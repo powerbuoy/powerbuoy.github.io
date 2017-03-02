@@ -4,8 +4,9 @@ node_modules
 src/resources/sass/icons.scss
 src/resources/sass/icon-vars.scss
 src/resources/sass/svg.scss
-scripts/assets/
-scripts/icons/
-scripts/app-bundle.js
-scripts/app-bundle.js.map
-scripts/vendor-bundle.js
+
+# scripts/assets/
+# scripts/icons/
+# scripts/app-bundle.js
+# scripts/app-bundle.js.map
+# scripts/vendor-bundle.js
