@@ -1,0 +1,244 @@
+// Breakpoints
+$bp-small: '(min-width: 400px)';
+$bp-small-max: '(max-width: 399px)';
+
+$bp-medium: '(min-width: 760px)';
+$bp-medium-max: '(max-width: 759px)';
+
+$bp-large: '(min-width: 1020px)';
+$bp-large-max: '(max-width: 1019px)';
+
+$bp-x-large: '(min-width: 1600px)';
+$bp-x-large-max: '(max-width: 1599px)';
+
+// Max site width (@container and @section use this)
+$site-width: 1060px;
+
+// .primary-content's width
+$primary-content-width: 70%;
+
+// Margins (margins beneath elements)
+$margin-small: .5rem;
+$margin-default: 1rem;
+$margin-large: 2rem;
+$margin-x-large: 4rem;
+
+// Paddings (inner padding of boxes)
+$padding-small: .5rem;
+$padding-default: 1rem;
+$padding-large: 2rem;
+$padding-x-large: 4rem;
+$padding-xx-large: 6rem;
+
+// Gutters (margin between columns)
+$gutter-default: 1rem;
+$gutter-large: 2rem;
+
+// Section paddings
+$section-padding-horizontal: 1.5rem; // Distance from edge of screen to inner width in low res
+$section-padding: 3rem;
+$section-slant: 3rem;
+
+// Slants (used by section--slanted)
+$top-slant: polygon(0 #{$section-slant}, 100% 0, 100% 100%, 0 100%);
+$bottom-slant: polygon(0 0, 100% 0, 100% calc(100% - #{$section-slant}), 0 100%);
+$top-bottom-slant: polygon(0 #{$section-slant}, 100% 0, 100% calc(100% - #{$section-slant}), 0 100%);
+
+// Transition speeds
+$transition-easing: ease-out;
+$transition-default: .25s;
+$transition-slow: .75s;
+
+// Add more here to use cols--4, cols--5 etc
+$col-nums: (
+	"2": 2,
+	"3": 3
+);
+
+// Add more here to use cols--3--bp-large etc
+$col-breakpoints: (
+	"bp-medium": $bp-medium,
+	"bp-large": $bp-large
+);
+
+// Colors
+$color-body-bg: #111;
+$gradient-green-yellow-sun: radial-gradient(circle 200vw at 100% top, #8cd176, #10a678);
+
+$color-border: #d8d8d8;
+$color-shadow: rgba(0, 0, 0, .2);
+$color-overlay: rgba(0, 0, 0, .4);
+
+$color-x-lightgray: #f9f9f9;
+$color-lightgray: #f5f5f5;
+$color-gray: #9b9b9b;
+$color-darkgray: darkgray;
+$color-bluegray: #68788C;
+
+$color-white: #fff;
+$color-black: #000;
+
+$color-green: #1FBB82;
+$color-orange: #F99922; // #f79835
+$color-pink: #FF2570;
+$color-purple: #4d1676;
+$color-magenta: #ac3f79;
+$color-yellow: #fce561;
+
+$color-facebook: #446CB9;
+$color-linkedin: #3D91C6;
+
+// Define more to use bg--black etc
+$bg-colors: (
+	"white": #fff,
+	"x-lightgray": $color-x-lightgray,
+	"darkgray": $color-darkgray,
+	"bluegray": $color-bluegray,
+	"green": $color-green,
+	"orange": $color-orange,
+	"pink": $color-pink,
+	"purple": $color-purple,
+	"magenta": $color-magenta,
+	"yellow": $color-yellow
+);
+
+// Add more to use .color--red etc
+$text-colors: (
+	"white": $color-white,
+	"green": $color-green
+);
+
+// Add more to use .icon--red etc
+$icon-colors: (
+	"white": $color-white,
+	"green": $color-green,
+	"gray": $color-gray
+);
+
+// Add more to use .button--green etc
+$button-colors: (
+	"white": $color-white,
+	"green": $color-green,
+	"pink": $color-pink,
+	"facebook": $color-facebook,
+	"linkedin": $color-linkedin
+);
+
+// Font family
+$font-family-default: "Open Sans", sans-serif;
+$font-family-heading: "Open Sans", sans-serif;
+
+// Weigth
+$font-weight-default: lighter;
+$font-weight-heading: bold;
+
+// Size
+$font-size-default: 1rem;
+$font-size-small: .875rem;
+$font-size-large: 1.2rem;
+$font-size-x-large: 1.8rem;
+
+$font-size-h1: 2.4rem;
+$font-size-h2: 2rem;
+$font-size-h3: 1.4rem;
+$font-size-h4: 1.1rem;
+$font-size-h5: 1rem;
+$font-size-h6: 1rem;
+
+// Height and spacing
+$line-height-default: 1.6;
+$line-height-heading: 1.2;
+
+$letter-spacing-default: -.01em;
+$letter-spacing-heading: -.01em;
+
+// Color
+$color-text: #eee;
+$color-heading: #eee;
+
+// Links
+$color-link: $color-green;
+$color-link-hover: darken($color-green, 10%);
+$color-link-visited: #609;
+
+$text-decoration-link: none;
+$text-decoration-link-hover: none;
+
+// https://codepen.io/sdthornton/pen/wBZdXq
+$shadow-1: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24);
+$shadow-2: 0 3px 6px rgba(0, 0, 0, .16), 0 3px 6px rgba(0, 0, 0, .23);
+$shadow-3: 0 10px 20px rgba(0, 0, 0, .19), 0 6px 6px rgba(0, 0, 0, .23);
+$shadow-4: 0 14px 28px rgba(0, 0, 0, .25), 0 10px 10px rgba(0, 0, 0, .22);
+$shadow-5: 0 19px 38px rgba(0, 0, 0, .30), 0 15px 12px rgba(0, 0, 0, .22);
+
+// Icons
+$icon-margin: .4em;
+$icon-round-color: #369;
+$icon-large-size: 2em;
+$icon-round-size: 2.2em;
+
+// Card
+$card-padding: 2rem;
+$card-margin: 2rem;
+$card-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24);
+
+// Button size
+$button-padding-horizontal: 5.4rem;
+$button-padding-vertical: 1.2rem;
+$button-empty-padding-horizontal: $button-padding-vertical;
+$button-small-percentage: .8;
+
+$button-transition: true;
+
+// Button border
+$button-border-width: 1px;
+$button-border-style: solid;
+$button-border-color: false; // false makes non ghost buttons have 0 border
+$button-border-radius: 2rem;
+
+// Button background
+$button-color: $color-green;
+$button-ghost-opacity: 1; // Opacity of a ghost buttons bg on hover
+$button-gradient: false;
+$button-shadow: false;
+
+// Button text
+$button-font-family: false;
+$button-text-shadow: false;
+$button-text-color: #fff;
+$button-line-height: 1.2;
+$button-font-size: .875rem;
+$button-font-weight: bold;
+$button-font-style: normal;
+$button-text-transform: none;
+$button-letter-spacing: 0;
+
+// Form background and text colors
+$color-form-field-bg: transparent;
+$color-form-success: #060;
+$color-form-error: #600;
+$color-form-placeholder: #999;
+$color-form-text: #333;
+
+// Padding
+$form-padding-horizontal: 0;
+$form-padding-vertical: .5rem;
+
+// Border
+$form-border: true;
+$form-border-radius: false;
+
+// Select elements
+$form-select-arrow: "assets/svg/select-arrow.svg"; // Set to false to have unstyled select elements
+$form-select-arrow-size: .5rem;
+
+// Range inputs
+$form-range-bg: $color-green;
+$form-range-height: .25rem;
+$form-range-border: false;
+$form-range-border-radius: .2rem;
+$form-range-thumb-bg: $color-white;
+$form-range-thumb-radius: .75rem;
+$form-range-thumb-border: .25rem solid $color-green;
+$form-range-thumb-border-radius: 50%;
+$form-range-thumb-shadow: true;

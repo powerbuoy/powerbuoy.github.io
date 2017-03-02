@@ -1,0 +1,25 @@
+.vh100 {
+	min-height: 100vh;
+
+	&--valign {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		flex-direction: column;
+
+		.text--center &,
+		&.text--center {
+			align-items: center;
+		}
+
+		&--fixed-last {
+			> :first-child {
+				margin-top: auto;
+			}
+
+			> :last-child {
+				margin: auto auto 0;
+			}
+		}
+	}
+}

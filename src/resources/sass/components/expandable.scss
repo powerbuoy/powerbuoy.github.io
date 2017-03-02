@@ -1,0 +1,39 @@
+[expandable] {
+	overflow: hidden;
+	transition: max-height $transition-slow $transition-easing;
+}
+
+[expand-trigger] {
+	position: relative;
+	z-index: 1;
+
+	.icon-plus {
+		display: block;
+		margin: $margin-default auto 0;
+
+		text-align: center;
+		font-size: 2em;
+
+		transform: translateY(0);
+		transition: transform $transition-slow $transition-easing;
+
+		&:before {
+			transition: transform $transition-slow $transition-easing, color $transition-slow $transition-slow $transition-easing;
+		}
+	}
+
+	&.open {
+		.icon-plus {
+			transform: translateY(6.5rem);
+
+			@media #{$bp-medium} {
+				transform: translateY(9rem);
+			}
+
+			&:before {
+				transform: rotate(-225deg);
+				color: $color-lightgray;
+			}
+		}
+	}
+}
