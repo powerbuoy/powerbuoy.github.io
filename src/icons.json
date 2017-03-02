@@ -77,6 +77,24 @@
       "css": "cancel",
       "code": 59404,
       "src": "mfglabs"
+    },
+    {
+      "uid": "0f6a2573a7b6df911ed199bb63717e27",
+      "css": "github",
+      "code": 61595,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "e7d17d4d07756f4ab5eb690eea1275ca",
+      "css": "stackoverflow",
+      "code": 59399,
+      "src": "zocial"
+    },
+    {
+      "uid": "b08cfe8039de2ce815686aced2caef06",
+      "css": "download",
+      "code": 59400,
+      "src": "entypo"
     }
   ]
 }

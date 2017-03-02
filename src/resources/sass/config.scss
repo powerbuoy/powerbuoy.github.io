@@ -12,7 +12,7 @@ $bp-x-large: '(min-width: 1600px)';
 $bp-x-large-max: '(max-width: 1599px)';
 
 // Max site width (@container and @section use this)
-$site-width: 1060px;
+$site-width: 800px;
 
 // .primary-content's width
 $primary-content-width: 70%;
@@ -31,18 +31,13 @@ $padding-x-large: 4rem;
 $padding-xx-large: 6rem;
 
 // Gutters (margin between columns)
-$gutter-default: 1rem;
-$gutter-large: 2rem;
+$gutter-default: 2rem;
+$gutter-large: 4rem;
 
 // Section paddings
 $section-padding-horizontal: 1.5rem; // Distance from edge of screen to inner width in low res
 $section-padding: 3rem;
 $section-slant: 3rem;
-
-// Slants (used by section--slanted)
-$top-slant: polygon(0 #{$section-slant}, 100% 0, 100% 100%, 0 100%);
-$bottom-slant: polygon(0 0, 100% 0, 100% calc(100% - #{$section-slant}), 0 100%);
-$top-bottom-slant: polygon(0 #{$section-slant}, 100% 0, 100% calc(100% - #{$section-slant}), 0 100%);
 
 // Transition speeds
 $transition-easing: ease-out;
@@ -62,21 +57,21 @@ $col-breakpoints: (
 );
 
 // Colors
-$color-body-bg: #111;
-$gradient-green-yellow-sun: radial-gradient(circle 200vw at 100% top, #8cd176, #10a678);
+$color-body-bg: #fefefe;
 
 $color-border: #d8d8d8;
 $color-shadow: rgba(0, 0, 0, .2);
 $color-overlay: rgba(0, 0, 0, .4);
 
 $color-x-lightgray: #f9f9f9;
-$color-lightgray: #f5f5f5;
+$color-lightgray: #eaeaea;
 $color-gray: #9b9b9b;
-$color-darkgray: darkgray;
+$color-darkgray: #666;
+$color-x-darkgray: #111;
 $color-bluegray: #68788C;
 
 $color-white: #fff;
-$color-black: #000;
+$color-black: #010101;
 
 $color-green: #1FBB82;
 $color-orange: #F99922; // #f79835
@@ -125,12 +120,12 @@ $button-colors: (
 );
 
 // Font family
-$font-family-default: "Open Sans", sans-serif;
-$font-family-heading: "Open Sans", sans-serif;
+$font-family-default: "Lato", sans-serif;
+$font-family-heading: "Montserrat", sans-serif;
 
 // Weigth
-$font-weight-default: lighter;
-$font-weight-heading: bold;
+$font-weight-default: 300;
+$font-weight-heading: 600;
 
 // Size
 $font-size-default: 1rem;
@@ -138,23 +133,23 @@ $font-size-small: .875rem;
 $font-size-large: 1.2rem;
 $font-size-x-large: 1.8rem;
 
-$font-size-h1: 2.4rem;
-$font-size-h2: 2rem;
-$font-size-h3: 1.4rem;
-$font-size-h4: 1.1rem;
-$font-size-h5: 1rem;
+$font-size-h1: 6.2rem;
+$font-size-h2: 6.2rem;
+$font-size-h3: 1.6rem;
+$font-size-h4: 1.4rem;
+$font-size-h5: 1.2rem;
 $font-size-h6: 1rem;
 
 // Height and spacing
 $line-height-default: 1.6;
-$line-height-heading: 1.2;
+$line-height-heading: .9;
 
-$letter-spacing-default: -.01em;
+$letter-spacing-default: 0;
 $letter-spacing-heading: -.01em;
 
 // Color
-$color-text: #eee;
-$color-heading: #eee;
+$color-text: #111;
+$color-heading: #111;
 
 // Links
 $color-link: $color-green;

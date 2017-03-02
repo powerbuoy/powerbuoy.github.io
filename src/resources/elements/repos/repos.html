@@ -1,0 +1,18 @@
+<template>
+
+	<h2>My Projects</h2>
+
+	<article repeat.for="repo of repos">
+
+		<h3>${repo.name | readable}</h3>
+
+		<p>Lorem ipsum dolor sit amet consequetuer lipsumus dolrimus.</p>
+
+		<nav>
+			<a href="${repo.html_url}/archive/master.zip" class="icon-download" title="Download"></a>
+			<a href="${repo.html_url}" class="icon-github" title="GitHub"></a>
+		</nav>
+
+	</article>
+
+</template>

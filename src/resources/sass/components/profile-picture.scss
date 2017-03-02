@@ -1,0 +1,5 @@
+@mixin profile-picture {
+	border-radius: 50%;
+	border: 1rem solid $color-white;
+	box-shadow: 0 .25rem .75rem $color-shadow;
+}

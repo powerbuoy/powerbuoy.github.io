@@ -1,0 +1,16 @@
+@mixin cutout-text ($bg: "scripts/assets/bg/bg.jpg", $color: $color-white) {
+	background: url($bg) no-repeat 50% top;
+	background-size: cover;
+	background-attachment: fixed;
+
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+
+	color: $color;
+
+	padding-bottom: 1rem; // Because the line-height is so low, g:s etc get cut off otherwise
+}
+
+.text--cutout {
+	@include cutout-text;
+}

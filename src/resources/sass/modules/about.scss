@@ -1,0 +1,57 @@
+about {
+	@include section;
+
+	background: linear-gradient(to bottom, $color-white, $color-white 50%, $color-lightgray);
+
+	display: flex;
+	min-height: calc(100vh + #{$section-slant});
+	align-items: flex-start;
+	justify-content: center;
+	flex-direction: column;
+	margin-bottom: -$section-slant;
+
+	clip-path: $bottom-slant;
+	padding-bottom: $section-slant + $section-padding;
+
+//	color: $color-white;
+
+	figure {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+
+		@media #{$bp-large} {
+			transform: translateX(-10rem);
+		}
+
+		img {
+			@include profile-picture;
+			width: 20rem;
+			margin-right: $gutter-large;
+		}
+
+		figcaption {
+			flex: 1;
+
+			h2 {
+				@include cutout-text;
+
+				margin: 0 0 -1rem -.3rem;
+			}
+
+			nav + p {
+				opacity: .5;
+
+				strong {
+					display: block;
+				}
+			}
+
+			nav {
+				@include icon-nav;
+
+				float: right;
+			}
+		}
+	}
+}

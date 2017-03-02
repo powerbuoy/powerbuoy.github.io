@@ -1,0 +1,30 @@
+#site-header {
+	@include section;
+
+	padding-top: $padding-default;
+	padding-bottom: $padding-default;
+
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	z-index: 99;
+
+	display: none;
+
+	h1 {
+		margin: 0;
+		font-size: $font-size-small;
+		font-weight: 600;
+
+		strong {
+			font-size: $font-size-default;
+			display: block;
+			font-weight: 900;
+		}
+
+		small {
+			color: $color-lightgray;
+		}
+	}
+}

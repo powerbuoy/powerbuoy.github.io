@@ -5,7 +5,6 @@ import {HttpClient} from 'aurelia-fetch-client';
 export class Http {
 	constructor (http) {
 		this.http = http;
-		this.baseUrl = 'http://ment.ioioio.se/api/';
 	}
 
 	/**
@@ -16,16 +15,16 @@ export class Http {
 
 		let config = {
 			method: 'get',
-			credentials: 'include',
+			// credentials: 'include',
 			Accept: 'application/json'
 		};
 
-		return this.http.fetch(this.baseUrl + url, config)
+		return this.http.fetch(url, config)
 			.then(response => {
 				return response.json();
 			})
 			.then(json => {
-				return json.data;
+				return json;
 			});
 	}
 
@@ -35,7 +34,7 @@ export class Http {
 	post (url, data) {
 		let config = {
 			method: 'post',
-			credentials : 'include',
+			// credentials : 'include',
 			Accept: 'application/json'
 		};
 
@@ -43,17 +42,17 @@ export class Http {
 		if (data && !data.body) {
 			config.body = JSON.stringify(data);
 		}
-		// A body is specifically specified, pass it in raw
+		// A body is specified, pass it in raw
 		else if (data && data.body) {
 			config.body = data.body;
 		}
 
-		return this.http.fetch(this.baseUrl + url, config)
+		return this.http.fetch(url, config)
 			.then(response => {
 				return response.json();
 			})
 			.then(json => {
-				return json.data;
+				return json;
 			});
 	}
 
