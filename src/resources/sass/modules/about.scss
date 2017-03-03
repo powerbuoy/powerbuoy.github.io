@@ -33,18 +33,15 @@ about {
 	}
 
 	figure {
-		@media #{$bp-medium-max} {
+		@media #{$bp-large-max} {
 			text-align: center;
 		}
 
-		@media #{$bp-medium} {
+		@media #{$bp-large} {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-		}
-
-		@media #{$bp-large} {
-			transform: translateX(-10rem);
+			transform: translateX(-10rem); // Offset the image a little for balance
 		}
 
 		img {
@@ -55,6 +52,9 @@ about {
 
 			@media #{$bp-medium} {
 				width: 20rem;
+			}
+
+			@media #{$bp-large} {
 				margin: 0 $gutter-large 0 0;
 			}
 		}
@@ -71,7 +71,7 @@ about {
 				position: relative;
 				z-index: 1;
 
-				@media #{$bp-medium} {
+				@media #{$bp-large} {
 					float: right;
 				}
 			}
