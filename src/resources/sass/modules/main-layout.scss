@@ -1,5 +1,15 @@
-main {
+.photo-credit {
+	margin: 0;
+	text-align: center;
+	color: $color-white;
+	font-size: $font-size-small;
+}
+
+body {
 	background: url(scripts/assets/bg/bg.jpg) no-repeat 50% top;
 	background-size: cover;
 	background-attachment: fixed;
+
+	background-image: none;
+	padding-bottom: $padding-default;
 }

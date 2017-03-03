@@ -1,14 +1,31 @@
-@mixin cutout-text ($bg: "scripts/assets/bg/bg.jpg", $color: $color-white) {
-	background: url($bg) no-repeat 50% top;
-	background-size: cover;
-	background-attachment: fixed;
+@mixin cutout-text ($bg: "scripts/assets/bg/bg.jpg", $color: $color-white, $content: false) {
+	// The commented bits allow for a shadow (but requires a nested element and that the user passes in the text $content)
+//	position: relative;
 
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
+//	> * {
+		background: url($bg) no-repeat 50% top;
+		background-size: cover;
+		background-attachment: fixed;
 
-	color: $color;
+		background-image: none; // This is set in app.js instead and is random :D
 
-	padding-bottom: 1rem; // Because the line-height is so low, g:s etc get cut off otherwise
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+
+//		position: absolute;
+//		width: 100%;
+
+		color: $color;
+
+		padding-bottom: 1rem; // Because the line-height is so low, g:s etc get cut off otherwise
+//	}
+
+	@if ($content) {
+		&:after {
+			content: $content;
+			text-shadow: 0 -1px 1px rgba(0, 0, 0, .8);
+		}
+	}
 }
 
 .text--cutout {

@@ -4,10 +4,11 @@ about {
 	background: linear-gradient(to bottom, $color-white, $color-white 50%, $color-lightgray);
 
 	display: flex;
-	min-height: calc(100vh + #{$section-slant});
 	align-items: flex-start;
 	justify-content: center;
 	flex-direction: column;
+
+	min-height: calc(100vh + #{$section-slant});
 	margin-bottom: -$section-slant;
 
 	clip-path: $bottom-slant;
@@ -15,10 +16,32 @@ about {
 
 //	color: $color-white;
 
+	> a.icon-down {
+		position: absolute;
+		left: 50%;
+		bottom: $section-padding;
+		transform: translateX(-50%);
+		font-size: 3rem;
+		color: inherit;
+		opacity: .5;
+		transition: all $transition-default $transition-easing;
+
+		&:hover {
+			opacity: 1;
+			color: $color-link;
+		}
+	}
+
 	figure {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
+		@media #{$bp-medium-max} {
+			text-align: center;
+		}
+
+		@media #{$bp-medium} {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
 
 		@media #{$bp-large} {
 			transform: translateX(-10rem);
@@ -26,17 +49,31 @@ about {
 
 		img {
 			@include profile-picture;
-			width: 20rem;
-			margin-right: $gutter-large;
+
+			width: 10rem;
+			margin: 0 0 $margin-default;
+
+			@media #{$bp-medium} {
+				width: 20rem;
+				margin: 0 $gutter-large 0 0;
+			}
 		}
 
 		figcaption {
 			flex: 1;
 
-			h2 {
-				@include cutout-text;
-
+			h1 {
 				margin: 0 0 -1rem -.3rem;
+			}
+
+			nav {
+				@include icon-nav;
+				position: relative;
+				z-index: 1;
+
+				@media #{$bp-medium} {
+					float: right;
+				}
 			}
 
 			nav + p {
@@ -45,12 +82,6 @@ about {
 				strong {
 					display: block;
 				}
-			}
-
-			nav {
-				@include icon-nav;
-
-				float: right;
 			}
 		}
 	}

@@ -3,4 +3,8 @@ h1,
 h2,
 .heading--2 {
 	font-weight: 900;
+
+	@media #{$bp-medium-max} {
+		font-size: 3rem;
+	}
 }

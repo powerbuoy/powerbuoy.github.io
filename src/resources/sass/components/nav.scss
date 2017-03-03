@@ -1,16 +1,17 @@
 @mixin icon-nav {
+	letter-spacing: $margin-small;
+
 	a {
 		display: inline-block;
-		margin-right: $margin-small;
 
 		color: inherit;
 		font-size: $font-size-large;
 		opacity: .6;
-		transition: opacity $transition-default $transition-easing;
+		transition: all $transition-default $transition-easing;
 
 		&:hover {
 			opacity: 1;
-			color: inherit;
+			color: $color-link;
 		}
 	}
 }
