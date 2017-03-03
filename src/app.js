@@ -23,7 +23,7 @@ export class App {
 		// Random unsplash image
 		let unsplashKey = '4d6fb906f11c473986d67a17526e0949ed4f6b084565793cd88dd4615167cc62';
 
-		this.http.fetch('https://api.unsplash.com/photos/random?client_id=' + unsplashKey, {method: 'get'}).then(data => {
+		this.http.fetch('https://api.unsplash.com/photos/random?featured=1&client_id=' + unsplashKey, {method: 'get'}).then(data => {
 			return data.json();
 		}).then(data => {
 			this.setBg(data);

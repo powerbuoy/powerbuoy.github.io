@@ -4,7 +4,11 @@
 
 	<article repeat.for="repo of repos">
 
-		<h3>${repo.name | readable}</h3>
+		<h3>
+			<a href="${repo.html_url}">
+				${repo.name | readable}
+			</a>
+		</h3>
 
 		<p>${repo.readme}</p>
 
