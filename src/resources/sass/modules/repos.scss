@@ -26,8 +26,14 @@ repos {
 	article {
 		background: $color-white;
 
+		display: flex;
+		align-items: flex-start;
+		justify-content: flex-start;
+		flex-direction: column;
+
 		flex: 0 0 calc(50% - #{$gutter-default / 2});
 		width: calc(50% - #{$gutter-default / 2});
+
 		margin: 0 0 $gutter-default;
 		padding: $padding-large;
 
@@ -35,6 +41,8 @@ repos {
 
 		nav {
 			@include icon-nav;
+
+			margin-top: auto;
 		}
 	}
 }
