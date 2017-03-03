@@ -1,8 +1,8 @@
 import {inject} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import {Http} from 'resources/services/http';
+import {HttpClient} from 'aurelia-fetch-client';
 
-@inject(EventAggregator, Http)
+@inject(EventAggregator, HttpClient)
 export class App {
 	constructor (ea, http) {
 		this.ea = ea;
@@ -23,7 +23,9 @@ export class App {
 		// Random unsplash image
 		let unsplashKey = '4d6fb906f11c473986d67a17526e0949ed4f6b084565793cd88dd4615167cc62';
 
-		this.http.get('https://api.unsplash.com/photos/random?client_id=' + unsplashKey).then(data => {
+		this.http.fetch('https://api.unsplash.com/photos/random?client_id=' + unsplashKey, {method: 'get'}).then(data => {
+			return data.json();
+		}).then(data => {
 			this.setBg(data);
 		}).catch(error => {
 			this.setBg({
