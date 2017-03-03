@@ -50,7 +50,7 @@ export class App {
 		let credit = document.createElement('p');
 
 		credit.classList.add('photo-credit');
-		credit.innerHTML = 'Photo by <a href="' + data.user.urls.html + '">' + data.user.name + '</a>';
+		credit.innerHTML = 'Photo by <a href="' + data.user.links.html + '">' + data.user.name + '</a>';
 
 		document.body.appendChild(credit);
 	}
