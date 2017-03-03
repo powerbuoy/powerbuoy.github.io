@@ -63,7 +63,11 @@ about {
 			flex: 1;
 
 			h1 {
-				margin: 0 0 -1rem -.3rem;
+				margin: 0 0 0 -.3rem;
+
+				@media #{$bp-large} {
+					margin-bottom: -1rem;
+				}
 			}
 
 			nav {
