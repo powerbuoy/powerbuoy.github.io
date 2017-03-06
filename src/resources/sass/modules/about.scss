@@ -55,6 +55,7 @@ about {
 			}
 
 			@media #{$bp-large} {
+				flex: 0 0 20rem;
 				margin: 0 $gutter-large 0 0;
 			}
 		}
