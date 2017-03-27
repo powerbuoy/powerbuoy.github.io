@@ -55,6 +55,7 @@
     "uglify-js": "^2.6.3",
     "uid": "0.0.2",
     "velocity-animate": "^1.4.2",
-    "vinyl-fs": "^2.4.3"
+    "vinyl-fs": "^2.4.3",
+    "whatwg-fetch": "^2.0.3"
   }
 }
