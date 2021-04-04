@@ -1,34 +1,215 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html>
+<html lang="en-GB" class="no-js">
 
 	<head>
 
-		<base href="/">
-
 		<meta charset="utf8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimal-ui">
-		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<title>AndreasLagerkvist.com</title>
+		<title>Andreas Lagerkvist</title>
+		<meta name="description" content="Web Developer and Blender Enthusiast Based in Sweden">
 
-		<link href="https://fonts.googleapis.com/css?family=Lato:300,300i,700,700i|Montserrat:600,900" rel="stylesheet">
+		<link rel="preconnect" href="https://fonts.gstatic.com">
+		<link rel="preconnect" href="https://unpkg.com">
+		<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+		<link rel="stylesheet" href="css/app.css">
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
 		<script>
-			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-				(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-				m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-			})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+			// JS class
+			document.documentElement.classList.remove('no-js');
+			document.documentElement.classList.add('js');
 
-			ga('create', 'UA-1823084-2', 'auto');
-			ga('send', 'pageview');
+			// Random theme on load
+			/* const themes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+			const theme = themes[Math.floor(Math.random() * themes.length)];
+
+			document.documentElement.classList.add('theme-' + theme); */
+
+			// Actually no
+			document.documentElement.classList.add('theme-i');
 		</script>
 
 	</head>
 
-	<body aurelia-app="main">
+	<body>
 
-		<script src="scripts/vendor-bundle.js" data-main="aurelia-bootstrapper"></script>
+		<a data-toggle-bg3d class="icon-pause">Toggle background animation</a>
+
+		<figure id="bg"></figure>
+
+		<nav id="themes">
+			<a data-set-theme="a">Theme A</a>
+			<a data-set-theme="b">Theme B</a>
+			<a data-set-theme="c">Theme C</a>
+			<a data-set-theme="d">Theme D</a>
+			<a data-set-theme="e">Theme E</a>
+			<a data-set-theme="f">Theme F</a>
+			<a data-set-theme="g">Theme G</a>
+			<a data-set-theme="h">Theme H</a>
+			<a data-set-theme="i">Theme I</a>
+			<a data-set-theme="j">Theme J</a>
+		</nav>
+
+		<nav id="navigation" data-highlight-visible>
+			<a href="#about">About</a>
+			<a href="#work">Work</a>
+			<a href="#play">Play</a>
+			<a href="#contact">Contact</a>
+			<a href="#end">The End</a>
+		</nav>
+
+		<main>
+
+			<section id="about" data-auto-theme="i" data-camera-pos='{"x":0.15738707178810377,"y":0.6632245933397466,"z":0.7799714895268972,"rx":-0.6603667225714476,"ry":0.313520620866766,"rz":0.2351094585681995}'>
+
+				<header>
+
+					<h1>Hi! I'm Andreas</h1>
+
+					<p>I'm a Web Developer and Blender Enthusiast from Sweden.</p>
+
+				</header>
+
+				<ul>
+					<li><a href="https://github.com/powerbuoy/" target="_blank" rel="noopener" class="icon-github">GitHub</a></li>
+					<li><a href="https://stackoverflow.com/users/1074594/powerbuoy" target="_blank" rel="noopener" class="icon-stackoverflow">StackOverflow</a></li>
+				</ul>
+
+			</section>
+
+			<section id="work" data-auto-theme="g" data-camera-pos='{"x":1.6264026631799302,"y":1.2948229057672256,"z":5.986972351580601,"rx":-0.8697633991850208,"ry":-0.1868166573247362,"rz":-0.21659510346244576}'>
+
+				<header>
+
+					<h2>Work</h2>
+
+					<p>Check out some of my <a href="https://github.com/powerbuoy?tab=repositories" target="_blank" rel="noopener">GitHub projects</a>.</p>
+
+				</header>
+
+				<div>
+
+					<article>
+
+						<h3>SleekWP</h3>
+
+						<p>The WordPress Theme for Developers.</p>
+
+						<ul>
+							<li><a href="https://github.com/powerbuoy/sleek/" target="_blank" rel="noopener" class="icon-github">GitHub</a></li>
+							<li><a href="https://sleekwp.dev" target="_blank" rel="noopener" class="icon-globe">Website</a></li>
+						</ul>
+
+					</article>
+
+					<article class="card">
+
+						<h3>SleekUI</h3>
+
+						<p>Lightweight SASS and JS library for common UI elements</p>
+
+						<ul>
+							<li><a href="https://github.com/powerbuoy/sleek-ui/" target="_blank" rel="noopener" class="icon-github">GitHub</a></li>
+						</ul>
+
+					</article>
+
+				</div>
+
+			</section>
+
+			<section id="play" data-auto-theme="e" data-camera-pos='{"x":4.015843278294994,"y":0.7427593056044219,"z":9.710916412580875,"rx":-0.9790715983750727,"ry":-1.0308008948462561,"rz":-0.9061688411006168}'>
+
+				<header>
+
+					<h2>Play</h2>
+
+					<p>I like to play around in Blender in my spare time.<br>Here's some of the stuff I've made.</p>
+
+				</header>
+
+				<div>
+
+					<figure>
+						<a href="assets/robot.jpg" target="_blank">
+							<img src="assets/robot-thumb.jpg" alt="A robot in a post apocalyptic field holding a flower" width="200" height="300" loading="lazy">
+						</a>
+					</figure>
+
+					<figure>
+						<a href="assets/chess.jpg" target="_blank">
+							<img src="assets/chess-thumb.jpg" alt="A dimly lit bar table with an ongoing chess match" width="450" height="300" loading="lazy">
+						</a>
+					</figure>
+
+					<figure>
+						<a href="assets/brushes.jpg" target="_blank">
+							<img src="assets/brushes-thumb.jpg" alt="A glass with used paint brushes" width="300" height="300" loading="lazy">
+						</a>
+					</figure>
+
+					<figure>
+						<a href="assets/troll.jpg" target="_blank">
+							<img src="assets/troll-thumb.jpg" alt="An old troll strolling through a mystical forest" width="400" height="300" loading="lazy">
+						</a>
+					</figure>
+
+					<figure>
+						<a href="assets/bulb.mp4" target="_blank" title="A lightbulb rolling on the floor">
+							<video autoplay loop muted width="533" height="300" loading="lazy">
+								<source src="assets/bulb.mp4" type="video/mp4"></source>
+							</video>
+						</a>
+					</figure>
+
+				</div>
+
+			</section>
+
+			<section id="contact" data-auto-theme="h" data-camera-pos='{"x":1.2928716579423913,"y":0.8710942112817563,"z":14.08160151207296,"rx":-2.254564420415036,"ry":-0.9679905485695725,"rz":-2.3508026523748886}'>
+
+				<header>
+
+					<h2>Contact</h2>
+
+					<p>You can <a href="mailto:andreas.lagerkvist@invise.se?subject=From%20website">write me an e-mail</a> if you like.<br>Or find me online:</p>
+
+				</header>
+
+				<ul>
+					<li><a href="https://github.com/powerbuoy/" target="_blank" rel="noopener" class="icon-github">GitHub</a></li>
+					<li><a href="https://stackoverflow.com/users/1074594/powerbuoy" target="_blank" rel="noopener" class="icon-stackoverflow">StackOverflow</a></li>
+				</ul>
+
+			</section>
+
+			<section id="end" data-auto-theme="b" data-camera-pos='{"x":-0.10642392173444505,"y":0.1798439109093774,"z":19.628076613444538,"rx":-2.7613242127834337,"ry":-0.5228655690770228,"rz":-2.9445739092095806}'>
+
+				<header>
+
+					<h2>The End</h2>
+
+					<p>This site was built using <a href="https://www.blender.org/" target="_blank" rel="noopener">Blender</a>, <a href="https://threejs.org/" target="_blank" rel="noopener">ThreeJS</a>, <a href="https://github.com/tweenjs/tween.js/" target="_blank" rel="noopener">TweenJS</a>, <a href="https://splitting.js.org/" target="_blank" rel="noopener">SplittingJS</a> and the code you see if you “view source”.</p>
+
+				</header>
+
+				<nav>
+					<a href="#about" class="icon-up">Go back to the top</a>
+				</nav>
+
+			</section>
+
+		</main>
+
+		<aside id="performance-notice">
+			<p>Your framerate is low.<br>You may want to pause the 3D background using the button in the top left corner.</p>
+		</aside>
+
+		<script src="https://unpkg.com/splitting@1.0.6/dist/splitting.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
+		<script type="module" src="js/app.js"></script>
 
 	</body>
 
