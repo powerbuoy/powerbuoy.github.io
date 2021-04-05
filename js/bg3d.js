@@ -393,19 +393,19 @@ export default class Bg3d {
 		}
 
 		if (this.objects.skateboard_wheel_front_left) {
-			this.objects.skateboard_wheel_front_left.rotation.z = elapsedTime / 2;
+			this.objects.skateboard_wheel_front_left.rotation.z = -(elapsedTime / 2);
 		}
 
 		if (this.objects.skateboard_wheel_front_right) {
-			this.objects.skateboard_wheel_front_right.rotation.z = elapsedTime / 3;
+			this.objects.skateboard_wheel_front_right.rotation.z = -(elapsedTime / 3);
 		}
 
 		if (this.objects.skateboard_wheel_back_left) {
-			this.objects.skateboard_wheel_back_left.rotation.z = elapsedTime;
+			this.objects.skateboard_wheel_back_left.rotation.z = -elapsedTime;
 		}
 
 		if (this.objects.skateboard_wheel_back_right) {
-			this.objects.skateboard_wheel_back_right.rotation.z = elapsedTime * 20;
+			this.objects.skateboard_wheel_back_right.rotation.z = -(elapsedTime * 20);
 		}
 
 		if (this.objects.r2d2_controller) {
