@@ -23,8 +23,8 @@ export default class Bg3d {
 			scene: 'assets/alcom.glb',
 			envMap: 'assets/envmap.jpg',
 			fov: 50,
-			easing: TWEEN.Easing.Quadratic.InOut,
-			camTransDur: 1000,
+			easing: TWEEN.Easing.Exponential.InOut, // Quadratic
+			camTransDur: 1500,
 			dev: false // NOTE: Dev mode - enables free camera and more
 		}, conf);
 
