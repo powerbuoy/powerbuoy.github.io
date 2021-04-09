@@ -52,7 +52,7 @@ export default class Bg3d {
 		else {
 			this.floor();
 			this.cameraPos();
-			// this.mousePos(); // NOTE: Disabled for now... not sure if needed??
+			this.mousePos(); // NOTE: Disabled for now... not sure if needed??
 		}
 	}
 
@@ -302,17 +302,13 @@ export default class Bg3d {
 
 	////////////
 	// Mouse pos
-	// Change position of camera (actually move the scene around)
 	mousePos () {
 		document.body.addEventListener('mousemove', e => {
-			const halfW = window.innerWidth / 2;
-			const halfH = window.innerHeight / 2;
-			const x = ((e.clientX - halfW) / halfW) * 0.025; // NOTE: 0.025 = limit movement a lot
-			const y = ((e.clientY - halfH) / halfH) * 0.025;
+			const x = (e.clientX / window.innerWidth) * 2 - 1;
+			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
-			// this.scene.rotation.x = y;
-			this.scene.position.y = y;
-			this.scene.position.x = -x;
+			this.camera.fov = this.config.fov + (5 * (y - x));
+			this.camera.updateProjectionMatrix();
 		});
 	}
 
