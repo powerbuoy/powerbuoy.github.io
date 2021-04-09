@@ -231,7 +231,7 @@ html.js #end {
 	bottom: var(--performance-notice-bottom);
 	z-index: 99;
 
-	width: 30rem;
+	width: max-content;
 	max-width: 90%;
 
 	transform: translate(-50%, calc(100% + var(--performance-notice-bottom) + var(--spacing-medium)));

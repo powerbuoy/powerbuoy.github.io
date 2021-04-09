@@ -86,6 +86,7 @@ export default class Bg3d {
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, this.el.clientWidth / this.el.clientHeight, 0.01, 5000);
+		this.currentCameraPos = {x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0};
 
 		// Shadows
 		this.renderer.shadowMap.enabled = true;
@@ -246,6 +247,8 @@ export default class Bg3d {
 	}
 
 	setCameraPos (newPos) {
+		this.currentCameraPos = newPos;
+
 		new TWEEN.Tween(this.camera.position).to({x: newPos.x, y: newPos.y, z: newPos.z}, this.config.camTransDur).easing(this.config.easing).start();
 
 		// NOTE: Instead of just animating the camera.rotation directly,
@@ -310,7 +313,8 @@ export default class Bg3d {
 			const x = (e.clientX / window.innerWidth) * 2 - 1;
 			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
-			this.camera.fov = this.config.fov + (5 * (y - x));
+			this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
+			this.camera.fov = this.config.fov + (5 * y);
 			this.camera.updateProjectionMatrix();
 		});
 	}
