@@ -52,7 +52,10 @@ export default class Bg3d {
 		else {
 			this.floor();
 			this.cameraPos();
-			this.mousePos(); // NOTE: Disabled for now... not sure if needed??
+
+			if (!window.matchMedia('(pointer: none)').matches) {
+				this.mousePos();
+			}
 		}
 	}
 

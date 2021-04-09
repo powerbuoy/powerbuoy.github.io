@@ -214,6 +214,12 @@ html.js #end {
 
 // Performance notice
 #performance-notice {
+	--performance-notice-bottom: var(--spacing-large);
+
+	@media (orientation: landscape) {
+		--performance-notice-bottom: var(--spacing-medium);
+	}
+
 	padding: var(--spacing-medium);
 
 	font-size: 80%;
@@ -222,10 +228,13 @@ html.js #end {
 
 	position: fixed;
 	left: 50%;
-	bottom: var(--spacing-medium);
+	bottom: var(--performance-notice-bottom);
 	z-index: 99;
 
-	transform: translate(-50%, calc(100% + var(--spacing-medium) * 2));
+	width: 30rem;
+	max-width: 90%;
+
+	transform: translate(-50%, calc(100% + var(--performance-notice-bottom) + var(--spacing-medium)));
 	transition: transform 1s var(--easing);
 
 	border-radius: 0.5rem;
