@@ -53,7 +53,7 @@ export default class Bg3d {
 			this.floor();
 			this.cameraPos();
 
-			if (!window.matchMedia('(pointer: none)').matches) {
+			if (!window.matchMedia('(hover: none)').matches) {
 				this.mousePos();
 			}
 		}
