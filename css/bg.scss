@@ -1,3 +1,4 @@
+// 3d background
 #bg {
 	position: fixed;
 	left: 0;
@@ -24,17 +25,21 @@
 	}
 }
 
+// In dev mode
 html.dev #bg {
 	pointer-events: all;
 	z-index: 1;
 	opacity: 0.75;
 }
 
+// Slide in when loaded
 html.loaded #bg {
 	transform: translateX(0);
 }
 
-[data-toggle-bg3d] {
+// Toggle & dev icon
+[data-toggle-bg3d],
+a[href="?dev=true"] {
 	position: fixed;
 	left: var(--spacing-medium);
 	top: var(--spacing-medium);
@@ -53,10 +58,19 @@ html.loaded #bg {
 
 html.bg3d-disabled [data-toggle-bg3d] {
 	&::before {
-		content: "\e805";
+		content: "\e801";
 	}
 }
 
-html.loaded a[data-toggle-bg3d] {
-	transform: scale(1);
+html.loaded {
+	a[data-toggle-bg3d],
+	a[href="?dev=true"] {
+		transform: scale(1);
+	}
+}
+
+// Dev icon
+a[href="?dev=true"] {
+	left: calc(var(--spacing-medium) + 1rem + var(--spacing-small)); // NOTE: 1rem = font-size of icon
+	transition-delay: 5.25s;
 }

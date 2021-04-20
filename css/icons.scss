@@ -19,13 +19,14 @@
 }
 
 .icon-globe:before { content: "\e800"; }
-.icon-down:before { content: "\e801"; }
-.icon-left:before { content: "\e802"; }
-.icon-right:before { content: "\e803"; }
-.icon-up:before { content: "\e804"; }
-.icon-play:before { content: "\e805"; }
-.icon-pause:before { content: "\e806"; }
+.icon-play:before { content: "\e801"; }
+.icon-pause:before { content: "\e802"; }
 .icon-github:before { content: "\f09b"; }
+.icon-left:before { content: "\f104"; }
+.icon-right:before { content: "\f105"; }
+.icon-up:before { content: "\f106"; }
+.icon-down:before { content: "\f107"; }
+.icon-terminal:before { content: "\f120"; }
 .icon-stackoverflow:before { content: "\f16c"; }
 
 a[class*="icon-"] {
