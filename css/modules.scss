@@ -30,7 +30,7 @@ section {
 		}
 	}
 
-	ul {
+	nav {
 		@include list-inline;
 	}
 }
@@ -39,24 +39,10 @@ html.js section {
 	header p {
 		@include scrollspy-hide;
 
-		transition-delay: 1s;
+		transition-delay: 1.25s;
 	}
 
-	&.in-view {
-		header p {
-			@include scrollspy-show;
-		}
-	}
-}
-
-// About & contact
-html.js #about,
-html.js #contact {
-	header p {
-		transition-delay: 1.5s;
-	}
-
-	ul li {
+	nav > * {
 		@include scrollspy-hide(2rem, 0);
 
 		transition-delay: 1.75s;
@@ -69,7 +55,8 @@ html.js #contact {
 	}
 
 	&.in-view {
-		ul li {
+		header p,
+		nav > * {
 			@include scrollspy-show;
 		}
 	}
@@ -115,10 +102,6 @@ html.js #work {
 	}
 
 	&.in-view {
-		header p {
-			@include scrollspy-show;
-		}
-
 		article {
 			opacity: 1;
 			transform: rotateX(0);
@@ -196,68 +179,5 @@ html.js #play {
 		figure {
 			transform: scale(1);
 		}
-	}
-}
-
-// End
-html.js #end {
-	> nav {
-		@include scrollspy-hide;
-
-		transition-delay: 1.5s;
-	}
-
-	&.in-view > nav {
-		@include scrollspy-show;
-	}
-}
-
-// Performance notice
-#performance-notice {
-	--performance-notice-bottom: var(--spacing-large);
-
-	@media (orientation: landscape) {
-		--performance-notice-bottom: var(--spacing-medium);
-	}
-
-	padding: var(--spacing-medium);
-
-	font-size: 80%;
-	color: white;
-	text-align: center;
-
-	position: fixed;
-	left: 50%;
-	bottom: var(--performance-notice-bottom);
-	z-index: 99;
-
-	width: max-content;
-	max-width: 90%;
-
-	transform: translate(-50%, calc(100% + var(--performance-notice-bottom) + var(--spacing-medium)));
-	transition: transform 1s var(--easing);
-
-	border-radius: 0.5rem;
-
-	&::before {
-		background: var(--accent-color);
-		display: block;
-		content: "";
-		position: absolute;
-		left: 0;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		border-radius: 0.5rem;
-		z-index: -1;
-		opacity: 0.75;
-	}
-
-	p {
-		margin: 0;
-	}
-
-	&.active {
-		transform: translate(-50%, 0);
 	}
 }

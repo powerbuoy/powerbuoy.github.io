@@ -2,7 +2,7 @@
 	margin-left: 0;
 	list-style: none;
 
-	li {
+	> * {
 		display: inline-block;
 		margin: 0 var(--spacing-medium) 0 0;
 	}
