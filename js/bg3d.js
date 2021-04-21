@@ -82,11 +82,14 @@ export default class Bg3d {
 		this.objects = {};
 
 		// Create scene, renderer etc
+		this.deltaTime = 0.016;
 		this.clock = new THREE.Clock();
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, this.el.clientWidth / this.el.clientHeight, 0.01, 5000);
 		this.currentCameraPos = {x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0};
+
+		this.clock.start();
 
 		// Shadows
 		this.renderer.shadowMap.enabled = true;
@@ -322,37 +325,48 @@ export default class Bg3d {
 	///////////////////////////
 	// Keep track of framerate
 	framerate () {
-		this.fpsEl = document.getElementById('fps');
-		this.totalFrames = 0;
-		this.fpsDips = 0;
+		this.fpsEl = document.querySelector('[data-fps]');
+		this.fps = 0; // Current FPS
+		this.lastFpss = []; // Last X FPS's
+		this.stableFps = 0; // Average of last X FPS's
+		this.fpsDips = 0; // Number of dips
 		this.fpsThreshold = 30; // Minimum FPS
 		this.fpsDipsThreshold = 120; // Number of times FPS is allowed to dip below threshold
-		this.fps = 0;
 		this.trackFps = true;
+		this.hasInformedFps = false;
 	}
 
 	trackFramerate () {
-		if (this.trackFps) {
-			this.totalFrames++;
-			this.fps = this.totalFrames / this.clock.getElapsedTime();
+		this.fps = 1 / this.deltaTime;
 
-			if (this.fps < this.fpsThreshold) {
-				this.fpsDips++;
+		// Calculate and show stable FPS in dev mode
+		if (this.config.dev) {
+			this.lastFpss.length = this.lastFpss.length > 60 ? 60 : this.lastFpss.length;
+			this.lastFpss.unshift(this.fps);
+			this.stableFps = this.lastFpss.reduce((a, b) => a + b) / this.lastFpss.length;
+			this.fpsEl.textContent = Math.round(this.stableFps);
+		}
+
+		// Increase dips
+		if (this.fps < this.fpsThreshold) {
+			this.fpsDips++;
+		}
+
+		// If too many dips
+		if (this.fpsDips > this.fpsDipsThreshold) {
+			// Stop tracking
+			if (!this.config.dev) {
+				this.trackFps = false;
 			}
 
-			if (this.fpsDips > this.fpsDipsThreshold) {
-				if (!this.config.dev) {
-					this.trackFps = false;
-				}
-
+			// Inform window
+			if (!this.hasInformedFps) {
 				document.body.dispatchEvent(new Event('bg3d/fps-dip', {
 					bubbles: true
 				}));
-			}
-		}
 
-		if (this.config.dev) {
-			this.fpsEl.textContent = this.fps;
+				this.hasInformedFps = true;
+			}
 		}
 	}
 
@@ -494,10 +508,14 @@ export default class Bg3d {
 	/////////
 	// Render
 	render () {
+		this.deltaTime = this.clock.getDelta();
+
 		this.animate();
 		this.renderer.render(this.scene, this.camera);
 		// this.composer.render();
 
-		this.trackFramerate();
+		if (this.trackFps) {
+			this.trackFramerate();
+		}
 	}
 }
