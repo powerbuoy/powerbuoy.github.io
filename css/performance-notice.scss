@@ -60,3 +60,11 @@
 html.dev.loaded #fps {
 	transform: scale(1);
 }
+
+// Hide when no JS
+html.no-js {
+	#fps,
+	#performance-notice {
+		display: none;
+	}
+}

@@ -80,3 +80,8 @@ html.js.loaded #navigation a {
 		animation-name: navigation-slide-up;
 	}
 }
+
+// Hide when no JS
+html.no-js #navigation {
+	display: none;
+}

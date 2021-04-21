@@ -85,3 +85,8 @@ html.js.loaded #themes a {
 		animation-delay: #{3.5 + $i * 0.05 - 0.05}s;
 	}
 }
+
+// Hide when no JS
+html.no-js #themes {
+	display: none;
+}

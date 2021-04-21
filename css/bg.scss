@@ -74,3 +74,11 @@ a[href="?dev=true"] {
 	left: calc(var(--spacing-medium) + 1rem + var(--spacing-small)); // NOTE: 1rem = font-size of icon
 	transition-delay: 5.25s;
 }
+
+// Hide when no JS
+html.no-js {
+	a[data-toggle-bg3d],
+	a[href="?dev=true"] {
+		display: none;
+	}
+}
