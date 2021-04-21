@@ -52,4 +52,11 @@
 	left: var(--spacing-medium);
 	bottom: var(--spacing-medium);
 	color: var(--accent-color);
+
+	transform: scale(0);
+	transition: transform 0.5s 5.5s var(--easing);
+}
+
+html.dev.loaded #fps {
+	transform: scale(1);
 }
