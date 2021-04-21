@@ -322,6 +322,7 @@ export default class Bg3d {
 	///////////////////////////
 	// Keep track of framerate
 	framerate () {
+		this.fpsEl = document.getElementById('fps');
 		this.totalFrames = 0;
 		this.fpsDips = 0;
 		this.fpsThreshold = 30; // Minimum FPS
@@ -340,12 +341,18 @@ export default class Bg3d {
 			}
 
 			if (this.fpsDips > this.fpsDipsThreshold) {
-				this.trackFps = false;
+				if (!this.config.dev) {
+					this.trackFps = false;
+				}
 
 				document.body.dispatchEvent(new Event('bg3d/fps-dip', {
 					bubbles: true
 				}));
 			}
+		}
+
+		if (this.config.dev) {
+			this.fpsEl.textContent = this.fps;
 		}
 	}
 

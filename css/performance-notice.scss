@@ -7,7 +7,7 @@
 
 	padding: var(--spacing-medium);
 
-	font-size: 80%;
+	font-size: 0.8em;
 	color: white;
 	text-align: center;
 
@@ -45,4 +45,11 @@
 	&.active {
 		transform: translate(-50%, 0);
 	}
+}
+
+#fps {
+	position: fixed;
+	left: var(--spacing-medium);
+	bottom: var(--spacing-medium);
+	color: var(--accent-color);
 }
