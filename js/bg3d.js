@@ -326,9 +326,9 @@ export default class Bg3d {
 	// Keep track of framerate
 	framerate () {
 		this.fpsEl = document.querySelector('[data-fps]');
-		this.fps = 0; // Current FPS
-		this.lastFpss = []; // Last X FPS's
-		this.stableFps = 0; // Average of last X FPS's
+		this.fps = 0;
+		this.stableFps = 0;
+		this.fpsRounding = 0.75;
 		this.fpsDips = 0; // Number of dips
 		this.fpsThreshold = 30; // Minimum FPS
 		this.fpsDipsThreshold = 120; // Number of times FPS is allowed to dip below threshold
@@ -338,12 +338,10 @@ export default class Bg3d {
 
 	trackFramerate () {
 		this.fps = 1 / this.deltaTime;
+		this.stableFps = this.fpsRounding * this.stableFps + (1 - this.fpsRounding) * this.fps;
 
-		// Calculate and show stable FPS in dev mode
+		// Show FPS in dev mode
 		if (this.config.dev) {
-			this.lastFpss.length = this.lastFpss.length > 60 ? 60 : this.lastFpss.length;
-			this.lastFpss.unshift(this.fps);
-			this.stableFps = this.lastFpss.reduce((a, b) => a + b) / this.lastFpss.length;
 			this.fpsEl.textContent = Math.round(this.stableFps);
 		}
 
