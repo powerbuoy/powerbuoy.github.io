@@ -37,48 +37,9 @@ html.loaded #bg {
 	transform: translateX(0);
 }
 
-// Toggle & dev icon
-[data-toggle-bg3d],
-a[href="?dev=true"] {
-	position: fixed;
-	left: var(--spacing-medium);
-	top: var(--spacing-medium);
-
-	font-size: 0;
-	line-height: 1;
-
-	transform: scale(0);
-	transition: transform 0.5s 5s var(--easing);
-
-	&::before {
-		font-size: 1rem;
-		margin: 0;
-	}
-}
-
+// Toggle icon
 html.bg3d-disabled [data-toggle-bg3d] {
 	&::before {
 		content: "\e801";
-	}
-}
-
-html.loaded {
-	a[data-toggle-bg3d],
-	a[href="?dev=true"] {
-		transform: scale(1);
-	}
-}
-
-// Dev icon
-a[href="?dev=true"] {
-	left: calc(var(--spacing-medium) + 1rem + var(--spacing-small)); // NOTE: 1rem = font-size of icon
-	transition-delay: 5.25s;
-}
-
-// Hide when no JS
-html.no-js {
-	a[data-toggle-bg3d],
-	a[href="?dev=true"] {
-		display: none;
 	}
 }

@@ -1,0 +1,49 @@
+#utils {
+	position: fixed;
+	left: var(--spacing-medium);
+	top: var(--spacing-medium);
+
+	display: grid;
+	grid-auto-flow: column;
+	grid-gap: var(--spacing-medium);
+
+	a {
+		display: inline-block;
+		grid-row: 1;
+
+		font-size: 0;
+		line-height: 1;
+
+		transform: scale(0);
+		transition: transform 0.5s 5s var(--easing);
+
+		&:empty {
+			grid-row: 2;
+			width: 1rem;
+			height: 1rem;
+		}
+
+		&::before {
+			font-size: 1rem;
+			margin: 0;
+		}
+
+		@for $i from 1 through 5 {
+			&:nth-child(#{$i}) {
+				transition-delay: #{5 + ($i * 0.25 - 0.25)}s;
+			}
+		}
+
+		html.loaded & {
+			transform: scale(1);
+		}
+	}
+}
+
+// Hide when no JS
+html.no-js {
+	a[data-toggle-bg3d],
+	a[href="?dev=true"] {
+		display: none;
+	}
+}
