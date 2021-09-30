@@ -8,6 +8,23 @@ html {
 	font-size: 100%;
 	color: var(--text-color);
 	transition: background-color 0.75s var(--easing), color 0.75s var(--easing);
+
+	// Gradient "light" at the top
+	/* &::before {
+		background: radial-gradient(circle farthest-corner at center top, white, transparent 100%) no-repeat 50% 0;
+
+		display: block;
+		content: "";
+
+		position: fixed;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: -2;
+
+		opacity: 0.1;
+	} */
 }
 
 body {
