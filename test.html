@@ -1,0 +1,76 @@
+<!doctype html>
+
+<html lang="en-GB" class="no-js">
+
+	<head>
+
+		<meta charset="utf8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<title>Andreas Lagerkvist</title>
+		<meta name="description" content="Web Developer and Blender Enthusiast from Sweden">
+
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+
+			html {
+				font-size: 100%;
+			}
+
+			body {
+				background: #fefefe;
+				font: 1rem/1.6 Helvetica, sans-serif;
+				color: #111;
+
+				margin: 0;
+				padding: 6rem max(5vw, calc((100vw - 900px) / 2));
+				min-height: 100vh;
+
+				display: flex;
+				align-items: center;
+				text-align: center;
+			}
+
+			h1 {
+				font: bold clamp(3rem, 10vw, 8rem)/0.9 Helvetica, sans-serif;
+				letter-spacing: -0.01em;
+				margin: 0;
+			}
+
+			[data-shadow] {
+				--shadow-offset-x: calc(2rem * var(--mouse-fraction-x, 0) * -1);
+				--shadow-offset-y: calc(2rem * var(--mouse-fraction-y, 0) * -1);
+				--shadow-blur: calc(2rem * var(--mouse-distance, 0));
+				--shadow-color: rgba(0, 0, 0, 0.5);
+
+				text-shadow: var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-color);
+			}
+		</style>
+
+	</head>
+
+	<body>
+
+		<h1 data-shadow>This is some text with a shadow</h1>
+
+		<script>
+			const shadowEls = document.querySelectorAll('[data-shadow]');
+
+			window.addEventListener('mousemove', e => {
+				shadowEls.forEach(el => {
+					const fractionX = (e.pageX - (el.offsetLeft + el.offsetWidth / 2)) / window.innerWidth;
+					const fractionY = (e.pageY - (el.offsetTop + el.offsetHeight / 2)) / window.innerHeight;
+					const distance = Math.sqrt(Math.abs(fractionX) * Math.abs(fractionY) * 2);
+
+					el.style.setProperty('--mouse-fraction-x', fractionX);
+					el.style.setProperty('--mouse-fraction-y', fractionY);
+					el.style.setProperty('--mouse-distance', distance);
+				}, {passive: true});
+			});
+		</script>
+
+	</body>
+
+</html>
