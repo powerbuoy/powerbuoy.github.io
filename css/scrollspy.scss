@@ -5,6 +5,10 @@
 .splitting {
 	perspective: 300px;
 
+	.word {
+		transform-style: preserve-3d;
+	}
+
 	.char {
 		transform: rotateX(90deg);
 		transform-origin: 50% bottom;
