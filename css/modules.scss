@@ -66,6 +66,13 @@ html.js section {
 #work {
 	article {
 		@include card;
+
+		display: flex;
+		flex-direction: column;
+
+		> nav {
+			margin-top: auto;
+		}
 	}
 
 	> div {
