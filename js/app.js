@@ -132,12 +132,14 @@ document.querySelectorAll('[data-highlight-visible]').forEach(el => {
 	const links = el.querySelectorAll('a[href^="#"]');
 	const targets = document.querySelectorAll(Array.from(links).map(link => link.getAttribute('href')).join(', '));
 	const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+		const target = Array.from(links).filter(l => l.getAttribute('href') === '#' + entry.target.id)[0];
+
 		if (entry.isIntersecting) {
 			links.forEach(l => l.classList.remove('active'));
-			Array.from(links).filter(l => l.getAttribute('href') === '#' + entry.target.id)[0].classList.add('active');
+			target.classList.add('active');
 		}
 		else {
-			Array.from(links).filter(l => l.getAttribute('href') === '#' + entry.target.id)[0].classList.remove('active');
+			target.classList.remove('active');
 		}
 	}), {threshold: 0.25});
 
