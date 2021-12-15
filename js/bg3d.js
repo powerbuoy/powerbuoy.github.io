@@ -30,6 +30,7 @@ export default class Bg3d {
 			camTransDur: 1500,
 
 			dev: false,
+			cameraDataAttr: 'cameraPos',
 
 			postProcessing: {
 				glitch: false,
@@ -45,6 +46,7 @@ export default class Bg3d {
 
 		// New version only
 		if (this.getParams.get('new')) {
+			this.config.cameraDataAttr = 'camera';
 			this.config.background = true;
 			this.config.postProcessing.bokeh = true;
 			this.config.postProcessing.bloom = true;
@@ -93,28 +95,20 @@ export default class Bg3d {
 			z: this.camera.position.z,
 			rx: this.camera.rotation.x,
 			ry: this.camera.rotation.y,
-			rz: this.camera.rotation.z
+			rz: this.camera.rotation.z,
+			fov: this.camera.fov
 		};
 
-		console.log(JSON.stringify(cameraPos));
-	}
-
-	copySceneData () {
-		const cameraPos = {
-			camX: this.camera.position.x,
-			camY: this.camera.position.y,
-			camZ: this.camera.position.z,
-			camRx: this.camera.rotation.x,
-			camRy: this.camera.rotation.y,
-			camRz: this.camera.rotation.z
-		};
+		if (this.postProcessing.bokehPass) {
+			cameraPos.focus = this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value;
+		}
 
 		console.log(JSON.stringify(cameraPos));
 	}
 
 	// Update the scene background whenever html.--body-bg changes
 	updateBgColor () {
-		this.scene.background = new THREE.Color(0xffeedd);
+		this.scene.background = new THREE.Color(0x333333);
 	}
 
 	///////
@@ -273,15 +267,15 @@ export default class Bg3d {
 		}
 		// Bokeh
 		if (this.config.postProcessing.bokeh) {
-			this.composer.addPass(new BokehPass(this.scene, this.camera, {
+			this.postProcessing.bokehPass = new BokehPass(this.scene, this.camera, {
 				width: this.el.clientWidth,
 				height: this.el.clientWidth,
-
-				// TODO: How can I change this programmatically?? And animate it?
 				focus: 1.0,
 				aperture: 0.025,
 				maxblur: 1.0
-			}));
+			});
+
+			this.composer.addPass(this.postProcessing.bokehPass);
 		}
 		// Glitch
 		if (this.config.postProcessing.glitch) {
@@ -295,13 +289,7 @@ export default class Bg3d {
 	cameraPos () {
 		const observer = new IntersectionObserver(entries => entries.forEach(entry => {
 			if (entry.isIntersecting) {
-				let data = entry.target.dataset.cameraPos;
-
-				if (this.config.new) {
-					data = entry.target.dataset.cameraPosNew;
-				}
-
-				this.setCameraPos(JSON.parse(data));
+				this.setCameraPos(JSON.parse(entry.target.dataset[this.config.cameraDataAttr]));
 			}
 		}), {threshold: 0.25});
 
@@ -311,34 +299,44 @@ export default class Bg3d {
 	setCameraPos (newPos) {
 		this.currentCameraPos = newPos;
 
-		// Animate camera position
-		new TWEEN.Tween(this.camera.position).to({x: newPos.x, y: newPos.y, z: newPos.z}, this.config.camTransDur).easing(this.config.easing).start();
-
-		// Animate camera rotation
-		// NOTE: Instead of just animating the camera.rotation directly,
-		// we need to animate this temporary object and update the camera rotation every time it updates (for some reason...)
-		// https://stackoverflow.com/questions/66734479/unable-to-tween-threejs-camera-rotation
-		const oldRot = {
-			x: this.camera.rotation.x,
-			y: this.camera.rotation.y,
-			z: this.camera.rotation.z
+		const oldPos = {
+			x: this.camera.position.x,
+			y: this.camera.position.y,
+			z: this.camera.position.z,
+			rx: this.camera.rotation.x,
+			ry: this.camera.rotation.y,
+			rz: this.camera.rotation.z,
+			fov: this.camera.fov,
+			focus: 1.0
 		};
 
-		new TWEEN.Tween(oldRot).to({x: newPos.rx, y: newPos.ry, z: newPos.rz}, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
-			this.camera.rotation.x = oldRot.x;
-			this.camera.rotation.y = oldRot.y;
-			this.camera.rotation.z = oldRot.z;
-		});
+		if (this.postProcessing.bokehPass) {
+			oldPos.focus = this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value;
+		}
 
-		// Animate camera FOV
-		if (newPos.fov) {
-			const oldFov = this.camera.fov;
+		new TWEEN.Tween(oldPos).to(newPos, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
+			this.camera.position.x = oldPos.x;
+			this.camera.position.y = oldPos.y;
+			this.camera.position.z = oldPos.z;
 
-			new TWEEN.Tween(oldFov).to(newPos.fov, this.cofnig.camTransDur).easing(this.config.easing).start().onUpdate(() => {
-				this.camera.fov = oldFov;
+			this.camera.rotation.x = oldPos.rx;
+			this.camera.rotation.y = oldPos.ry;
+			this.camera.rotation.z = oldPos.rz;
+
+			if (newPos.focus && this.postProcessing.bokehPass) {
+				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = oldPos.focus;
+			}
+
+			if (newPos.fov) {
+				this.camera.fov = oldPos.fov;
 
 				this.camera.updateProjectionMatrix();
-			});
+			}
+		});
+
+		// Animate focus
+		if (newPos.focus) {
+			// TODO
 		}
 
 		// Tween rotation with lookAt instead
@@ -370,7 +368,8 @@ export default class Bg3d {
 			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
 			this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
-			this.camera.fov = this.config.fov + (5 * y);
+			this.camera.rotation.x = this.currentCameraPos.rx + (0.05 * y);
+			// this.camera.fov = this.config.fov + (5 * y);
 			this.camera.updateProjectionMatrix();
 		});
 	}
