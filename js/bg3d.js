@@ -6,11 +6,11 @@ import * as THREE from 'https://unpkg.com/three@0.127.0/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js';
 // import { TransformControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/TransformControls.js';
-// import { EffectComposer } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/EffectComposer.js';
-// import { RenderPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/RenderPass.js';
-// import { GlitchPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/GlitchPass.js';
-// import { BokehPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/BokehPass.js';
-// import { UnrealBloomPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/RenderPass.js';
+import { GlitchPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/GlitchPass.js';
+import { BokehPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/BokehPass.js';
+import { UnrealBloomPass } from 'https://unpkg.com/three@0.127.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 //////
 // App
@@ -19,20 +19,35 @@ export default class Bg3d {
 	// Constructor
 	constructor (el, conf) {
 		this.el = el;
+		this.getParams = new URLSearchParams(window.location.search);
 		this.config = Object.assign({
+			background: false,
 			scene: 'assets/alcom.glb',
 			envMap: 'assets/envmap.jpg',
+
 			fov: 50,
 			easing: TWEEN.Easing.Quadratic.InOut,
 			camTransDur: 1500,
-			dev: false // NOTE: Dev mode - enables free camera and more
+
+			dev: false,
+
+			postProcessing: {
+				glitch: false,
+				bokeh: false,
+				bloom: false
+			}
 		}, conf);
 
-		// Enable dev through query string
-		const params = new URLSearchParams(window.location.search);
+		// Glitch
+		if (this.getParams.get('glitch')) {
+			this.config.postProcessing.glitch = true;
+		}
 
-		if (params.get('dev')) {
-			this.config.dev = true;
+		// New version only
+		if (this.getParams.get('new')) {
+			this.config.background = true;
+			this.config.postProcessing.bokeh = true;
+			this.config.postProcessing.bloom = true;
 		}
 
 		// Kick off
@@ -41,14 +56,23 @@ export default class Bg3d {
 		this.loadEnv();
 		this.lights();
 		this.framerate();
-		// this.postProcessing(); NOTE: Disabled PP for now not sure how to keep BG transparent :/
+		this.postProcessing();
 
-		if (this.config.dev) {
-			document.documentElement.classList.add('dev'); // NOTE: Some CSS differs in dev mode
+		if (this.config.background) {
+			document.documentElement.classList.add('bg3d-background');
+			this.updateBgColor();
+		}
+
+		// Dev mode
+		if (this.getParams.get('dev')) {
+			this.config.dev = true;
 			this.camera.position.z = 10;
 			this.scene.add(new THREE.AxesHelper(500));
 			this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
+			document.documentElement.classList.add('dev');
 		}
+		// Not dev
 		else {
 			this.floor();
 			this.cameraPos();
@@ -73,6 +97,24 @@ export default class Bg3d {
 		};
 
 		console.log(JSON.stringify(cameraPos));
+	}
+
+	copySceneData () {
+		const cameraPos = {
+			camX: this.camera.position.x,
+			camY: this.camera.position.y,
+			camZ: this.camera.position.z,
+			camRx: this.camera.rotation.x,
+			camRy: this.camera.rotation.y,
+			camRz: this.camera.rotation.z
+		};
+
+		console.log(JSON.stringify(cameraPos));
+	}
+
+	// Update the scene background whenever html.--body-bg changes
+	updateBgColor () {
+		this.scene.background = new THREE.Color(0xffeedd);
 	}
 
 	///////
@@ -219,21 +261,32 @@ export default class Bg3d {
 	postProcessing () {
 		this.composer = new EffectComposer(this.renderer);
 
-		const render = new RenderPass(this.scene, this.camera);
-		const glitch = new GlitchPass();
-		const bloom = new UnrealBloomPass({x: this.el.clientWidth, y: this.el.clientHeight}, 1.5, 0.5, 0.85);
-		const bokeh = new BokehPass(this.scene, this.camera, {
-			focus: 1.0,
-			aperture: 0.025,
-			maxblur: 1.0,
-			width: this.el.clientWidth,
-			height: this.el.clientHeight
-		});
+		// Render
+		this.composer.addPass(new RenderPass(this.scene, this.camera));
 
-		this.composer.addPass(render);
-		// this.composer.addPass(bokeh);
-		// this.composer.addPass(glitch);
-		// this.composer.addPass(bloom);
+		// Bloom
+		if (this.config.postProcessing.bloom) {
+			this.composer.addPass(new UnrealBloomPass({
+				x: this.el.clientWidth,
+				y: this.el.clientHeight
+			}, 1.5, 0.5, 0.85));
+		}
+		// Bokeh
+		if (this.config.postProcessing.bokeh) {
+			this.composer.addPass(new BokehPass(this.scene, this.camera, {
+				width: this.el.clientWidth,
+				height: this.el.clientWidth,
+
+				// TODO: How can I change this programmatically?? And animate it?
+				focus: 1.0,
+				aperture: 0.025,
+				maxblur: 1.0
+			}));
+		}
+		// Glitch
+		if (this.config.postProcessing.glitch) {
+			this.composer.addPass(new GlitchPass());
+		}
 	}
 
 	/////////////
@@ -242,7 +295,13 @@ export default class Bg3d {
 	cameraPos () {
 		const observer = new IntersectionObserver(entries => entries.forEach(entry => {
 			if (entry.isIntersecting) {
-				this.setCameraPos(JSON.parse(entry.target.dataset.cameraPos));
+				let data = entry.target.dataset.cameraPos;
+
+				if (this.config.new) {
+					data = entry.target.dataset.cameraPosNew;
+				}
+
+				this.setCameraPos(JSON.parse(data));
 			}
 		}), {threshold: 0.25});
 
@@ -252,8 +311,10 @@ export default class Bg3d {
 	setCameraPos (newPos) {
 		this.currentCameraPos = newPos;
 
+		// Animate camera position
 		new TWEEN.Tween(this.camera.position).to({x: newPos.x, y: newPos.y, z: newPos.z}, this.config.camTransDur).easing(this.config.easing).start();
 
+		// Animate camera rotation
 		// NOTE: Instead of just animating the camera.rotation directly,
 		// we need to animate this temporary object and update the camera rotation every time it updates (for some reason...)
 		// https://stackoverflow.com/questions/66734479/unable-to-tween-threejs-camera-rotation
@@ -269,19 +330,20 @@ export default class Bg3d {
 			this.camera.rotation.z = oldRot.z;
 		});
 
-		// NOTE: This doesn't work
-		/* new TWEEN.Tween(this.camera.rotation).to({x: newPos.rx, y: newPos.ry, z: newPos.rz}, this.config.camTransDur).easing(this.config.easing).start().onComplete(() => {
-			this.camera.rotation.x = newPos.rx;
-			this.camera.rotation.y = newPos.ry;
-			this.camera.rotation.z = newPos.rz;
-		}); */
+		// Animate camera FOV
+		if (newPos.fov) {
+			const oldFov = this.camera.fov;
 
-		// Tween rotation with lookAt
+			new TWEEN.Tween(oldFov).to(newPos.fov, this.cofnig.camTransDur).easing(this.config.easing).start().onUpdate(() => {
+				this.camera.fov = oldFov;
+
+				this.camera.updateProjectionMatrix();
+			});
+		}
+
+		// Tween rotation with lookAt instead
 		// https://stackoverflow.com/a/25278875/1074594
 		/* const initRot = new THREE.Euler().copy(this.camera.rotation);
-
-		console.log('INITIAL:');
-		console.log(initRot);
 
 		// Look at new position temporarily
 		this.camera.lookAt(newPos.lx, newPos.ly, newPos.lz);
@@ -289,23 +351,14 @@ export default class Bg3d {
 		// Copy rotation of new lookAt
 		const newRot = new THREE.Euler().copy(this.camera.rotation);
 
-		console.log('NEW:');
-		console.log(newRot);
-
 		// Go back to initial rotation
 		this.camera.rotation.copy(initRot);
 
 		// Now tween to new rotation
-		// WTF does this not work!?
-		// https://stackoverflow.com/questions/66734479/unable-to-tween-threejs-camera-rotation
-		// NOTE: Could definitely use solution from above here too, but not using lookAt so
-		new TWEEN.Tween(this.camera.rotation).to({x: newRot.x, y: newRot.y, z: newRot.z}, this.config.camTransDur).easing(this.config.easing).start().onComplete(() => {
-			console.log('Setting rotation manually');
-			console.log(newRot);
-
-			this.camera.rotation.x = newRot.x;
-			this.camera.rotation.y = newRot.y;
-			this.camera.rotation.z = newRot.z;
+		new TWEEN.Tween(oldRot).to({x: newRot.x, y: newRot.y, z: newRot.z}, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
+			this.camera.rotation.x = oldRot.x;
+			this.camera.rotation.y = oldRot.y;
+			this.camera.rotation.z = oldRot.z;
 		}); */
 	}
 
@@ -509,8 +562,8 @@ export default class Bg3d {
 		this.deltaTime = this.clock.getDelta();
 
 		this.animate();
-		this.renderer.render(this.scene, this.camera);
-		// this.composer.render();
+		// this.renderer.render(this.scene, this.camera);
+		this.composer.render();
 
 		if (this.trackFps) {
 			this.trackFramerate();
