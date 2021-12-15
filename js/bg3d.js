@@ -47,6 +47,7 @@ export default class Bg3d {
 		// New version only
 		if (this.getParams.get('new')) {
 			this.config.cameraDataAttr = 'camera';
+			this.config.fov = 5;
 			this.config.background = true;
 			this.config.postProcessing.bokeh = true;
 			this.config.postProcessing.bloom = true;
@@ -109,6 +110,15 @@ export default class Bg3d {
 	// Update the scene background whenever html.--body-bg changes
 	updateBgColor () {
 		this.scene.background = new THREE.Color(0x333333);
+
+		const observer = new MutationObserver(muts => {
+			console.dir(muts);
+		});
+
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class']
+		});
 	}
 
 	///////
@@ -260,10 +270,12 @@ export default class Bg3d {
 
 		// Bloom
 		if (this.config.postProcessing.bloom) {
-			this.composer.addPass(new UnrealBloomPass({
+			this.postProcessing.bloomPass = new UnrealBloomPass({
 				x: this.el.clientWidth,
 				y: this.el.clientHeight
-			}, 1.5, 0.5, 0.85));
+			}, 1.5, 0.5, 0.85);
+
+			this.composer.addPass(this.postProcessing.bloomPass);
 		}
 		// Bokeh
 		if (this.config.postProcessing.bokeh) {
