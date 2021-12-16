@@ -98,6 +98,7 @@ export default class Bg3d {
 
 		if (this.postProcessing.bokehPass) {
 			cameraPos.focus = this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value;
+			cameraPos.aperture = this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value;
 		}
 
 		console.log(JSON.stringify(cameraPos));
@@ -162,6 +163,7 @@ export default class Bg3d {
 		const loader = new GLTFLoader();
 
 		loader.load(this.config.scene, glb => {
+			// Modify all the scene objects
 			glb.scene.traverse(node => {
 				// Cast shadows on all meshes
 				if (node.isMesh) {
@@ -188,10 +190,10 @@ export default class Bg3d {
 				}
 			});
 
-			// Add scene
+			// Add scene to the... scene
 			this.scene.add(glb.scene);
 
-			// Grab objects
+			// Grab objects (store them and their initial positions/rotations for later use)
 			this.grabObjects();
 
 			// Hide dev floor
@@ -290,7 +292,13 @@ export default class Bg3d {
 			}
 		}), {threshold: 0.25});
 
-		document.querySelectorAll('[data-camera-pos]').forEach(el => observer.observe(el));
+		document.querySelectorAll('[data-camera-pos]').forEach((el, index) => {
+			if (index === 0) {
+				this.setCameraPos(JSON.parse(el.dataset[this.config.cameraDataAttr]));
+			}
+
+			observer.observe(el);
+		});
 	}
 
 	setCameraPos (newPos) {
@@ -356,8 +364,8 @@ export default class Bg3d {
 			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
 			if (this.config.beta) {
-				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = this.currentCameraPos.focus + (0.5 * -y);
-				this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value = this.currentCameraPos.aperture + (0.05 * x);
+				// this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = this.currentCameraPos.focus + (0.5 * -y);
+				// this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value = this.currentCameraPos.aperture + (0.05 * x);
 			}
 			else {
 				this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
