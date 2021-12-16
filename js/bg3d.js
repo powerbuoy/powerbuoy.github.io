@@ -274,7 +274,9 @@ export default class Bg3d {
 		}
 		// Glitch
 		if (this.config.postProcessing.glitch) {
-			this.composer.addPass(new GlitchPass());
+			this.postProcessing.glitchPass = new GlitchPass();
+
+			this.composer.addPass(this.postProcessing.glitchPass);
 		}
 	}
 
