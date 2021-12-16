@@ -15,6 +15,8 @@ if (getParams.get('glitch')) {
 }
 // Beta
 if (getParams.get('beta')) {
+	document.documentElement.classList.add('beta');
+
 	bg3dConf.beta = true;
 }
 // Glitch

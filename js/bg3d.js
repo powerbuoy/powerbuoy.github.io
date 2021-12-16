@@ -57,9 +57,8 @@ export default class Bg3d {
 		this.framerate();
 		this.postProcessing();
 
-		// Non transparent
+		// Non transparent - update with CSS body bg
 		if (this.config.background) {
-			document.documentElement.classList.add('bg3d-background');
 			this.updateBgColor();
 		}
 
