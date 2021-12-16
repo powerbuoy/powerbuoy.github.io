@@ -105,12 +105,15 @@ export default class Bg3d {
 	}
 
 	// Update the scene background whenever html.--body-bg changes
-	// TODO: Move to app.js
+	// TODO: Animate
+	// TODO: Move to app.js??
 	updateBgColor () {
 		this.scene.background = new THREE.Color(0x333333);
 
 		const observer = new MutationObserver(muts => {
-			console.dir(muts);
+			const bodyBg = window.getComputedStyle(document.documentElement).getPropertyValue('--body-bg').trim().substr(1);
+
+			this.scene.background = new THREE.Color(parseInt(bodyBg, 16));
 		});
 
 		observer.observe(document.documentElement, {
