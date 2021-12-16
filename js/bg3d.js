@@ -310,29 +310,29 @@ export default class Bg3d {
 		}
 
 		new TWEEN.Tween(oldPos).to(newPos, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
+			// Position
 			this.camera.position.x = oldPos.x;
 			this.camera.position.y = oldPos.y;
 			this.camera.position.z = oldPos.z;
 
+			// Rotation
 			this.camera.rotation.x = oldPos.rx;
 			this.camera.rotation.y = oldPos.ry;
 			this.camera.rotation.z = oldPos.rz;
 
+			// Focus
 			if (newPos.focus && this.postProcessing.bokehPass) {
 				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = oldPos.focus;
 			}
 
+			// FOV
 			if (newPos.fov) {
 				this.camera.fov = oldPos.fov;
 
+				// Need this for FOV change to take effect
 				this.camera.updateProjectionMatrix();
 			}
 		});
-
-		// Animate focus
-		if (newPos.focus) {
-			// TODO
-		}
 
 		// Tween rotation with lookAt instead
 		// https://stackoverflow.com/a/25278875/1074594
