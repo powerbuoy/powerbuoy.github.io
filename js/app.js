@@ -4,13 +4,13 @@
 // Bg3d
 import Bg3d from './bg3d.js';
 
-window.bg3d = new Bg3d(document.getElementById('bg'));
+const ourBg3d = new Bg3d(document.getElementById('bg'));
 
 var bg3dRunning = true;
 
 // Render function
 function render () {
-	window.bg3d.render();
+	ourBg3d.render();
 
 	if (bg3dRunning) {
 		requestAnimationFrame(render);
@@ -25,15 +25,15 @@ const getParams = new URLSearchParams(window.location.search);
 
 // Dev
 if (getParams.get('glitch')) {
-	window.bg3d.config.dev = true;
+	ourBg3d.config.dev = true;
 }
 // Beta
 if (getParams.get('beta')) {
-	window.bg3d.config.beta = true;
+	ourBg3d.config.beta = true;
 }
 // Glitch
 if (getParams.get('glitch')) {
-	window.bg3d.config.postProcessing.glitch = true;
+	ourBg3d.config.postProcessing.glitch = true;
 }
 
 // Allow pausing
@@ -43,6 +43,7 @@ document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
 
 		bg3dRunning = !bg3dRunning;
 
+		// TODO: Don't use events, use ourBg3d.methods()
 		if (bg3dRunning) {
 			document.body.dispatchEvent(new Event('bg3d/enabled'));
 			document.documentElement.classList.remove('bg3d-disabled');
