@@ -311,6 +311,11 @@ export default class Bg3d {
 			this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = newPos.focus;
 		}
 
+		// Aperture
+		if (newPos.aperture && this.postProcessing.bokehPass) {
+			this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value = newPos.aperture;
+		}
+
 		// FOV
 		if (newPos.fov) {
 			this.camera.fov = newPos.fov;
@@ -329,11 +334,13 @@ export default class Bg3d {
 			ry: this.camera.rotation.y,
 			rz: this.camera.rotation.z,
 			fov: this.camera.fov,
-			focus: 1.0
+			focus: 1.0,
+			aperture: 0.025
 		};
 
 		if (this.postProcessing.bokehPass) {
 			oldPos.focus = this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value;
+			oldPos.aperture = this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value;
 		}
 
 		new TWEEN.Tween(oldPos).to(newPos, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
@@ -348,10 +355,17 @@ export default class Bg3d {
 			const x = (e.clientX / window.innerWidth) * 2 - 1;
 			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
-			this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
-			this.camera.rotation.x = this.currentCameraPos.rx + (0.05 * y);
-			// this.camera.fov = this.config.fov + (5 * y);
-			this.camera.updateProjectionMatrix();
+			if (this.config.beta) {
+				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = this.currentCameraPos.focus + (0.5 * -y);
+				this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value = this.currentCameraPos.aperture + (0.05 * x);
+			}
+			else {
+				this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
+				this.camera.rotation.x = this.currentCameraPos.rx + (0.05 * y);
+
+				// this.camera.fov = this.config.fov + (5 * y);
+				// this.camera.updateProjectionMatrix();
+			}
 		});
 	}
 
