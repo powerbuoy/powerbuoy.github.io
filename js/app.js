@@ -4,13 +4,15 @@
 // Bg3d
 import Bg3d from './bg3d.js';
 
-const bg3dConf = {};
+const bg3dConf = {
+	postProcessing: {}
+};
 
 // Change stuff with ?GET
 const getParams = new URLSearchParams(window.location.search);
 
 // Dev
-if (getParams.get('glitch')) {
+if (getParams.get('dev')) {
 	bg3dConf.dev = true;
 }
 // Beta
