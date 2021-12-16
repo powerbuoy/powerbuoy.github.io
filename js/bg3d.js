@@ -19,7 +19,6 @@ export default class Bg3d {
 	// Constructor
 	constructor (el, conf) {
 		this.el = el;
-		this.getParams = new URLSearchParams(window.location.search);
 		this.config = Object.assign({
 			background: false,
 			scene: 'assets/alcom.glb',
@@ -36,22 +35,10 @@ export default class Bg3d {
 				glitch: false,
 				bokeh: false,
 				bloom: false
-			}
+			},
+
+			beta: false
 		}, conf);
-
-		// Glitch
-		if (this.getParams.get('glitch')) {
-			this.config.postProcessing.glitch = true;
-		}
-
-		// New version only
-		if (this.getParams.get('new')) {
-			this.config.cameraDataAttr = 'camera';
-			this.config.fov = 5;
-			this.config.background = true;
-			this.config.postProcessing.bokeh = true;
-			// this.config.postProcessing.bloom = true;
-		}
 
 		// Kick off
 		this.init();
@@ -61,23 +48,33 @@ export default class Bg3d {
 		this.framerate();
 		this.postProcessing();
 
+		// Beta 🍾
+		if (this.config.beta) {
+			this.config.background = true;
+			this.config.cameraDataAttr = 'camera';
+			this.config.fov = 5;
+			this.config.postProcessing.bokeh = true;
+			// this.config.postProcessing.bloom = true;
+		}
+
+		// Non transparent
 		if (this.config.background) {
 			document.documentElement.classList.add('bg3d-background');
 			this.updateBgColor();
 		}
 
 		// Dev mode
-		if (this.getParams.get('dev')) {
-			this.config.dev = true;
+		if (this.config.dev) {
 			this.camera.position.z = 10;
 			this.scene.add(new THREE.AxesHelper(500));
 			this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
 			document.documentElement.classList.add('dev');
-		}
+		}}
+
 		// Not dev
-		else {
-			this.floor();
+		if (!this.config.dev) {
+			this.shadowFloor();
 			this.cameraPos();
 
 			if (!window.matchMedia('(hover: none)').matches) {
