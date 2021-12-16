@@ -4,7 +4,25 @@
 // Bg3d
 import Bg3d from './bg3d.js';
 
-const ourBg3d = new Bg3d(document.getElementById('bg'));
+const bg3dConf = {};
+
+// Change stuff with ?GET
+const getParams = new URLSearchParams(window.location.search);
+
+// Dev
+if (getParams.get('glitch')) {
+	bg3dConf.dev = true;
+}
+// Beta
+if (getParams.get('beta')) {
+	bg3dConf.beta = true;
+}
+// Glitch
+if (getParams.get('glitch')) {
+	bg3dConf.postProcessing.glitch = true;
+}
+
+const ourBg3d = new Bg3d(document.getElementById('bg'), bg3dConf);
 
 var bg3dRunning = true;
 
@@ -19,22 +37,6 @@ function render () {
 
 // Wait a tick before we call it
 requestAnimationFrame(render);
-
-// Change stuff with ?GET
-const getParams = new URLSearchParams(window.location.search);
-
-// Dev
-if (getParams.get('glitch')) {
-	ourBg3d.config.dev = true;
-}
-// Beta
-if (getParams.get('beta')) {
-	ourBg3d.config.beta = true;
-}
-// Glitch
-if (getParams.get('glitch')) {
-	ourBg3d.config.postProcessing.glitch = true;
-}
 
 // Allow pausing
 document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
