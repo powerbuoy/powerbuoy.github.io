@@ -26,13 +26,13 @@ if (getParams.get('glitch')) {
 	bg3dConf.postProcessing.glitch = true;
 }
 
-const ourBg3d = new Bg3d(document.getElementById('bg'), bg3dConf);
+window.bg3d = new Bg3d(document.getElementById('bg'), bg3dConf);
 
 var bg3dRunning = true;
 
 // Render function
 function render () {
-	ourBg3d.render();
+	window.bg3d.render();
 
 	if (bg3dRunning) {
 		requestAnimationFrame(render);
