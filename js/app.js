@@ -44,12 +44,10 @@ document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
 		bg3dRunning = !bg3dRunning;
 
 		if (bg3dRunning) {
-			document.body.dispatchEvent(new Event('bg3d/enabled'));
 			document.documentElement.classList.remove('bg3d-disabled');
 			requestAnimationFrame(render);
 		}
 		else {
-			document.body.dispatchEvent(new Event('bg3d/disabled'));
 			document.documentElement.classList.add('bg3d-disabled');
 		}
 	});
