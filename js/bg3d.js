@@ -105,6 +105,7 @@ export default class Bg3d {
 	}
 
 	// Update the scene background whenever html.--body-bg changes
+	// TODO: Move to app.js
 	updateBgColor () {
 		this.scene.background = new THREE.Color(0x333333);
 
