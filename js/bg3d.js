@@ -406,9 +406,7 @@ export default class Bg3d {
 
 			// Inform window
 			if (!this.hasInformedFps) {
-				document.body.dispatchEvent(new Event('bg3d/fps-dip', {
-					bubbles: true
-				}));
+				document.body.dispatchEvent(new Event('bg3d/fps-dip'));
 
 				this.hasInformedFps = true;
 			}
