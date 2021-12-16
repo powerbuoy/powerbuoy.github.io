@@ -8,6 +8,7 @@ window.bg3d = new Bg3d(document.getElementById('bg'));
 
 var bg3dRunning = true;
 
+// Render function
 function render () {
 	window.bg3d.render();
 
@@ -16,7 +17,24 @@ function render () {
 	}
 }
 
-render();
+// Wait a tick before we call it
+requestAnimationFrame(render);
+
+// Change stuff with ?GET
+const getParams = new URLSearchParams(window.location.search);
+
+// Dev
+if (getParams.get('glitch')) {
+	window.bg3d.config.dev = true;
+}
+// Beta
+if (getParams.get('beta')) {
+	window.bg3d.config.beta = true;
+}
+// Glitch
+if (getParams.get('glitch')) {
+	window.bg3d.config.postProcessing.glitch = true;
+}
 
 // Allow pausing
 document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
