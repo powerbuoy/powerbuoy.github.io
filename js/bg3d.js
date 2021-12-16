@@ -70,7 +70,7 @@ export default class Bg3d {
 			this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
 			document.documentElement.classList.add('dev');
-		}}
+		}
 
 		// Not dev
 		if (!this.config.dev) {
@@ -224,11 +224,11 @@ export default class Bg3d {
 		this.scene.add(this.ambLight);
 	}
 
-	////////
-	// Floor
+	///////////////
+	// Shadow floor
 	// Create a transparent shadow catcher
 	// https://threejs.org/docs/#api/en/materials/ShadowMaterial
-	floor () {
+	shadowFloor () {
 		const geometry = new THREE.PlaneGeometry(2000, 2000);
 		geometry.rotateX(-Math.PI / 2);
 
@@ -289,6 +289,8 @@ export default class Bg3d {
 	}
 
 	setCameraPos (newPos) {
+		this.currentCameraPos = newPos;
+
 		// Position
 		this.camera.position.x = newPos.x;
 		this.camera.position.y = newPos.y;
@@ -314,8 +316,6 @@ export default class Bg3d {
 	}
 
 	tweenCameraPos (newPos) {
-		this.currentCameraPos = newPos;
-
 		const oldPos = {
 			x: this.camera.position.x,
 			y: this.camera.position.y,
