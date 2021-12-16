@@ -40,14 +40,6 @@ export default class Bg3d {
 			beta: false
 		}, conf);
 
-		// Kick off
-		this.init();
-		this.load();
-		this.loadEnv();
-		this.lights();
-		this.framerate();
-		this.postProcessing();
-
 		// Beta 🍾
 		if (this.config.beta) {
 			this.config.background = true;
@@ -56,6 +48,14 @@ export default class Bg3d {
 			this.config.postProcessing.bokeh = true;
 			// this.config.postProcessing.bloom = true;
 		}
+
+		// Kick off
+		this.init();
+		this.load();
+		this.loadEnv();
+		this.lights();
+		this.framerate();
+		this.postProcessing();
 
 		// Non transparent
 		if (this.config.background) {
