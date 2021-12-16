@@ -50,7 +50,7 @@ export default class Bg3d {
 			this.config.fov = 5;
 			this.config.background = true;
 			this.config.postProcessing.bokeh = true;
-			this.config.postProcessing.bloom = true;
+			// this.config.postProcessing.bloom = true;
 		}
 
 		// Kick off
@@ -221,27 +221,10 @@ export default class Bg3d {
 
 	/////////
 	// Lights
-	// NOTE: Lights are included in the scene
+	// NOTE: Lights are included in the GLTF scene so we only add an amblight
 	lights () {
 		this.ambLight = new THREE.AmbientLight(0xffffff, 0.5);
 		this.scene.add(this.ambLight);
-
-		/* this.spotLight = new THREE.SpotLight(0xffffff, 2.5, 0, Math.PI / 10, 1);
-
-		this.spotLight.position.set(-10, 10, 10);
-
-		this.spotLight.castShadow = true;
-		this.spotLight.shadow.bias = -0.0002;
-		this.spotLight.shadow.mapSize.width = 512 * 8;
-		this.spotLight.shadow.mapSize.height = 512 * 8;
-		this.spotLight.shadow.camera.near = 1;
-		this.spotLight.shadow.camera.far = 1000;
-
-		this.scene.add(this.spotLight);
-
-		if (this.config.dev) {
-			this.scene.add(new THREE.SpotLightHelper(this.spotLight));
-		} */
 	}
 
 	////////
