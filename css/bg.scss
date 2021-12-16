@@ -23,6 +23,13 @@
 	}
 }
 
+// Toggle icon
+html.bg3d-disabled [data-toggle-bg3d] {
+	&::before {
+		content: "\e801"; // NOTE: Play Icon ▶
+	}
+}
+
 // In dev mode
 html.dev #bg {
 	pointer-events: all;
@@ -30,19 +37,12 @@ html.dev #bg {
 	opacity: 0.75;
 }
 
-// Slide in when loaded (NOTE: Not in beta version)
-html:not(.beta) #bg {
+// Slide in when loaded
+html #bg {
 	transform: translateX(100%);
 	transition: transform 2.5s 2s var(--easing);
 }
 
-html:not(.beta).loaded #bg {
+html.loaded #bg {
 	transform: translateX(0);
-}
-
-// Toggle icon
-html.bg3d-disabled [data-toggle-bg3d] {
-	&::before {
-		content: "\e801";
-	}
 }
