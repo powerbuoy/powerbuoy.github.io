@@ -55,7 +55,10 @@ export default class Bg3d {
 		this.loadEnv();
 		this.lights();
 		this.framerate();
-		this.postProcessing();
+
+		if (!this.config.dev) {
+			this.postProcessing();
+		}
 
 		// Non transparent - update with CSS body bg
 		if (this.config.background) {
@@ -134,6 +137,10 @@ export default class Bg3d {
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}); // NOTE: alpha does not work well with our postProcessing, but keeping it true here for backwards compat
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, this.el.clientWidth / this.el.clientHeight, 0.01, 5000);
+		this.composer = new EffectComposer(this.renderer);
+
+		// Render pass
+		this.composer.addPass(new RenderPass(this.scene, this.camera));
 
 		// Enable shadows
 		this.renderer.shadowMap.enabled = true;
@@ -248,11 +255,6 @@ export default class Bg3d {
 	//////////////////
 	// Post processing
 	postProcessing () {
-		this.composer = new EffectComposer(this.renderer);
-
-		// Render
-		this.composer.addPass(new RenderPass(this.scene, this.camera));
-
 		// Bloom
 		if (this.config.postProcessing.bloom) {
 			this.postProcessing.bloomPass = new UnrealBloomPass({
@@ -268,7 +270,7 @@ export default class Bg3d {
 				width: this.el.clientWidth,
 				height: this.el.clientWidth,
 				focus: 1.0,
-				aperture: 0.025,
+				aperture: 0.015,
 				maxblur: 1.0
 			});
 
@@ -363,17 +365,10 @@ export default class Bg3d {
 			const x = (e.clientX / window.innerWidth) * 2 - 1;
 			const y = (e.clientY / window.innerHeight) * 2 - 1;
 
-			if (this.config.beta) {
-				// this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = this.currentCameraPos.focus + (0.5 * -y);
-				// this.postProcessing.bokehPass.materialBokeh.uniforms.aperture.value = this.currentCameraPos.aperture + (0.05 * x);
-			}
-			else {
-				this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
-				this.camera.rotation.x = this.currentCameraPos.rx + (0.05 * y);
+			this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
+			this.camera.fov = this.currentCameraPos.fov + (0.75 * y);
 
-				// this.camera.fov = this.config.fov + (5 * y);
-				// this.camera.updateProjectionMatrix();
-			}
+			this.camera.updateProjectionMatrix();
 		});
 	}
 
@@ -562,7 +557,6 @@ export default class Bg3d {
 		this.deltaTime = this.clock.getDelta();
 
 		this.animate();
-		// this.renderer.render(this.scene, this.camera);
 		this.composer.render();
 
 		if (this.trackFps) {
