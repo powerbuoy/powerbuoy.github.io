@@ -128,31 +128,31 @@ export default class Bg3d {
 		this.objects = {};
 
 		// Create scene, renderer etc
-		this.deltaTime = 0.016;
+		this.deltaTime = 0.016; // Assume 60fps on first frame 🤷
 		this.clock = new THREE.Clock();
 		this.scene = new THREE.Scene();
-		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}); // NOTE: alpha does not work well with our postProcessing, but keeping it true here for backwards compat
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, this.el.clientWidth / this.el.clientHeight, 0.01, 5000);
-		this.currentCameraPos = {x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0};
 
-		this.clock.start();
-
-		// Shadows
+		// Enable shadows
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-		// Render size
+		// Set render size
 		this.renderer.setSize(this.el.clientWidth, this.el.clientHeight);
 		// this.renderer.setPixelRatio(window.devicePixelRatio); // NOTE: Too performance heavy...
 		this.el.appendChild(this.renderer.domElement);
 
-		// Resize
+		// Update stuff on resize
 		window.addEventListener('resize', e => {
 			this.camera.aspect = this.el.clientWidth / this.el.clientHeight;
 			this.camera.updateProjectionMatrix();
 			this.renderer.setSize(this.el.clientWidth, this.el.clientHeight);
 		});
+
+		// Start the clock
+		this.clock.start();
 	}
 
 	///////
@@ -284,7 +284,7 @@ export default class Bg3d {
 	cameraPos () {
 		const observer = new IntersectionObserver(entries => entries.forEach(entry => {
 			if (entry.isIntersecting) {
-				this.setCameraPos(JSON.parse(entry.target.dataset[this.config.cameraDataAttr]));
+				this.tweenCameraPos(JSON.parse(entry.target.dataset[this.config.cameraDataAttr]));
 			}
 		}), {threshold: 0.25});
 
@@ -292,6 +292,31 @@ export default class Bg3d {
 	}
 
 	setCameraPos (newPos) {
+		// Position
+		this.camera.position.x = newPos.x;
+		this.camera.position.y = newPos.y;
+		this.camera.position.z = newPos.z;
+
+		// Rotation
+		this.camera.rotation.x = newPos.rx;
+		this.camera.rotation.y = newPos.ry;
+		this.camera.rotation.z = newPos.rz;
+
+		// Focus
+		if (newPos.focus && this.postProcessing.bokehPass) {
+			this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = newPos.focus;
+		}
+
+		// FOV
+		if (newPos.fov) {
+			this.camera.fov = newPos.fov;
+
+			// Need this for FOV change to take effect
+			this.camera.updateProjectionMatrix();
+		}
+	}
+
+	tweenCameraPos (newPos) {
 		this.currentCameraPos = newPos;
 
 		const oldPos = {
@@ -310,49 +335,8 @@ export default class Bg3d {
 		}
 
 		new TWEEN.Tween(oldPos).to(newPos, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
-			// Position
-			this.camera.position.x = oldPos.x;
-			this.camera.position.y = oldPos.y;
-			this.camera.position.z = oldPos.z;
-
-			// Rotation
-			this.camera.rotation.x = oldPos.rx;
-			this.camera.rotation.y = oldPos.ry;
-			this.camera.rotation.z = oldPos.rz;
-
-			// Focus
-			if (newPos.focus && this.postProcessing.bokehPass) {
-				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = oldPos.focus;
-			}
-
-			// FOV
-			if (newPos.fov) {
-				this.camera.fov = oldPos.fov;
-
-				// Need this for FOV change to take effect
-				this.camera.updateProjectionMatrix();
-			}
+			this.setCameraPos(oldPos);
 		});
-
-		// Tween rotation with lookAt instead
-		// https://stackoverflow.com/a/25278875/1074594
-		/* const initRot = new THREE.Euler().copy(this.camera.rotation);
-
-		// Look at new position temporarily
-		this.camera.lookAt(newPos.lx, newPos.ly, newPos.lz);
-
-		// Copy rotation of new lookAt
-		const newRot = new THREE.Euler().copy(this.camera.rotation);
-
-		// Go back to initial rotation
-		this.camera.rotation.copy(initRot);
-
-		// Now tween to new rotation
-		new TWEEN.Tween(oldRot).to({x: newRot.x, y: newRot.y, z: newRot.z}, this.config.camTransDur).easing(this.config.easing).start().onUpdate(() => {
-			this.camera.rotation.x = oldRot.x;
-			this.camera.rotation.y = oldRot.y;
-			this.camera.rotation.z = oldRot.z;
-		}); */
 	}
 
 	////////////
