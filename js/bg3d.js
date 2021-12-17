@@ -28,7 +28,6 @@ export default class Bg3d {
 			camTransDur: 2000,
 
 			dev: false,
-			cameraDataAttr: 'cameraPos',
 
 			postProcessing: {
 				glitch: false,
@@ -56,11 +55,6 @@ export default class Bg3d {
 		else {
 			this.postProcessing();
 			this.shadowFloor();
-			this.cameraPos();
-
-			if (!window.matchMedia('(hover: none)').matches) {
-				this.mousePos();
-			}
 		}
 	}
 
@@ -247,25 +241,6 @@ export default class Bg3d {
 		}
 	}
 
-	/////////////
-	// Camera pos
-	// Change position and rotation of camera as user scrolls into a new [data-camera-pos] element
-	cameraPos () {
-		const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-			if (entry.isIntersecting) {
-				this.tweenCameraPos(JSON.parse(entry.target.dataset[this.config.cameraDataAttr]));
-			}
-		}), {threshold: 0.25});
-
-		document.querySelectorAll('[data-camera-pos]').forEach((el, index) => {
-			if (index === 0) {
-				this.setCameraPos(JSON.parse(el.dataset[this.config.cameraDataAttr]));
-			}
-
-			observer.observe(el);
-		});
-	}
-
 	setCameraPos (newPos) {
 		this.currentCameraPos = newPos;
 
@@ -321,18 +296,13 @@ export default class Bg3d {
 		});
 	}
 
-	////////////
-	// Mouse pos
-	mousePos () {
-		document.body.addEventListener('mousemove', e => {
-			const x = (e.clientX / window.innerWidth) * 2 - 1;
-			const y = (e.clientY / window.innerHeight) * 2 - 1;
+	 // TODO: Animate
+	tweenBg (newColor) {
+		this.setBg(newColor);
+	}
 
-			this.camera.rotation.z = this.currentCameraPos.rz + (0.05 * x);
-			this.camera.fov = this.currentCameraPos.fov + (0.75 * y);
-
-			this.camera.updateProjectionMatrix();
-		});
+	setBg (newColor) {
+		this.scene.background = new THREE.Color(newColor);
 	}
 
 	///////////////////////////

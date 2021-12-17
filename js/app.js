@@ -8,7 +8,6 @@ import Bg3d from './bg3d.js';
 
 const bg3dParams = {
 	dev: getParams.get('dev') ? true : false,
-	cameraDataAttr: getParams.get('beta') ? 'camera' : 'cameraPos',
 	postProcessing: {
 		glitch: getParams.get('glitch') ? true : false,
 		bokeh: getParams.get('beta') ? true : false,
@@ -32,6 +31,37 @@ function render () {
 // requestAnimationFrame(render);
 render();
 
+/////////////
+// Camera pos
+// Change position and rotation of camera as user scrolls into a new [data-camera-pos] element
+const cameraPosObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+	if (entry.isIntersecting) {
+		window.bg3d.tweenCameraPos(
+			JSON.parse(
+				entry.target.dataset[
+					(getParams.get('beta') ? 'camera' : 'cameraPos') // NOTE: Different data-attribute for new version 😬
+				]
+			)
+		);
+	}
+}), {threshold: 0.25});
+
+document.querySelectorAll('[data-camera-pos]').forEach((el, index) => {
+	// Start on first el's camera pos
+	if (index === 0) {
+		window.bg3d.setCameraPos(
+			JSON.parse(
+				el.dataset[
+					(getParams.get('beta') ? 'camera' : 'cameraPos') // NOTE: Different data-attribute for new version 😬
+				]
+			)
+		);
+	}
+
+	cameraPosObserver.observe(el);
+});
+
+////////////////////////////////////
 // Change background on theme change
 if (bg3dParams.postProcessing.bokeh || bg3dParams.postProcessing.bloom) {
 	const bg3dBgobserver = new MutationObserver(muts => {
@@ -43,6 +73,7 @@ if (bg3dParams.postProcessing.bokeh || bg3dParams.postProcessing.bloom) {
 	bg3dBgobserver.observe(document.documentElement, {attributes: true, attributeFilter: ['class']});
 }
 
+////////////////
 // Allow pausing
 document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
 	el.addEventListener('click', e => {
@@ -62,6 +93,21 @@ document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
 	});
 });
 
+////////////////////////////
+// Move around on mouse move
+if (!window.matchMedia('(hover: none)').matches) {
+	document.body.addEventListener('mousemove', e => {
+		const x = (e.clientX / window.innerWidth) * 2 - 1;
+		const y = (e.clientY / window.innerHeight) * 2 - 1;
+
+		window.bg3d.camera.rotation.z = window.bg3d.currentCameraPos.rz + (0.05 * x);
+		window.bg3d.camera.fov = window.bg3d.currentCameraPos.fov + (0.75 * y);
+
+		window.bg3d.camera.updateProjectionMatrix(); // NOTE: Needed after FOV change
+	});
+}
+
+///////////////////////
 // Performance observer
 document.body.addEventListener('bg3d/fps-dip', () => {
 	document.getElementById('performance-notice').classList.add('active');
