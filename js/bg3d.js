@@ -20,13 +20,12 @@ export default class Bg3d {
 	constructor (el, conf) {
 		this.el = el;
 		this.config = Object.assign({
-			background: false,
 			scene: 'assets/alcom.glb',
 			envMap: 'assets/envmap.jpg',
 
 			fov: 50,
 			easing: TWEEN.Easing.Quadratic.InOut,
-			camTransDur: 1500,
+			camTransDur: 2000,
 
 			dev: false,
 			cameraDataAttr: 'cameraPos',
@@ -35,19 +34,8 @@ export default class Bg3d {
 				glitch: false,
 				bokeh: false,
 				bloom: false
-			},
-
-			beta: false
+			}
 		}, conf);
-
-		// Beta 🍾
-		if (this.config.beta) {
-			this.config.background = true;
-			this.config.cameraDataAttr = 'camera';
-			this.config.fov = 5;
-			this.config.postProcessing.bokeh = true;
-			// this.config.postProcessing.bloom = true;
-		}
 
 		// Kick off
 		this.init();
@@ -55,15 +43,6 @@ export default class Bg3d {
 		this.loadEnv();
 		this.lights();
 		this.framerate();
-
-		if (!this.config.dev) {
-			this.postProcessing();
-		}
-
-		// Non transparent - update with CSS body bg
-		if (this.config.background) {
-			this.updateBgColor();
-		}
 
 		// Dev mode
 		if (this.config.dev) {
@@ -73,9 +52,9 @@ export default class Bg3d {
 
 			document.documentElement.classList.add('dev');
 		}
-
 		// Not dev
-		if (!this.config.dev) {
+		else {
+			this.postProcessing();
 			this.shadowFloor();
 			this.cameraPos();
 
@@ -107,24 +86,6 @@ export default class Bg3d {
 		console.log(JSON.stringify(cameraPos));
 	}
 
-	// Update the scene background whenever html.--body-bg changes
-	// TODO: Animate
-	// TODO: Move to app.js??
-	updateBgColor () {
-		this.scene.background = new THREE.Color(0x333333);
-
-		const observer = new MutationObserver(muts => {
-			const bodyBg = window.getComputedStyle(document.documentElement).getPropertyValue('--body-bg').trim().substr(1);
-
-			this.scene.background = new THREE.Color(parseInt(bodyBg, 16));
-		});
-
-		observer.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: ['class']
-		});
-	}
-
 	///////
 	// Init
 	init () {
@@ -137,10 +98,6 @@ export default class Bg3d {
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}); // NOTE: alpha does not work well with our postProcessing, but keeping it true here for backwards compat
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, this.el.clientWidth / this.el.clientHeight, 0.01, 5000);
-		this.composer = new EffectComposer(this.renderer);
-
-		// Render pass
-		this.composer.addPass(new RenderPass(this.scene, this.camera));
 
 		// Enable shadows
 		this.renderer.shadowMap.enabled = true;
@@ -151,6 +108,12 @@ export default class Bg3d {
 		this.renderer.setSize(this.el.clientWidth, this.el.clientHeight);
 		// this.renderer.setPixelRatio(window.devicePixelRatio); // NOTE: Too performance heavy...
 		this.el.appendChild(this.renderer.domElement);
+
+		// Add composer
+		this.composer = new EffectComposer(this.renderer);
+
+		// Render pass
+		this.composer.addPass(new RenderPass(this.scene, this.camera));
 
 		// Update stuff on resize
 		window.addEventListener('resize', e => {
