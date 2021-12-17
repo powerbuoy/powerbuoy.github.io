@@ -1,32 +1,22 @@
 'use strict';
 
+const getParams = new URLSearchParams(window.location.search);
+
 ///////
 // Bg3d
 import Bg3d from './bg3d.js';
 
-const bg3dConf = {
-	postProcessing: {}
+const bg3dParams = {
+	dev: getParams.get('dev') ? true : false,
+	cameraDataAttr: getParams.get('beta') ? 'camera' : 'cameraPos',
+	postProcessing: {
+		glitch: getParams.get('glitch') ? true : false,
+		bokeh: getParams.get('beta') ? true : false,
+		// bloom: getParams.get('beta') ? true : false
+	}
 };
 
-// Change stuff with ?GET
-const getParams = new URLSearchParams(window.location.search);
-
-// Dev
-if (getParams.get('dev')) {
-	bg3dConf.dev = true;
-}
-// Beta
-if (getParams.get('beta')) {
-	document.documentElement.classList.add('beta');
-
-	bg3dConf.beta = true;
-}
-// Glitch
-if (getParams.get('glitch')) {
-	bg3dConf.postProcessing.glitch = true;
-}
-
-window.bg3d = new Bg3d(document.getElementById('bg'), bg3dConf);
+window.bg3d = new Bg3d(document.getElementById('bg'), bg3dParams);
 
 var bg3dRunning = true;
 
@@ -39,8 +29,19 @@ function render () {
 	}
 }
 
-// Wait a tick before we call it
-requestAnimationFrame(render);
+// requestAnimationFrame(render);
+render();
+
+// Change background on theme change
+if (bg3dParams.postProcessing.bokeh || bg3dParams.postProcessing.bloom) {
+	const bg3dBgobserver = new MutationObserver(muts => {
+		const bodyBg = window.getComputedStyle(document.documentElement).getPropertyValue('--body-bg').trim().substr(1);
+
+		window.bg3d.tweenBg(parseInt(bodyBg, 16));
+	});
+
+	bg3dBgobserver.observe(document.documentElement, {attributes: true, attributeFilter: ['class']});
+}
 
 // Allow pausing
 document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
