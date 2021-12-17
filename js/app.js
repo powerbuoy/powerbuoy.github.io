@@ -15,6 +15,7 @@ const bg3dParams = {
 	}
 };
 
+// Store on window so we can play in console
 window.bg3d = new Bg3d(document.getElementById('bg'), bg3dParams);
 
 var bg3dRunning = true;
@@ -28,7 +29,6 @@ function render () {
 	}
 }
 
-// requestAnimationFrame(render);
 render();
 
 /////////////
@@ -36,7 +36,7 @@ render();
 // NOTE: Different data-attribute for new version 😬
 const cameraAttrName = (getParams.get('beta') ? 'camera' : 'cameraPos');
 
-// Change position and rotation of camera as user scrolls into a new [data-camera-pos] element
+// Change camera position as user scrolls into a new [data-camera-pos] element
 const cameraPosObserver = new IntersectionObserver(entries => entries.forEach(entry => {
 	if (entry.isIntersecting) {
 		window.bg3d.tweenCameraPos(JSON.parse(entry.target.dataset[cameraAttrName]));
