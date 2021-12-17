@@ -33,29 +33,20 @@ render();
 
 /////////////
 // Camera pos
+// NOTE: Different data-attribute for new version 😬
+const cameraAttrName = (getParams.get('beta') ? 'camera' : 'cameraPos');
+
 // Change position and rotation of camera as user scrolls into a new [data-camera-pos] element
 const cameraPosObserver = new IntersectionObserver(entries => entries.forEach(entry => {
 	if (entry.isIntersecting) {
-		window.bg3d.tweenCameraPos(
-			JSON.parse(
-				entry.target.dataset[
-					(getParams.get('beta') ? 'camera' : 'cameraPos') // NOTE: Different data-attribute for new version 😬
-				]
-			)
-		);
+		window.bg3d.tweenCameraPos(JSON.parse(entry.target.dataset[cameraAttrName]));
 	}
 }), {threshold: 0.25});
 
 document.querySelectorAll('[data-camera-pos]').forEach((el, index) => {
 	// Start on first el's camera pos
 	if (index === 0) {
-		window.bg3d.setCameraPos(
-			JSON.parse(
-				el.dataset[
-					(getParams.get('beta') ? 'camera' : 'cameraPos') // NOTE: Different data-attribute for new version 😬
-				]
-			)
-		);
+		window.bg3d.setCameraPos(JSON.parse(el.dataset[cameraAttrName]));
 	}
 
 	cameraPosObserver.observe(el);
