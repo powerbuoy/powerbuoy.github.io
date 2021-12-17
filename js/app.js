@@ -86,6 +86,7 @@ document.querySelectorAll('[data-toggle-bg3d]').forEach(el => {
 
 ////////////////////////////
 // Move around on mouse move
+// Naw
 if (false && !window.matchMedia('(hover: none)').matches) {
 	document.body.addEventListener('mousemove', e => {
 		const x = (e.clientX / window.innerWidth) * 2 - 1;

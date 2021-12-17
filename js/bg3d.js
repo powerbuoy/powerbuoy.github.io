@@ -53,8 +53,8 @@ export default class Bg3d {
 		}
 		// Not dev
 		else {
-			this.postProcessing();
 			this.shadowFloor();
+			this.postProcessing();
 		}
 	}
 
