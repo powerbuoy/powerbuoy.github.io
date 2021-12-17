@@ -256,7 +256,19 @@ export default class Bg3d {
 
 		// Focus
 		if (newPos.focus && this.postProcessing.bokehPass) {
-			this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = newPos.focus;
+			// On object
+			if (typeof this.objects[newPos.focus] !== 'undefined') {
+				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = this.camera.position.distanceTo(this.objects[newPos.focus].position)
+			}
+			// At a distance
+			else if (!isNaN(newPos.focus)) {
+				this.postProcessing.bokehPass.materialBokeh.uniforms.focus.value = newPos.focus;
+			}
+			// TODO: Yea because the objects hasn't been loaded yet ????
+			else {
+				console.error('Focus arg is netither an available object nor a number, fail on you!');
+				console.dir(newPos.focus);
+			}
 		}
 
 		// Aperture
