@@ -1,0 +1,72 @@
+# IO8
+
+three.js r186 + Rapier 0.20, plain ES modules. No build step while developing, but players get the build in `dist/`.
+
+Serve the folder with any static server and open it, e.g. through Apache, `npx serve` or `python3 -m http.server`. Opening `index.html` straight from disk won't work, browsers don't allow modules over `file://`.
+
+## Build
+
+`npm install` once, then `npm run build` makes `dist/`. It's committed and deployed like everything else, so run the build before committing anything players should get (rebuilding without changes gives identical files, so git only stores what changed). See `build.mjs`:
+
+- Every `.gltf` in `assets/` becomes one `.glb` with its textures inside. Textures bigger than 2048 px are scaled down and everything is converted to WebP, so a 4K texture from Blender is fine. Geometry and everything else in the model is left exactly as exported
+- `src/` and `lib/` are bundled into one minified `main.js`
+- The rest of `assets/` (audio, `sky.json`...) is copied as is
+
+The code keeps asking for `.gltf` either way, the built version loads the `.glb` instead (see `SleekLoader`).
+
+`window.app` is exposed for poking at things in the console, e.g. `app.player.config.balance.stiffness = 400` (springs and motors are re-read every step).
+
+## Structure
+
+- `src/sleek/` - reusable engine bits (scene/renderer, physics, GLTF loader, entity builder)
+- `src/game/` - the actual game: `io8.js` (the robot), `spawner.js` (obstacles along the map, tweak `CONFIG`, `OBSTACLES` and `DECORATIONS` there), `ground.js` (ground height anywhere on the map)
+- `assets/` - models, textures and audio
+- `lib/` - three.js and Rapier, copied in as-is. The import map in `index.html` maps `three`, `three/addons/` and `@dimforge/rapier3d-compat` to them. Only the three.js add-ons in use (and what they import) are there; to add one, copy it (and its imports) from the three.js repo's `examples/jsm/` into the same place under `lib/three/examples/jsm/`. To upgrade, replace the files with the same ones from a newer version
+
+## Blender conventions
+
+`SleekEntity` builds rigid bodies from the GLTF node names:
+
+```
+Thing_RigidBody      direct child of the scene, becomes a rigid body
+	Thing_Mesh       what you see
+	Thing_Shape      hidden, every mesh inside becomes a collider on the same body
+```
+
+`_Shape` is optional. Without it, the `_Mesh` itself is used for collisions, which suits a road or terrain where the collision should match what you see. Use a `_Shape` when a simpler (cheaper) shape will do, or the collision should differ from the looks.
+
+`_Mesh` is optional too: the `_RigidBody` object can be the mesh itself (e.g. a mesh object named `Road_RigidBody`), and then every mesh in it collides.
+
+Custom properties (Object Properties > Custom Properties, exported as GLTF extras):
+
+| Property      | On                 | Meaning                                                              |
+| ------------- | ------------------ | -------------------------------------------------------------------- |
+| `mass`        | `_RigidBody`       | 0 or missing = fixed body                                            |
+| `friction`    | `_RigidBody`/shape | default 0.5                                                          |
+| `restitution` | `_RigidBody`/shape | default 0                                                            |
+| `collider`    | `_RigidBody`/shape | `hull`, `trimesh`, `cuboid` or `ball`. Default: hull if dynamic, trimesh if fixed |
+| `shadow`      | mesh/light         | `0` = no shadows. Default on, for meshes and lights. Applies to everything under the object too (put it on a parent to switch off a whole part) |
+| `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot and sun |
+| `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_Mesh` to keep the head intact). Default: every mesh is its own piece |
+
+Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
+
+## Making a map
+
+The map is loaded from `MAP` in `src/game/app.js`.
+
+- Export as GLTF into `assets/gltf/<name>/`
+- Same conventions as everything else: a `Something_RigidBody` with no `mass` (fixed), a `_Mesh` child for looks and optionally a `_Shape` child for collisions (otherwise the mesh collides as it is). Several rigid bodies are fine (road pieces, ramps, walls)
+- The shape becomes a triangle mesh, so hills, dips and overhangs all work. It can be the same mesh as the visible one, or a simpler copy
+- io8 drives along **+X at z = 0**. Keep the ground at least 3 m deep on the negative Z side (street lights stand at z = -2.5, clutter at z = -1 to -1.8) and 1 m on the positive side (pyramids stick out ~0.75 m)
+- The map's X extent is its length. Nothing spawns within 2 m of either end, and io8 will drive off the edge unless there's a wall there
+- Add an empty called **`Spawn`** where io8 should start (its origin is the middle of the wheel, so put it ~0.5 m above the ground). Without one, io8 starts on the ground at x = 0
+- Slopes up to about 20° are fine to drive up. Much steeper and io8 will need its thrusters
+- Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky). See `src/game/sky.js`
+- Optional **`SkyPivot`** empty with the sun and moon on it, sun straight up (model it at midday, moon on the opposite side): it turns with the time like a clock hand, rising on the left. A Sun lamp parented to the sun or moon shines from it towards io8 and fades out as it sets
+
+## Physics gotchas
+
+- Rapier's per-axis locks (`setEnabledRotations` / `setEnabledTranslations`) explode as soon as the body has a joint. Full `lockRotations()` is fine. That's why the robot is kept upright and 2.5D by a hidden rotation-locked "gyro" body hinged to the legs, plus a generic joint that locks Z, rather than by locking axes on the parts themselves.
+- The number of lights must stay constant or three.js recompiles every shader (a visible hitch).
+- Motors are acceleration based, so stiffness/damping values are big-ish numbers that don't depend on mass.

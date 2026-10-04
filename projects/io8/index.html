@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+	<head>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>IO8</title>
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+		<style>
+			:root {
+				/* Colors */
+				--background: #000;
+				--foreground: #fff;
+				--card-background: rgb(0 0 0 / 0.2);
+
+				/* Spacing */
+				--ui-padding: 2.5%;
+			}
+
+			/* Base */
+			html {
+				background-color: var(--background);
+				font: 100% / 1.8 system-ui;
+				color: var(--foreground);
+			}
+
+			body {
+				margin: 0;
+			}
+
+			h2 {
+				font: 100 1.2rem system-ui;
+				margin: 0 0 1rem;
+			}
+
+			p {
+				margin: 0 0 1rem;
+			}
+
+			output {
+				font-weight: 900;
+			}
+
+			/* UI */
+			#ui {
+				/* Each UI card */
+				& > * {
+					background: var(--card-background);
+					backdrop-filter: blur(20px);
+
+					position: fixed;
+					z-index: 99;
+
+					padding: 2rem;
+					border-radius: 0.5rem;
+
+					& > :last-child {
+						margin-bottom: 0;
+					}
+				}
+
+				/* Top left */
+				& > :nth-of-type(1) {
+					top: var(--ui-padding);
+					left: var(--ui-padding);
+				}
+
+				/* Top center */
+				& > :nth-of-type(2) {
+					top: var(--ui-padding);
+					left: 50%;
+					transform: translateX(-50%);
+				}
+
+				/* Top right */
+				& > :nth-of-type(3) {
+					top: var(--ui-padding);
+					right: var(--ui-padding);
+				}
+
+				/* Bottom right */
+				& > :nth-of-type(4) {
+					bottom: var(--ui-padding);
+					right: var(--ui-padding);
+				}
+
+				/* Bottom center */
+				& > :nth-of-type(5) {
+					bottom: var(--ui-padding);
+					left: 50%;
+					transform: translateX(-50%);
+				}
+
+				/* Bottom left */
+				& > :nth-of-type(6) {
+					bottom: var(--ui-padding);
+					left: var(--ui-padding);
+				}
+
+				/* Hide empty cards, cards whose items are all hidden (no power-ups running) and the loader once done */
+				& > :empty,
+				& > [hidden],
+				& > :not(:has(> :not([hidden]))) {
+					display: none;
+				}
+			}
+
+			/* HUD items: a label with a name and a meter, updated by the game through data-stat */
+			[data-stat] {
+				display: block;
+				margin: 0 0 1rem;
+
+				& meter {
+					display: block;
+				}
+			}
+
+			/* Otherwise a display rule like the one above wins over the hidden attribute */
+			[hidden] {
+				display: none !important;
+			}
+
+			/* Game */
+			#game {
+				position: fixed;
+				inset: 0;
+				z-index: 98;
+				margin: 0;
+
+				/* io8's head follows the mouse, so it's an aiming reticle */
+				cursor: crosshair;
+
+				& canvas {
+					position: absolute;
+					inset: 0;
+				}
+			}
+		</style>
+
+	</head>
+
+	<body>
+
+		<figure id="game"></figure>
+
+		<section id="ui">
+
+			<!-- Top left -->
+			<article id="loading">
+
+				<p>Loading <output>0%</output></p>
+
+			</article>
+
+			<!-- Top center -->
+			<article></article>
+
+			<!-- Top right -->
+			<article>
+
+				<h2>Controls</h2>
+
+				<p><small>A / D drive · W thrust · S brake · Space explode · Click fire<br>F antenna · C light · V satellite<br>O orbit camera</small></p>
+
+			</article>
+
+			<!-- Bottom right -->
+			<article>
+
+				<label data-stat="speed" hidden>
+					Super speed <span data-val>(%ss)</span>
+					<meter value="1" low="0.25" high="0.5" optimum="1"></meter>
+				</label>
+
+				<label data-stat="weight" hidden>
+					Super weight <span data-val>(%ss)</span>
+					<meter value="1" low="0.25" high="0.5" optimum="1"></meter>
+				</label>
+
+			</article>
+
+			<!-- Bottom center -->
+			<article></article>
+
+			<!-- Bottom left -->
+			<article>
+
+				<label data-stat="fuel">
+					Fuel <span data-val>(%s%)</span>
+					<meter value="1" low="0.25" high="0.5" optimum="1"></meter>
+				</label>
+
+				<label data-stat="ammo">
+					Ammo <span data-val>(%s%)</span>
+					<meter value="1" low="0.25" high="0.5" optimum="1"></meter>
+				</label>
+
+			</article>
+
+		</section>
+
+		<!-- Libraries live in lib/ (three.js 0.186.1, Rapier 0.20.0), this maps the names the code imports to them -->
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./lib/three/build/three.module.js",
+					"three/addons/": "./lib/three/examples/jsm/",
+					"@dimforge/rapier3d-compat": "./lib/rapier/rapier.mjs"
+				}
+			}
+		</script>
+
+		<script type="module" src="./src/main.js"></script>
+
+	</body>
+
+</html>

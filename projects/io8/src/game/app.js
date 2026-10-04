@@ -1,0 +1,252 @@
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import Stats from 'three/addons/libs/stats.module.js';
+
+import SleekScene from '../sleek/scene.js';
+import SleekPhysics from '../sleek/physics.js';
+import SleekLoader from '../sleek/loader.js';
+import SleekAudio from '../sleek/audio.js';
+import SleekEntity from '../sleek/entity.js';
+
+import IO8 from './io8.js';
+import Spawner from './spawner.js';
+import Ground from './ground.js';
+import Explosion from './explosion.js';
+import Impacts from './impacts.js';
+import Pickups from './pickups.js';
+import Hud from './hud.js';
+import Lasers from './lasers.js';
+import Sunlight from './sunlight.js';
+import Sky from './sky.js';
+import Blasts from './blast/blasts.js';
+
+// Swap for your own map. Conventions (and what the map needs) are in the README
+const MAP = './assets/gltf/windowsxpmap/windowsxpmap.gltf';
+
+const target = new THREE.Vector3();
+const raycaster = new THREE.Raycaster();
+const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+export default class App extends SleekScene {
+	constructor (el) {
+		super(el, {
+			// Lights and reflects everything, but isn't drawn behind it (the map's night sky is black)
+			envMap: './assets/neuer_zollhof_1k.jpg',
+			background: false,
+			fov: 45,
+
+			// Draw distance (m), far enough for a sun and moon kilometres away
+			far: 5000
+		});
+
+		this.physics = new SleekPhysics();
+		this.hud = new Hud();
+		this.spawner = new Spawner(this.scene, this.physics);
+		this.cameraTarget = new THREE.Vector3();
+		this.cameraLead = 0;
+		this.cameraLift = 0;
+
+		// Mouse position in -1..1 screen coordinates, null until it first moves
+		this.pointer = null;
+		this.fire = false;
+
+		// On window rather than the canvas so the UI cards on top don't block aiming
+		window.addEventListener('pointermove', e => {
+			const rect = this.el.getBoundingClientRect();
+
+			this.pointer ??= new THREE.Vector2();
+			this.pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+		});
+
+		// One shot per left click, fired on the next frame
+		window.addEventListener('pointerdown', e => {
+			if (e.button === 0) {
+				this.fire = true;
+			}
+		});
+	}
+
+	async init () {
+		this.audio = new SleekAudio(this.camera, this.scene);
+		this.impacts = new Impacts(this.physics, this.audio);
+		this.spawner.setImpacts(this.impacts);
+		this.pickups = new Pickups(this.scene, this.audio);
+		this.spawner.setPickups(this.pickups);
+		this.blasts = new Blasts(this.scene, this.camera);
+		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
+
+		const [robot, map, sky, engineSound, thrusterSound] = await Promise.all([
+			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
+			SleekLoader.loadObject(MAP),
+			Sky.load(MAP),
+			this.audio.load('./assets/audio/freesound/407540__sojan__sci-fi-engine-loop.ogg'),
+			this.audio.load('./assets/audio/freesound/512815__mostyxs__good-jetpack-sound-loop.wav'),
+			this.impacts.init(),
+			this.pickups.init(),
+			this.lasers.init(),
+			this.spawner.init(),
+			super.init()
+		]);
+
+		this.map = new SleekEntity(map, this.physics, {name: 'Map'});
+		this.scene.add(this.map.object3d);
+		this.ground = new Ground(this.map);
+		this.sunlight = new Sunlight(this.map.object3d, this.scene);
+
+		// The map's sky.json if it has one, otherwise the sky stays black
+		if (sky) {
+			this.sky = new Sky(this.scene, this.camera, this.renderer, this.map.object3d, sky);
+		}
+
+		const start = this.spawnPoint();
+
+		this.spawner.setGround(this.ground, start.x);
+
+		this.player = new IO8(robot, this.physics, {pos: start});
+		this.player.onExplode = () => this.explode();
+		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
+		this.scene.add(this.player.object3d);
+
+		this.spawner.update(start.x);
+
+		this.blasts.warmUp(this.renderer);
+
+		// FPS counter, top left
+		this.stats = new Stats();
+		this.el.appendChild(this.stats.dom);
+
+		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+		this.controls.enabled = false;
+
+		// OrbitControls puts an inline cursor: auto on the canvas, which hides the crosshair from app.css
+		this.renderer.domElement.style.cursor = '';
+
+		// O toggles the orbit camera
+		window.addEventListener('keydown', e => {
+			if (e.code === 'KeyO' && !e.repeat) {
+				this.controls.enabled = !this.controls.enabled;
+				this.controls.target.copy(this.cameraTarget);
+			}
+		});
+
+		this.updateCamera(1);
+	}
+
+	// For now: blow io8 up with Space, reload the page to get it back
+	explode () {
+		if (this.player.isExploded) {
+			return;
+		}
+
+		this.explosion = new Explosion(this.scene, this.physics, this.player.legs.translation());
+		this.blasts.spawn(this.explosion.center, 1);
+		this.player.explode(this.explosion);
+		this.explosion.shockwave();
+		this.impacts.register(this.explosion.pieces.map(piece => piece.body.collider(0)), 'robot');
+	}
+
+	step (deltaTime) {
+		this.physics.step(deltaTime);
+		this.pickups.step(deltaTime, this.player);
+		this.player.step(deltaTime);
+		this.explosion?.step(deltaTime);
+		this.blasts.step(deltaTime);
+		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
+		this.fire = false;
+		this.map.step(deltaTime);
+		// Keep stuff to crash into ahead of io8
+		this.spawner.update(this.player.focusObject.getWorldPosition(target).x);
+		this.stats.update();
+		this.hud.set('fuel', this.player.fuelLevel, Math.round(this.player.fuelLevel * 100));
+		this.hud.set('ammo', this.lasers.ammoLevel, Math.floor(this.lasers.ammoLevel * 100));
+		this.hud.set('speed', this.player.effectLevel('speed'), Math.ceil(this.player.effectRemaining('speed')));
+		this.hud.set('weight', this.player.effectLevel('weight'), Math.ceil(this.player.effectRemaining('weight')));
+
+		if (this.controls.enabled) {
+			this.controls.update();
+		}
+		else {
+			this.updateCamera(deltaTime);
+			this.updateAim();
+		}
+
+		this.sky?.step(deltaTime);
+		this.sunlight.step(this.player.focusObject.getWorldPosition(target));
+
+		super.step(deltaTime);
+	}
+
+	// An empty called "Spawn" in the map wins, otherwise drop io8 on the ground at x = 0.
+	// io8's origin is the middle of its wheel (radius 0.25), so start a little above that
+	spawnPoint () {
+		const spawn = this.map.object3d.getObjectByName('Spawn');
+
+		if (spawn) {
+			const pos = spawn.getWorldPosition(new THREE.Vector3());
+
+			return {x: pos.x, y: pos.y, z: 0};
+		}
+
+		return {x: 0, y: (this.ground.heightAt(0) ?? 0) + 0.5, z: 0};
+	}
+
+	// Where the mouse points on io8's plane (z = 0) is what the head looks at.
+	// Redone every frame, not just on mouse move, since the camera moves with io8
+	updateAim () {
+		if (!this.pointer) {
+			return;
+		}
+
+		raycaster.setFromCamera(this.pointer, this.camera);
+		this.player.aim = raycaster.ray.intersectPlane(aimPlane, this.player.aim ?? new THREE.Vector3());
+	}
+
+	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other
+	updateCamera (deltaTime) {
+		const follow = 4;
+
+		// Easing after io8 at rate `follow` leaves the camera speed / follow behind, which pushes io8 towards
+		// the middle of the screen when it's fast. Aiming that far ahead cancels it out, so io8 stays put on
+		// screen at any speed. The speed is smoothed so io8's wobble doesn't shake the camera
+		this.cameraLead += (this.player.focusBody.linvel().x / follow - this.cameraLead) * Math.min(1, deltaTime * 2);
+
+		this.player.focusObject.getWorldPosition(target);
+		target.x += this.cameraLead;
+		this.cameraTarget.lerp(target, Math.min(1, deltaTime * follow));
+
+		// How far (m) the camera sits to the right of io8, which puts him left of center with room to see ahead.
+		// It looks `ahead` metres further on still, which turns it slightly to the right as well
+		const shift = 0.3;
+		const ahead = 2.5;
+
+		// Height follows io8 too, for hills. 0.32 keeps the framing the flat road had
+		const x = this.cameraTarget.x + shift;
+		const y = this.cameraTarget.y + 0.32;
+		const lift = this.cameraLiftFor(x, y, this.cameraTarget.y + 0.5, 7.5);
+
+		// Straight up when the ground needs it (so it never dips in), eased back down so it doesn't bob over every bump
+		this.cameraLift = lift > this.cameraLift ? lift : this.cameraLift + (lift - this.cameraLift) * Math.min(1, deltaTime * 2);
+
+		this.camera.position.set(x, y + this.cameraLift, 7.5);
+		this.camera.lookAt(x + ahead, this.cameraTarget.y + 0.5, this.cameraTarget.z);
+
+		this.blasts.shake(this.camera);
+	}
+
+	// How much higher than `y` the camera (at depth z) has to be for it, and its view of io8 (lookY at the road,
+	// z = 0), to stay `clearance` above the terrain in front of the road. Checked at a few points along the way
+	cameraLiftFor (x, y, lookY, z, clearance = 0.3) {
+		let lift = 0;
+
+		[1, 0.8, 0.6, 0.4].forEach(t => {
+			const ground = this.ground.heightAt(x, z * t);
+
+			// The line of sight at t of the way from the road to the camera is at lookY + (cameraY - lookY) * t
+			if (ground !== null) {
+				lift = Math.max(lift, (ground + clearance - lookY) / t + lookY - y);
+			}
+		});
+
+		return lift;
+	}
+}

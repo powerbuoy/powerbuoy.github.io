@@ -1,0 +1,15 @@
+{
+	"name": "io8",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "node build.mjs"
+	},
+	"devDependencies": {
+		"@gltf-transform/core": "^4.5.1",
+		"@gltf-transform/extensions": "^4.5.1",
+		"@gltf-transform/functions": "^4.5.1",
+		"esbuild": "^0.28.2",
+		"sharp": "^0.35.5"
+	}
+}
