@@ -22,6 +22,9 @@ const CONFIG = {
 	// Nothing spawns closer than this to either end of the map
 	edge: 2,
 
+	// An obstacle slot every spacing m (offset from the map's x = 0), each one used by chance
+	obstacles: {spacing: 15, offset: 2, chance: 0.7},
+
 	// Anything that ends up this far from io8 (debris included) is removed
 	despawn: {behind: 8, ahead: 35},
 
@@ -129,14 +132,16 @@ export default class Spawner {
 		const {size} = CONFIG.chunk;
 		const start = index * size;
 
-		// Two obstacle slots per chunk, each one may or may not be used
-		[start + 2, start + 7].forEach(slot => {
+		// The obstacle slots that fall inside this chunk (none in some, as the spacing is bigger than a chunk)
+		const {spacing, offset, chance} = CONFIG.obstacles;
+
+		for (let slot = Math.ceil((start - offset) / spacing) * spacing + offset; slot < start + size; slot += spacing) {
 			const x = slot + Math.random() * 1.5;
 
-			if (Math.abs(x - this.startX) > CONFIG.safeZone && Math.random() < 0.7) {
+			if (Math.abs(x - this.startX) > CONFIG.safeZone && Math.random() < chance) {
 				this.pick(OBSTACLES)(this, x);
 			}
-		});
+		}
 
 		// Now and then a pickup up in the air
 		if (this.pickups && Math.random() < CONFIG.pickups.chance) {

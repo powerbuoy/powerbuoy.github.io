@@ -51,7 +51,6 @@ Floating pickups placed on the map that io8 drives or flies through.
 - **Fuel**: refills the tank or makes it bigger for a while
 - **Speed**: raises `maxSpeed` for a few seconds
 - Ideas for more:
-	- **Negative magnet** (wanted next): pushes objects away from io8 while it's running. Each physics step, give dynamic bodies within a radius a push away from io8 that's stronger the closer they are (like `Explosion.shockwave()` but continuous and gentler, a speed change so light and heavy props react alike). A new entry in `EFFECTS` plus a pickup model with `effect: magnet`; maybe a faint visible field around io8
 	- **Shield**: smash through anything without slowing down (e.g. temporarily raise `driveFactor`)
 	- **Super thrust**: stronger thrust, no fuel drain, for a few seconds
 	- **Slow-mo**: lower `physics.config.speed` for a moment (the old todo list wanted slow-mo too)
