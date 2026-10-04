@@ -71,7 +71,15 @@
 
 				> a {
 					display: block;
-					font-size: 3rem;
+					font-size: 4rem;
+					line-height: 1.2;
+					font-weight: bolder;
+					text-shadow: 0 0 0.2 rgba(0, 0, 0, 0.6);
+					transition: scale 0.2s ease;
+
+					&:hover {
+						scale: 1.2;
+					}
 				}
 
 				> aside {
@@ -192,7 +200,7 @@
 
 		<section id="start">
 
-			<a role="button" data-action="play">Start</a>
+			<a role="button" data-action="play">Play</a>
 			<a role="button" data-action="restart">Restart</a>
 
 			<aside>

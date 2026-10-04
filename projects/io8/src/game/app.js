@@ -228,20 +228,26 @@ export default class App extends SleekScene {
 		target.x += this.cameraLead;
 		this.cameraTarget.lerp(target, Math.min(1, deltaTime * follow));
 
-		// How far (m) the camera sits to the right of io8, which puts him left of center with room to see ahead.
-		// It looks `ahead` metres further on still, which turns it slightly to the right as well
+		// How far (m) the camera sits to the right of io8, and how far back
 		const shift = 0.3;
-		const ahead = 2.5;
+		const distance = 7.5;
+
+		// Where io8 goes on screen, -1 is the left edge and 1 the right, the rest is room to see ahead. The camera
+		// turns right until he's there, which depends on how wide the screen is (a narrow portrait screen needs
+		// much less turn, or he'd end up off it). Measured at his depth, so a little out for things in front/behind
+		const screenX = -0.5;
+		const halfWidth = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this.camera.aspect;
+		const ahead = distance * Math.tan(Math.atan(-screenX * halfWidth) - Math.atan(shift / distance));
 
 		// Height follows io8 too, for hills. 0.32 keeps the framing the flat road had
 		const x = this.cameraTarget.x + shift;
 		const y = this.cameraTarget.y + 0.32;
-		const lift = this.cameraLiftFor(x, y, this.cameraTarget.y + 0.5, 7.5);
+		const lift = this.cameraLiftFor(x, y, this.cameraTarget.y + 0.5, distance);
 
 		// Straight up when the ground needs it (so it never dips in), eased back down so it doesn't bob over every bump
 		this.cameraLift = lift > this.cameraLift ? lift : this.cameraLift + (lift - this.cameraLift) * Math.min(1, deltaTime * 2);
 
-		this.camera.position.set(x, y + this.cameraLift, 7.5);
+		this.camera.position.set(x, y + this.cameraLift, distance);
 		this.camera.lookAt(x + ahead, this.cameraTarget.y + 0.5, this.cameraTarget.z);
 
 		this.blasts.shake(this.camera);
