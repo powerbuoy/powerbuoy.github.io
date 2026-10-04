@@ -35,7 +35,7 @@ export default class App extends SleekScene {
 			background: false,
 			fov: 45,
 
-			// Draw distance (m), far enough for a sun and moon kilometres away
+			// Draw distance (m), far enough for a sun and moon kilometres away, and the stars
 			far: 5000
 		});
 

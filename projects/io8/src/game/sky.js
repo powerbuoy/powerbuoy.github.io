@@ -2,8 +2,12 @@ import * as THREE from 'three';
 
 import SleekLoader from '../sleek/loader.js';
 
+import Stars from './stars.js';
+
 // Most colours a gradient can have (the shader needs a fixed number)
 const MAX_STOPS = 8;
+
+const pivotPosition = new THREE.Vector3();
 
 const shader = {
 	vertexShader: `
@@ -57,16 +61,23 @@ const shader = {
 			},
 			"time": 21,
 			"cycle": 240,
+			"date": "12-21",
 			"environment": 1
 		}
 
 	Keys are hours (0-24), each gradient's colours go from the horizon up (2 to 8 of them, any number per
 	keyframe). In between keyframes the colours blend, wrapping around midnight. `time` is the hour it
 	starts at, and `cycle` how many seconds a whole day takes (optional, leave it out and time stands still).
+	`date` ("MM-DD", optional) is the time of year, which decides which stars are out at night, see Stars.
 
 	An object called "SkyPivot" in the map turns with the time like the hand of a clock: anything on it
 	(the sun on one side, the moon on the other) rises on the left and sets on the right. Model it as it
-	looks at midday, sun straight up. The lights on the sun and moon follow them, see Sunlight.
+	looks at midday, sun straight up. The lights on the sun and moon follow them, see Sunlight. Stars turn
+	with it too, and come out by themselves as the sky gets dark, see Stars.
+
+	Like the dome and the stars, SkyPivot moves with the camera, so the sun and moon never drift as io8
+	drives. It stays as far in front of the camera as it's modelled (keep it inside the draw distance, and
+	past the hills), and its x/y are its offset from the camera.
 
 	The sky also lights the scene: it's rendered into the environment map, which is the light everything
 	gets from all around (what lights the shady sides) and what shiny and metal things reflect. So night
@@ -77,6 +88,7 @@ export default class Sky {
 
 	constructor (scene, camera, renderer, map, conf) {
 		this.scene = scene;
+		this.camera = camera;
 		this.cycle = conf.cycle ?? 0;
 
 		// The lighting is re-rendered from the sky whenever it's changed by this many hours (a few ms each time,
@@ -86,6 +98,14 @@ export default class Sky {
 		// Turned so the sun is up at noon, see above
 		this.pivot = map.getObjectByName('SkyPivot');
 		this.pivotAngle = this.pivot?.rotation.z ?? 0;
+
+		// Where it's modelled is where it sits relative to the camera, see follow()
+		this.pivotOffset = this.pivot?.getWorldPosition(new THREE.Vector3());
+
+		// Turned by the pivot, so there are only stars when there's a sky that turns
+		if (this.pivot) {
+			this.stars = new Stars(scene, camera, this.pivot, conf.catalog, conf.date);
+		}
 
 		this.keyframes = Object.entries(conf.sky)
 			.map(([hour, colors]) => ({hour: Number(hour), colors: colors.map(color => new THREE.Color(color))}))
@@ -131,11 +151,26 @@ export default class Sky {
 		this.setTime(conf.time ?? 0);
 	}
 
-	// Moves the time on when there's a day/night cycle
+	// Moves the time on when there's a day/night cycle. Call after the camera has moved
 	step (deltaTime) {
+		this.follow();
+
 		if (this.cycle) {
 			this.setTime(this.time + 24 * deltaTime / this.cycle);
 		}
+	}
+
+	// The sky is infinitely far away, so SkyPivot moves with the camera (up/down and sideways, it stays as far
+	// in front as it's modelled) and the sun and moon never drift, just like the dome and the stars
+	follow () {
+		if (!this.pivot) {
+			return;
+		}
+
+		const {x, y} = this.camera.position;
+
+		this.pivot.position.copy(this.pivot.parent.worldToLocal(pivotPosition.set(x + this.pivotOffset.x, y + this.pivotOffset.y, this.pivotOffset.z)));
+		this.pivot.updateMatrixWorld(true);
 	}
 
 	// Render the sky into the environment map (a few ms, so redo it when the sky changes, not every frame)
@@ -160,7 +195,7 @@ export default class Sky {
 			return null;
 		}
 
-		return JSON.parse(text);
+		return {...JSON.parse(text), catalog: await Stars.load()};
 	}
 
 	// Hours, 0-24
@@ -181,6 +216,8 @@ export default class Sky {
 
 			color.lerpColors(Sky.sample(previous.colors, height), Sky.sample(next.colors, height), blend);
 		});
+
+		this.stars?.setSky(this.material.uniforms.colors.value[this.stops - 1]);
 
 		// A whole turn a day, anticlockwise as seen from the camera (rising on the left), sun up at noon
 		if (this.pivot) {
