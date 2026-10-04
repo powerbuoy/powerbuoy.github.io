@@ -12,6 +12,7 @@ export default class SleekAudio {
 	// off if they're all busy
 	pool = [];
 	poolIndex = 0;
+	isPaused = false;
 
 	constructor (camera, scene, conf = {}) {
 		this.config = Object.assign({poolSize: 16}, conf);
@@ -29,7 +30,10 @@ export default class SleekAudio {
 		}
 
 		const start = () => {
-			this.listener.context.resume();
+			if (!this.isPaused) {
+				this.listener.context.resume();
+			}
+
 			window.removeEventListener('keydown', start);
 			window.removeEventListener('pointerdown', start);
 		};
@@ -39,6 +43,17 @@ export default class SleekAudio {
 	}
 
 	// Play a one-off sound at a point in the world. rate changes the pitch (and speed)
+	// Stops every sound where it is (looping ones included) until resume()
+	pause () {
+		this.isPaused = true;
+		this.listener.context.suspend();
+	}
+
+	resume () {
+		this.isPaused = false;
+		this.listener.context.resume();
+	}
+
 	playAt (buffer, position, {volume = 1, rate = 1} = {}) {
 		const sound = this.pool[this.poolIndex];
 

@@ -80,6 +80,11 @@ export default class SleekScene {
 		this.camera.updateProjectionMatrix();
 		this.renderer.setSize(width, height);
 		this.composer.setSize(width, height);
+
+		// Resizing clears the canvas, and while paused nothing else redraws it
+		if (!this.isPlaying) {
+			this.composer.render();
+		}
 	}
 
 	play () {

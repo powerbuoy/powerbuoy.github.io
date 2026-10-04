@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" class="paused">
 
 	<head>
 
@@ -13,7 +13,10 @@
 				/* Colors */
 				--background: #000;
 				--foreground: #fff;
+				--accent: #f90;
 				--card-background: rgb(0 0 0 / 0.2);
+				--card-padding: 1rem;
+				--card-radius: 0.25rem;
 
 				/* Spacing */
 				--ui-padding: 2.5%;
@@ -39,8 +42,49 @@
 				margin: 0 0 1rem;
 			}
 
+			a {
+				color: var(--accent);
+				text-decoration: none;
+				cursor: pointer;
+			}
+
 			output {
 				font-weight: 900;
+			}
+
+			/* Start menu */
+			#start {
+				background: var(--card-background);
+				backdrop-filter: blur(20px);
+
+				position: fixed;
+				inset: 0;
+				z-index: 98;
+
+				display: none;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 1rem;
+
+				transition: opacity 0.3s ease;
+
+				> a {
+					display: block;
+					font-size: 3rem;
+				}
+
+				> aside {
+					background: var(--card-background);
+					padding: var(--card-padding);
+					border-radius: var(--card-radius);
+					padding: 1rem;
+				}
+			}
+
+			html.paused #start {
+				display: flex;
+				opacity: 1;
 			}
 
 			/* UI */
@@ -48,13 +92,14 @@
 				/* Each UI card */
 				& > * {
 					background: var(--card-background);
+					padding: var(--card-padding);
+					border-radius: var(--card-radius);
 					backdrop-filter: blur(20px);
 
 					position: fixed;
 					z-index: 99;
 
-					padding: 2rem;
-					border-radius: 0.5rem;
+					font-size: 0.75rem;
 
 					& > :last-child {
 						margin-bottom: 0;
@@ -110,7 +155,7 @@
 			/* HUD items: a label with a name and a meter, updated by the game through data-stat */
 			[data-stat] {
 				display: block;
-				margin: 0 0 1rem;
+				margin: 0 0 0.5rem;
 
 				& meter {
 					display: block;
@@ -145,6 +190,21 @@
 
 		<figure id="game"></figure>
 
+		<section id="start">
+
+			<a role="button" data-action="play">Start</a>
+			<a role="button" data-action="restart">Restart</a>
+
+			<aside>
+
+				<h2>Controls</h2>
+
+				<p><small>A / D drive · W thrust · S brake · Space explode · Click fire<br>F antenna · C light · V satellite<br>O orbit camera</small></p>
+
+			</aside>
+
+		</section>
+
 		<section id="ui">
 
 			<!-- Top left -->
@@ -158,13 +218,7 @@
 			<article></article>
 
 			<!-- Top right -->
-			<article>
-
-				<h2>Controls</h2>
-
-				<p><small>A / D drive · W thrust · S brake · Space explode · Click fire<br>F antenna · C light · V satellite<br>O orbit camera</small></p>
-
-			</article>
+			<article></article>
 
 			<!-- Bottom right -->
 			<article>

@@ -15,7 +15,41 @@ const app = new App(document.getElementById('game'));
 await app.init();
 
 loading.hidden = true;
-app.play();
+
+// The game starts paused behind the start menu (html.paused), with its first frame drawn
+const root = document.documentElement;
+
+function setPaused (paused) {
+	root.classList.toggle('paused', paused);
+
+	if (paused) {
+		app.pause();
+	}
+	else {
+		app.play();
+	}
+}
+
+app.step(0);
+setPaused(true);
+
+document.addEventListener('click', e => {
+	if (e.target.closest('[data-action="play"]')) {
+		setPaused(false);
+	}
+
+	// A fresh start, simplest done by loading the page again
+	if (e.target.closest('[data-action="restart"]')) {
+		location.reload();
+	}
+});
+
+// Esc pauses, and resumes again from the menu
+window.addEventListener('keydown', e => {
+	if (e.code === 'Escape' && !e.repeat) {
+		setPaused(app.isPlaying);
+	}
+});
 
 // Handy in the console
 window.app = app;

@@ -47,6 +47,10 @@ const quat = new THREE.Quaternion();
 
 export default class IO8 extends SleekEntity {
 	keys = new Set();
+
+	// Off while the game is paused, see App.pause()
+	hasInput = false;
+
 	antennaIsUp = false;
 	satelliteIsSpinning = true;
 	isThrusting = false;
@@ -231,6 +235,10 @@ export default class IO8 extends SleekEntity {
 
 	handleInput () {
 		window.addEventListener('keydown', e => {
+			if (!this.hasInput) {
+				return;
+			}
+
 			this.keys.add(e.code);
 
 			if (e.repeat) {

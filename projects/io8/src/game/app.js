@@ -60,7 +60,7 @@ export default class App extends SleekScene {
 
 		// One shot per left click, fired on the next frame
 		window.addEventListener('pointerdown', e => {
-			if (e.button === 0) {
+			if (e.button === 0 && this.isPlaying) {
 				this.fire = true;
 			}
 		});
@@ -123,13 +123,27 @@ export default class App extends SleekScene {
 
 		// O toggles the orbit camera
 		window.addEventListener('keydown', e => {
-			if (e.code === 'KeyO' && !e.repeat) {
+			if (e.code === 'KeyO' && !e.repeat && this.isPlaying) {
 				this.controls.enabled = !this.controls.enabled;
 				this.controls.target.copy(this.cameraTarget);
 			}
 		});
 
 		this.updateCamera(1);
+	}
+
+	play () {
+		super.play();
+		this.audio.resume();
+		this.player.hasInput = true;
+	}
+
+	// Freezes everything (physics, sounds, io8's controls), the last frame stays on screen
+	pause () {
+		super.pause();
+		this.audio.pause();
+		this.player.hasInput = false;
+		this.player.keys.clear();
 	}
 
 	// For now: blow io8 up with Space, reload the page to get it back
