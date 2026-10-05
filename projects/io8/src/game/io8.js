@@ -27,8 +27,8 @@ const EFFECTS = {
 	},
 
 	// amount = how many times heavier (the Weight pickup's amount). The motors and balance spring are acceleration based, so he drives the
-	// same, but he slams through things instead of bouncing off them. Thrust is a plain force, so it can't
-	// lift him any more, and the head spring is a plain spring, so the head sinks down onto its end stops
+	// same, but he slams through things instead of bouncing off them, and blasts barely move him. Thrust is worked
+	// out from his normal weight, so it can't lift him any more, and the head spring is a plain spring, so the head sinks down onto its end stops
 	weight (io8, amount) {
 		const masses = io8.colliders.map(collider => collider.mass());
 
@@ -79,7 +79,10 @@ export default class IO8 extends SleekEntity {
 			driveFactor: 100,
 			brakeFactor: 40,
 			rollFactor: 0.05,
-			thrust: 110,
+
+			// Thrust as an acceleration (m/s², gravity is 9.81) of io8's normal weight, so changing his masses in
+			// Blender doesn't need retuning. The weight power-up doesn't count, so it can't lift him any more
+			thrust: 15.7,
 
 			// Thruster fuel: seconds of thrust in a full tank. Starts refilling `refillDelay` seconds after you let
 			// go of the thrusters (anywhere, in the air too), empty to full in `refillTime` seconds.
@@ -204,6 +207,9 @@ export default class IO8 extends SleekEntity {
 
 		// The head's normal weight, the suspension spring is tuned for it (see suspension())
 		this.headMass = head.mass();
+
+		// His whole normal weight, the thrust is worked out from it
+		this.mass = wheel.mass() + legs.mass() + head.mass();
 
 		// Balance and 2.5D in one go: an invisible body that can never rotate, hinged to the legs at the axle.
 		// The hinge stops the legs (and so everything jointed to them) rotating around anything but Z,
@@ -351,7 +357,7 @@ export default class IO8 extends SleekEntity {
 		this.isThrusting = this.isDown('thrust') && this.fuel > 0;
 
 		if (this.isThrusting) {
-			up.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation())).multiplyScalar(this.config.thrust * timestep);
+			up.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation())).multiplyScalar(this.config.thrust * this.mass * timestep);
 			this.legs.applyImpulse(up, true);
 		}
 

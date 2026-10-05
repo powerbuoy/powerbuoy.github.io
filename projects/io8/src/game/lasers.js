@@ -47,9 +47,10 @@ export default class Lasers {
 			// last shot, and takes `refillTime` seconds to go from empty to full
 			ammo: {capacity: 8, refillDelay: 2, refillTime: 2.5},
 
-			// The blast where it hits: things within `radius` (m) get up to `push` m/s (see Explosion.shockwave()),
+			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
+			// a cardboard box off at 15 m/s, see Explosion.shockwave()),
 			// and how big it looks (see Blasts, 1 = io8 blowing up)
-			blast: {radius: 3, push: 15, size: 0.35},
+			blast: {radius: 3, impulse: 167, size: 0.5},
 
 			// Sounds (5 variations of each, a random one plays) and their volumes (0-1)
 			// (`empty` is the dry click when you fire with no charge left), and optionally their pitch (1 = as recorded)

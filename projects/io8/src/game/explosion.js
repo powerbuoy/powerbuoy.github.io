@@ -41,9 +41,10 @@ export default class Explosion {
 		this.physics = physics;
 		this.center = new THREE.Vector3().copy(center);
 		this.config = Object.assign({
-			// Shockwave: bodies within radius get up to `push` m/s, less the further away they are
+			// Shockwave: bodies within radius get up to `impulse` (N·s) per m² of them facing the blast, less the
+			// further away they are. A 30 cm, 1 kg cardboard box faces it with 0.09 m², so 67 sends it off at 6 m/s
 			radius: 3,
-			push: 6,
+			impulse: 67,
 
 			// Debris: outward speed range (m/s), max spin (rad/s), extra upward kick, how much it spreads
 			// towards/away from the camera (0-1, more = more pieces fly at the screen), and how long (s)
@@ -59,10 +60,12 @@ export default class Explosion {
 		}, conf);
 	}
 
-	// Shove every dynamic body nearby away from the center, same speed change whatever it weighs.
-	// Call after shatter(), debris already has its own outward speed so it's skipped
+	// Shove every dynamic body nearby away from the center. Like a real blast it hits everything with the same
+	// pressure, so what moves is what's big and light: cardboard flies, something heavy and compact (io8, or
+	// anything with the weight power-up) barely budges. Call after shatter(), debris already has its own outward
+	// speed so it's skipped
 	shockwave () {
-		const {radius, push} = this.config;
+		const {radius, impulse} = this.config;
 		const debris = new Set(this.pieces.map(({body}) => body.handle));
 
 		this.physics.world.bodies.forEach(body => {
@@ -81,10 +84,22 @@ export default class Explosion {
 			// Straight up when it's right on top of the blast, otherwise away from it with a bit of lift
 			dir.normalize();
 			dir.y += 0.5;
-			dir.normalize().multiplyScalar(push * (1 - distance / radius) * body.mass());
+			dir.normalize().multiplyScalar(impulse * (1 - distance / radius) * Explosion.areaOf(body));
 
 			body.applyImpulse(dir, true);
 		});
+	}
+
+	// Roughly how much of a body faces a blast (m²): a cube's side for its volume. Masses set in Blender (or by the
+	// weight power-up) don't change it, so they decide how much it moves
+	static areaOf (body) {
+		let volume = 0;
+
+		for (let i = 0; i < body.numColliders(); i++) {
+			volume += body.collider(i).volume();
+		}
+
+		return volume ** (2 / 3);
 	}
 
 	/*
