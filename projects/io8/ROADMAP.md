@@ -117,11 +117,10 @@ Notes:
 
 ## 4. Sky
 
-The env map (`neuer_zollhof_1k.jpg`) is now shown as the background (`background` in the `SleekScene` config, with `backgroundBlurriness` to soften it). For the daytime map:
+Done: gradient sky with a day/night cycle from the map's `sky.json`, `SkyPivot` turning the sun and moon (it follows the camera, so nothing drifts), the real night sky (`stars.js`, Yale Bright Star Catalog, optional `date` in `sky.json`). To do:
 
-- Pick an HDRI (Poly Haven) that matches the map's mood, and use it for both background and lighting. `.hdr`/`.exr` light better than the current `.jpg` (needs `HDRLoader`/`EXRLoader` instead of `TextureLoader`)
-- Or three's `Sky` addon (`three/addons/objects/Sky.js`) for a procedural sky that matches the sun direction
-- Distant hills/city silhouettes in the map help hide where the ground ends and the sky starts
+- **Clouds** (waiting on the Blender side): puffy blobs scattered with Geometry Nodes under a `Clouds` empty with a `drift` custom property (m/s), exported as GPU instances. Code: check the build keeps `EXT_mesh_gpu_instancing` when it makes the .glb, move the instances with the wind, and shrink them away at the downwind edge of the field / grow them back in at the upwind edge so nothing pops, from any camera angle
+- **Sunlight colour keyframes**: the Sun lamp has one fixed colour, so direct light stays white-ish at dusk (the warm tint now only comes from the sky's environment light). Give the sun (and moon) a colour per hour in `sky.json`, blended like the gradients, for golden-hour light on clouds, terrain and io8
 
 ## 5. Background props
 
