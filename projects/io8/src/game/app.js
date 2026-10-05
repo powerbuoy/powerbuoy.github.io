@@ -179,7 +179,8 @@ export default class App extends SleekScene {
 		// Keep stuff to crash into ahead of io8
 		this.spawner.update(this.player.focusObject.getWorldPosition(target).x);
 		this.stats.update();
-		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.health));
+		// Rounded up so he never shows 0% while he's still alive
+		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
 		this.hud.set('fuel', this.player.fuelLevel, Math.round(this.player.fuelLevel * 100));
 		this.hud.set('ammo', this.lasers.ammoLevel, Math.floor(this.lasers.ammoLevel * 100));
 		this.hud.set('speed', this.player.effectLevel('speed'), Math.ceil(this.player.effectRemaining('speed')));
