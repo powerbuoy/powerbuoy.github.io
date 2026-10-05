@@ -87,7 +87,11 @@
 					background: var(--card-background);
 					padding: var(--card-padding);
 					border-radius: var(--card-radius);
-					padding: 1rem;
+					padding: 2rem;
+
+					> :last-child {
+						margin-bottom: 0;
+					}
 				}
 			}
 
@@ -208,7 +212,7 @@
 
 				<h2>Controls</h2>
 
-				<p><small>A / D drive · W thrust · S brake · Click fire<br>F antenna · C light · V satellite<br>O orbit camera</small></p>
+				<p>WASD: drive / fly / brake · Click: fire</p>
 
 			</aside>
 
@@ -251,7 +255,7 @@
 			<article>
 
 				<label data-stat="health">
-					Health <span data-val>(%s)</span>
+					Health <span data-val>(%s%)</span>
 					<meter value="1" low="0.25" high="0.5" optimum="1"></meter>
 				</label>
 
