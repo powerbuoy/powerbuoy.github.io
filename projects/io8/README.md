@@ -48,6 +48,7 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `shadow`      | mesh/light         | `0` = no shadows. Default on, for meshes and lights. Applies to everything under the object too (put it on a parent to switch off a whole part) |
 | `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot and sun |
 | `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_Mesh` to keep the head intact). Default: every mesh is its own piece |
+| `emit`        | an empty on io8    | `smoke`: damage smoke and sparks come from here (any number of them, a random one each time). Parent it to the part it should move with |
 
 Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
 

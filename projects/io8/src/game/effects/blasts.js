@@ -28,7 +28,10 @@ export default class Blasts {
 			shake: {amount: 1, reach: 30, decay: 1.1, move: 0.25, turn: 4}
 		}, conf);
 
-		this.layers = [new Fireball(scene), new Sparks(scene)];
+		// Sparks are also used on their own (see Damage)
+		this.fireball = new Fireball(scene);
+		this.sparks = new Sparks(scene);
+		this.layers = [this.fireball, this.sparks];
 
 		// One light, always there and normally off: adding and removing lights makes three.js recompile shaders
 		this.light = new THREE.PointLight(this.config.light.color, 0, this.config.light.distance);

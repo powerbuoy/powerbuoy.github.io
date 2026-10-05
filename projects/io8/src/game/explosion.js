@@ -30,7 +30,7 @@ const DEBRIS_GROUPS = (DEBRIS_GROUP << 16) | (0xFFFF & ~DEBRIS_GROUP);
 /*
 	The physics of a blast at a point: shatter() to turn a model into flying debris, and shockwave() to
 	shove everything else nearby. Doesn't know about io8, so anything can be blown up with it. What it
-	looks like (fire, sparks...) is up to Blasts in blast/
+	looks like (fire, sparks...) is up to Blasts in effects/
 */
 export default class Explosion {
 	age = 0;

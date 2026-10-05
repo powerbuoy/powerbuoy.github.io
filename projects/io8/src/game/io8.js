@@ -149,6 +149,19 @@ export default class IO8 extends SleekEntity {
 		this.eye = get('RobotEye');
 		this.muzzleObject = get('Muzzle');
 
+		// Where damage smokes and sparks from (see Damage): empties tagged with an "emit: smoke" custom property.
+		// TEMPORARY: the middle of the head until they're placed in Blender
+		this.emitters = [];
+		this.object3d.traverse(obj => {
+			if (obj.userData.emit === 'smoke') {
+				this.emitters.push(obj);
+			}
+		});
+
+		if (!this.emitters.length) {
+			this.emitters.push(get('RobotHead_RigidBody'));
+		}
+
 		// Headlight (remember its brightness and glow from Blender so toggling doesn't need magic numbers)
 		this.headlight = light('RobotHeadlight');
 		this.headlightBulb = get('RobotHeadlightBulb');

@@ -18,7 +18,8 @@ import Hud from './hud.js';
 import Lasers from './lasers.js';
 import Sunlight from './sunlight.js';
 import Sky from './sky.js';
-import Blasts from './blast/blasts.js';
+import Blasts from './effects/blasts.js';
+import Damage from './damage.js';
 
 // Swap for your own map. Conventions (and what the map needs) are in the README
 const MAP = './assets/gltf/windowsxpmap/windowsxpmap.gltf';
@@ -112,6 +113,8 @@ export default class App extends SleekScene {
 
 		this.spawner.update(start.x);
 
+		this.damage = new Damage(this.scene, this.blasts, this.player);
+
 		this.blasts.warmUp(this.renderer);
 
 		// FPS counter, top left
@@ -173,6 +176,7 @@ export default class App extends SleekScene {
 		this.player.step(deltaTime);
 		this.explosion?.step(deltaTime);
 		this.blasts.step(deltaTime);
+		this.damage.step(deltaTime);
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
 		this.fire = false;
 		this.map.step(deltaTime);

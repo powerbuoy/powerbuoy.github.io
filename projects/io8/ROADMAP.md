@@ -100,7 +100,7 @@ The head already follows the mouse (360°, see `turnHead()` in `io8.js`). Next: 
 
 ### Explosion visuals (done)
 
-In `src/game/blast/`: fireball, sparks, one pooled flash light and camera shake, `blasts.spawn(position, size)` (io8 = 1, laser hit = 0.35). `Explosion` is physics only (debris, shockwave). Smoke and a ground shock ring were tried and dropped. A flipbook fireball is still an option if the look needs more
+In `src/game/effects/`: fireball, sparks, one pooled flash light and camera shake, `blasts.spawn(position, size)` (io8 = 1, laser hit = 0.35). `Explosion` is physics only (debris, shockwave). Smoke and a ground shock ring were tried and dropped. A flipbook fireball is still an option if the look needs more
 
 ## 3. Obstacles in the air
 
