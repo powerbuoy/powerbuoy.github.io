@@ -12,9 +12,20 @@ const euler = new THREE.Euler();
 */
 export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
-		const material = new THREE.MeshStandardMaterial({roughness: 1, flatShading: true});
+		const material = new THREE.MeshStandardMaterial({roughness: 1});
+		const geometry = new THREE.IcosahedronGeometry(0.5, 0);
 
-		super(scene, new THREE.IcosahedronGeometry(0.5, 0), material, 96);
+		// Shaded smooth like everything modelled in Blender. three gives a 20-sided icosahedron one normal per
+		// face (faceted, whatever the material says), so point every normal straight out from the middle instead
+		const {position, normal} = geometry.attributes;
+
+		for (let i = 0; i < position.count; i++) {
+			normal.setXYZ(i, position.getX(i), position.getY(i), position.getZ(i));
+		}
+
+		geometry.normalizeNormals();
+
+		super(scene, geometry, material, 96);
 
 		this.config = Object.assign({
 			// How big a puff gets (m), how long it lasts (s), how fast it rises (m/s), how far from the emitter it
