@@ -75,12 +75,16 @@ export default class App extends SleekScene {
 		this.blasts = new Blasts(this.scene, this.camera);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 
-		const [robot, map, sky, engineSound, thrusterSound] = await Promise.all([
+		const sciFi = name => this.audio.load(`./assets/audio/kenney_sci-fi-sounds/Audio/${name}.ogg`);
+
+		const [robot, map, sky, engineSound, thrusterSound, boom, crunch] = await Promise.all([
 			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
 			SleekLoader.loadObject(MAP),
 			Sky.load(MAP),
 			this.audio.load('./assets/audio/freesound/407540__sojan__sci-fi-engine-loop.ogg'),
 			this.audio.load('./assets/audio/freesound/512815__mostyxs__good-jetpack-sound-loop.wav'),
+			Promise.all([0, 1].map(i => sciFi(`lowFrequency_explosion_00${i}`))),
+			Promise.all([0, 1, 2, 3, 4].map(i => sciFi(`explosionCrunch_00${i}`))),
 			this.impacts.init(),
 			this.pickups.init(),
 			this.lasers.init(),
@@ -103,8 +107,7 @@ export default class App extends SleekScene {
 		this.spawner.setGround(this.ground, start.x);
 
 		this.player = new IO8(robot, this.physics, {pos: start});
-		this.player.onExplode = () => this.explode();
-		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
+		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts, boom, crunch});
 		this.scene.add(this.player.object3d);
 
 		this.spawner.update(start.x);
@@ -146,7 +149,7 @@ export default class App extends SleekScene {
 		this.player.keys.clear();
 	}
 
-	// For now: blow io8 up with Space, reload the page to get it back
+	// Blow io8 up (when he's out of health), Restart in the menu gets him back
 	explode () {
 		if (this.player.isExploded) {
 			return;
@@ -161,6 +164,11 @@ export default class App extends SleekScene {
 
 	step (deltaTime) {
 		this.physics.step(deltaTime);
+
+		// Out of health: blown up here, between physics steps (explode() can't run during one)
+		if (this.player.health <= 0) {
+			this.explode();
+		}
 		this.pickups.step(deltaTime, this.player);
 		this.player.step(deltaTime);
 		this.explosion?.step(deltaTime);
@@ -171,6 +179,7 @@ export default class App extends SleekScene {
 		// Keep stuff to crash into ahead of io8
 		this.spawner.update(this.player.focusObject.getWorldPosition(target).x);
 		this.stats.update();
+		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.health));
 		this.hud.set('fuel', this.player.fuelLevel, Math.round(this.player.fuelLevel * 100));
 		this.hud.set('ammo', this.lasers.ammoLevel, Math.floor(this.lasers.ammoLevel * 100));
 		this.hud.set('speed', this.player.effectLevel('speed'), Math.ceil(this.player.effectRemaining('speed')));

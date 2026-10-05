@@ -43,6 +43,7 @@ const EFFECTS = {
 };
 
 const up = new THREE.Vector3();
+const velocity = new THREE.Vector3();
 const quat = new THREE.Quaternion();
 
 export default class IO8 extends SleekEntity {
@@ -71,6 +72,12 @@ export default class IO8 extends SleekEntity {
 	// How fast the wheel spins compared to normal top speed, eased (drives the engine sound)
 	engineRevs = 0;
 	sinceThrust = 0;
+	sinceDamage = 0;
+
+	// His velocity (centre of mass) over the last few physics steps, newest last, and the biggest speed change
+	// of the crash going on right now (0 when there isn't one), see updateHealth()
+	velocities = [];
+	crash = 0;
 
 	constructor (object3d, physics, conf = {}) {
 		super(object3d, physics, Object.assign({
@@ -89,6 +96,12 @@ export default class IO8 extends SleekEntity {
 			// Below `low` (0-1) the flames sputter
 			fuel: {capacity: 2, refillDelay: 1, refillTime: 1.5, low: 0.25},
 
+			// Hitting things hard hurts: how much his speed changes within `window` seconds (a fall stopping, a wall,
+			// a blast) past `safe` m/s does damage * excess² (like crash energy). A 1.5 m drop lands at ~5 m/s,
+			// 5 m at ~10, 10 m at ~14. Health comes back `refillDelay` seconds after the last hit, empty to full in
+			// `refillTime` seconds (null for no healing). At 0 he blows up
+			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: 30},
+
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},
 
@@ -100,6 +113,9 @@ export default class IO8 extends SleekEntity {
 			// Thruster sound volume while firing (it fades in and out with the flames)
 			thrusterVolume: 0.8,
 
+			// Blowing up (two sounds layered: a deep boom and a crunch, pitched down a little)
+			explosionVolume: {boom: 1, crunch: 0.7},
+
 			// The head bobs on the leg springs (parts tagged "suspension" in Blender). Acceleration based like the neck,
 			// travel is how far (m) it can squash down and stretch up before hitting the end stops
 			suspension: {stiffness: 120, damping: 5, travel: [-0.12, 0.08]}
@@ -110,6 +126,7 @@ export default class IO8 extends SleekEntity {
 		this.handleInput();
 
 		this.fuel = this.config.fuel.capacity;
+		this.health = this.config.health.capacity;
 
 		// Work out the debris shapes now, so exploding doesn't hitch
 		Explosion.prepare(this.object3d);
@@ -263,10 +280,6 @@ export default class IO8 extends SleekEntity {
 				case 'KeyV':
 					this.satelliteIsSpinning = !this.satelliteIsSpinning;
 					break;
-
-				case 'Space':
-					this.onExplode?.();
-					break;
 			}
 		});
 
@@ -323,6 +336,7 @@ export default class IO8 extends SleekEntity {
 		this.isExploded = true;
 		this.engineSound?.stop();
 		this.thrusterSound?.stop();
+		this.playExplosion(explosion.center);
 
 		// Removing a body removes its joints too
 		this.destroy();
@@ -362,6 +376,7 @@ export default class IO8 extends SleekEntity {
 		}
 
 		this.updateFuel(timestep);
+		this.updateHealth(timestep);
 		this.updateEffects(timestep);
 	}
 
@@ -427,6 +442,50 @@ export default class IO8 extends SleekEntity {
 		return this.fuel / this.config.fuel.capacity;
 	}
 
+	// Damage from sudden speed changes of the whole of io8 (centre of mass, so the head bobbing on its springs
+	// doesn't count). Driving, thrust and gravity change it far too slowly to matter, a cardboard box gives
+	// way so it barely does either. One crash takes a few steps to play out, so it's charged by its peak:
+	// as the speed change grows, only the extra damage is taken
+	updateHealth (timestep) {
+		const {capacity, safe, damage, window, refillDelay, refillTime} = this.config.health;
+		const steps = Math.max(1, Math.round(window / timestep));
+
+		velocity.set(0, 0, 0);
+		[this.wheel, this.legs, this.head].forEach(body => velocity.addScaledVector(body.linvel(), body.mass()));
+		velocity.divideScalar(this.wheel.mass() + this.legs.mass() + this.head.mass());
+
+		this.velocities.push(velocity.clone());
+
+		if (this.velocities.length <= steps) {
+			return;
+		}
+
+		const change = velocity.distanceTo(this.velocities.shift());
+		const hurt = speed => damage * Math.max(0, speed - safe) ** 2;
+
+		if (change > safe) {
+			if (change > this.crash) {
+				this.health = Math.max(0, this.health - (hurt(change) - hurt(this.crash)));
+				this.crash = change;
+				this.sinceDamage = 0;
+			}
+		}
+		else {
+			this.crash = 0;
+		}
+
+		this.sinceDamage += timestep;
+
+		if (refillTime && this.sinceDamage > refillDelay && this.health > 0) {
+			this.health = Math.min(capacity, this.health + capacity / refillTime * timestep);
+		}
+	}
+
+	// 0-1, for the health meter
+	get healthLevel () {
+		return this.health / this.config.health.capacity;
+	}
+
 	// A spring pulling the head towards the aim, done by hand rather than with the joint's motor because
 	// the motor's angle stops at ±180° and would spin the head the long way round when you aim behind.
 	// Same maths as the motor (acceleration based), so braking and accelerating still swing the head around.
@@ -477,8 +536,24 @@ export default class IO8 extends SleekEntity {
 		this.springOffset = offset;
 	}
 
+	// A random one of each kind's variations, layered
+	playExplosion (position) {
+		if (!this.explosionSounds) {
+			return;
+		}
+
+		const pick = buffers => buffers[Math.floor(Math.random() * buffers.length)];
+		const {boom, crunch} = this.config.explosionVolume;
+
+		this.audio.playAt(pick(this.explosionSounds.boom), position, {volume: boom});
+		this.audio.playAt(pick(this.explosionSounds.crunch), position, {volume: crunch, rate: 0.8});
+	}
+
 	// Give io8 his sounds (buffers loaded by the app), they play from where he is
-	initSounds (audio, {engine, thruster, impacts}) {
+	initSounds (audio, {engine, thruster, impacts, boom, crunch}) {
+		this.audio = audio;
+		this.explosionSounds = {boom, crunch};
+
 		// Bumps and crashes: the tyre thuds, everything else clanks. Judged by io8's whole weight (not just the
 		// part that got hit), so bumping a light box sounds like the box, not like io8
 		const weight = () => this.wheel.mass() + this.legs.mass() + this.head.mass();
