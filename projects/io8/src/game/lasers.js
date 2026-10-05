@@ -10,11 +10,13 @@ const SOUNDS = './assets/audio';
 const Y = new THREE.Vector3(0, 1, 0);
 const origin = new THREE.Vector3();
 const direction = new THREE.Vector3();
+const center = new THREE.Vector3();
 
 /*
 	Laser bolts. They fly (not an instant beam), but they're far too fast for a physics body: they'd pass
-	through a box between two steps. So each frame a ray is cast over the stretch the bolt covers, and if it
-	hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
+	through a box between two steps. So each frame the bolt's own shape (a capsule, so it can't slip through a
+	gap thinner than itself, like the seams between stacked boxes) is swept over the stretch it covers, and if
+	it hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
 	from bloom, no real lights (changing the number of lights makes three.js recompile its shaders)
 */
 export default class Lasers {
@@ -61,7 +63,8 @@ export default class Lasers {
 		// Along Y with the tip at the origin, so a bolt's position is its front end (where the ray starts from)
 		this.geometry = new THREE.CapsuleGeometry(radius, length - radius * 2, 4, 8).translate(0, -length / 2, 0);
 		this.material = new THREE.MeshBasicMaterial({color: new THREE.Color(color).multiplyScalar(brightness)});
-		this.ray = new RAPIER.Ray({x: 0, y: 0, z: 0}, {x: 1, y: 0, z: 0});
+		// The same capsule for the physics, swept along each frame (along Y, centred on its position)
+		this.shape = new RAPIER.Capsule((length - radius * 2) / 2, radius);
 		this.ammo = this.config.ammo.capacity;
 	}
 
@@ -123,19 +126,19 @@ export default class Lasers {
 	}
 
 	move (bolt, deltaTime) {
-		const {speed, range, blast, volume} = this.config;
+		const {speed, range, blast, volume, length} = this.config;
 		const {mesh} = bolt;
-		const {ray} = this;
 		const distance = speed * deltaTime;
 
-		ray.origin = mesh.position;
-		ray.dir = bolt.direction;
-
+		// The position is the tip, the capsule's centre is half a bolt behind it. The sweep's "velocity" is
+		// the unit direction, so its time of impact is how far (m) the bolt gets before it touches something.
 		// Skips io8's own parts (same collision groups as them), so he can't shoot himself
-		const hit = this.physics.world.castRay(ray, distance, true, undefined, ROBOT_GROUPS);
+		center.copy(mesh.position).addScaledVector(bolt.direction, -length / 2);
+
+		const hit = this.physics.world.castShape(center, mesh.quaternion, bolt.direction, this.shape, 0, distance, true, undefined, ROBOT_GROUPS);
 
 		if (hit) {
-			const point = ray.pointAt(hit.timeOfImpact);
+			const point = mesh.position.clone().addScaledVector(bolt.direction, hit.time_of_impact);
 			// Hits io8 too if he's close, so don't shoot point blank
 			new Explosion(this.scene, this.physics, point, blast).shockwave();
 			this.blasts.spawn(point, blast.size);
