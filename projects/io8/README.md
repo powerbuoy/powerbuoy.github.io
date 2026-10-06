@@ -14,11 +14,11 @@ Serve the folder with any static server and open it, e.g. through Apache, `npx s
 
 The code keeps asking for `.gltf` either way, the built version loads the `.glb` instead (see `SleekLoader`).
 
-`window.app` is exposed for poking at things in the console, e.g. `app.player.config.balance.stiffness = 400` (springs and motors are re-read every step).
+Add `?debug` to the address for an FPS counter. `window.app` is exposed for poking at things in the console, e.g. `app.player.config.balance.stiffness = 400` (springs and motors are re-read every step).
 
 ## Structure
 
-- `src/sleek/` - reusable engine bits (scene/renderer, physics, GLTF loader, entity builder)
+- `src/sleek/` - reusable engine bits (scene/renderer, physics, GLTF loader, entity builder, audio)
 - `src/game/` - the actual game: `io8.js` (the robot), `spawner.js` (obstacles along the map, tweak `CONFIG`, `OBSTACLES` and `DECORATIONS` there), `ground.js` (ground height anywhere on the map)
 - `assets/` - models, textures and audio
 - `lib/` - three.js and Rapier, copied in as-is. The import map in `index.html` maps `three`, `three/addons/` and `@dimforge/rapier3d-compat` to them. Only the three.js add-ons in use (and what they import) are there; to add one, copy it (and its imports) from the three.js repo's `examples/jsm/` into the same place under `lib/three/examples/jsm/`. To upgrade, replace the files with the same ones from a newer version
@@ -45,9 +45,9 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `friction`    | `_RigidBody`/shape | default 0.5                                                          |
 | `restitution` | `_RigidBody`/shape | default 0                                                            |
 | `collider`    | `_RigidBody`/shape | `hull`, `trimesh`, `cuboid` or `ball`. Default: hull if dynamic, trimesh if fixed |
-| `shadow`      | mesh/light         | `0` = no shadows. Default on, for meshes and lights. Applies to everything under the object too (put it on a parent to switch off a whole part) |
+| `shadow`      | mesh/light         | `0` = no shadows, `receive` = receives them but doesn't cast any (for big things like terrain, which would otherwise be drawn into every shadow map). Default on, for meshes and lights. Applies to everything under the object too (put it on a parent to switch off a whole part) |
 | `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot and sun |
-| `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_Mesh` to keep the head intact). Default: every mesh is its own piece |
+| `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_RigidBody` to keep the head intact). Default: every mesh is its own piece |
 | `emit`        | an empty on io8    | `smoke`: damage smoke and sparks come from here (any number of them, a random one each time). Parent it to the part it should move with |
 
 Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
@@ -59,11 +59,11 @@ The map is loaded from `MAP` in `src/game/app.js`.
 - Export as GLTF into `assets/gltf/<name>/`
 - Same conventions as everything else: a `Something_RigidBody` with no `mass` (fixed), a `_Mesh` child for looks and optionally a `_Shape` child for collisions (otherwise the mesh collides as it is). Several rigid bodies are fine (road pieces, ramps, walls)
 - The shape becomes a triangle mesh, so hills, dips and overhangs all work. It can be the same mesh as the visible one, or a simpler copy
-- io8 drives along **+X at z = 0**. Keep the ground at least 3 m deep on the negative Z side (street lights stand at z = -2.5, clutter at z = -1 to -1.8) and 1 m on the positive side (pyramids stick out ~0.75 m)
+- io8 drives along **+X at z = 0**. Keep the ground at least 3 m deep on the negative Z side (clutter stands at z = -1 to -1.8) and 1 m on the positive side (pyramids stick out ~0.75 m)
 - The map's X extent is its length. Nothing spawns within 2 m of either end, and io8 will drive off the edge unless there's a wall there
 - Add an empty called **`Spawn`** where io8 should start (its origin is the middle of the wheel, so put it ~0.5 m above the ground). Without one, io8 starts on the ground at x = 0
 - Slopes up to about 20° are fine to drive up. Much steeper and io8 will need its thrusters
-- Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky). See `src/game/sky.js`
+- Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky), `date` (`"MM-DD"`) the time of year for the stars, and `environment` how strongly the sky lights the scene (default 1). See `src/game/sky.js`
 - Optional **`SkyPivot`** empty with the sun and moon on it, sun straight up (model it at midday, moon on the opposite side): it turns with the time like a clock hand, rising on the left. It moves with the camera like the rest of the sky, so the sun and moon don't drift. A Sun lamp parented to the sun or moon shines from it towards io8 and fades out as it sets
 
 ## Physics gotchas

@@ -118,10 +118,12 @@ export default class Spawner {
 		const {behind, ahead} = CONFIG.despawn;
 
 		this.props.forEach(prop => {
-			const dx = prop.position.x - x;
+			const {x: propX, y: propY} = prop.position;
+			const dx = propX - x;
 
 			// Anything that fell off the world goes too
-			if (dx < -behind || dx > ahead || prop.position.y < -10) {
+			if (dx < -behind || dx > ahead || propY < -10) {
+				this.impacts?.unregister(prop.colliders);
 				prop.destroy();
 				this.props.delete(prop);
 			}

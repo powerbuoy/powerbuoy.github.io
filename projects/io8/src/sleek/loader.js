@@ -12,7 +12,6 @@ const LIGHT_SHADOWS = {
 // One manager for every load so a single progress bar covers everything
 const manager = new THREE.LoadingManager();
 const gltfLoader = new GLTFLoader(manager);
-const textureLoader = new THREE.TextureLoader(manager);
 
 // The build (build.mjs) turns every .gltf into a .glb, so the code can keep asking for .gltf either way
 if (globalThis.BUILD) {
@@ -26,21 +25,19 @@ export default class SleekLoader {
 		manager.onProgress = (url, loaded, total) => callback(loaded / total, url);
 	}
 
-	static async loadTexture (src) {
-		return textureLoader.loadAsync(src);
-	}
-
 	static async loadObject (src) {
 		const gltf = await gltfLoader.loadAsync(src);
 
 		gltf.scene.traverse(node => {
 			// Meshes cast and receive shadows unless Blender says "shadow: 0", on them or on anything they're under
-			// (a mesh with several materials arrives as one mesh per material, the property is on their parent)
+			// (a mesh with several materials arrives as one mesh per material, the property is on their parent).
+			// "shadow: receive" only receives them: for big things like the terrain, which would otherwise be drawn
+			// again into every shadow map just to shade itself
 			if (node.isMesh) {
 				const shadow = SleekLoader.inherited(node, 'shadow') ?? 1;
 
-				node.castShadow = !!Number(shadow);
-				node.receiveShadow = !!Number(shadow);
+				node.castShadow = shadow !== 'receive' && !!Number(shadow);
+				node.receiveShadow = shadow === 'receive' || !!Number(shadow);
 
 				if (node.material.map) {
 					node.material.map.anisotropy = 16;

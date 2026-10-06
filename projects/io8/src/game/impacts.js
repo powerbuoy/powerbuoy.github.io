@@ -70,6 +70,14 @@ export default class Impacts {
 		});
 	}
 
+	// Call before the colliders are removed, or their entries stay forever (handles are never reused)
+	unregister (colliders) {
+		colliders.forEach(collider => {
+			this.materials.delete(collider.handle);
+			this.lastPlayed.delete(collider.parent()?.handle);
+		});
+	}
+
 	onContact (collider1, collider2, force) {
 		// Of the two, the one that felt it most (in g's) makes the sound
 		let loudest = null;

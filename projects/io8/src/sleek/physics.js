@@ -6,16 +6,16 @@ const pos = new THREE.Vector3();
 const quat = new THREE.Quaternion();
 const nextPos = new THREE.Vector3();
 const nextQuat = new THREE.Quaternion();
-const scale = new THREE.Vector3();
+const unused = new THREE.Vector3();
 const matrix = new THREE.Matrix4();
 const parentInverse = new THREE.Matrix4();
 
 export default class SleekPhysics {
-	static RAPIER = RAPIER;
-
 	accumulator = 0;
-	links = [];
-	listeners = [];
+
+	// By body, and Sets, so adding and removing (whole piles of props at once) is cheap
+	links = new Map();
+	listeners = new Set();
 	contactListeners = [];
 
 	// Rapier is WASM so it has to be initialised once before anything else touches it
@@ -39,27 +39,34 @@ export default class SleekPhysics {
 		this.events = new RAPIER.EventQueue(true);
 	}
 
-	// Keep an Object3D in sync with a rigid body
+	// Keep an Object3D in sync with a rigid body. Fixed bodies never move, so they're left where they are.
+	// Rigid bodies don't scale either, so the object's scale is remembered once
 	link (object3d, body) {
-		this.links.push({
+		if (body.isFixed()) {
+			return;
+		}
+
+		this.links.set(body, {
 			object3d,
 			body,
+			scale: object3d.getWorldScale(new THREE.Vector3()),
 			prevPos: new THREE.Vector3().copy(body.translation()),
-			prevQuat: new THREE.Quaternion().copy(body.rotation())
+			prevQuat: new THREE.Quaternion().copy(body.rotation()),
+			isResting: false
 		});
 	}
 
 	unlink (body) {
-		this.links = this.links.filter(link => link.body !== body);
+		this.links.delete(body);
 	}
 
 	// Called before every fixed physics step (forces, motors, balancing etc.)
 	onStep (callback) {
-		this.listeners.push(callback);
+		this.listeners.add(callback);
 	}
 
 	offStep (callback) {
-		this.listeners = this.listeners.filter(listener => listener !== callback);
+		this.listeners.delete(callback);
 	}
 
 	// Called with (collider1, collider2, force in newtons) whenever two things push on each other harder than
@@ -75,10 +82,12 @@ export default class SleekPhysics {
 		this.accumulator += Math.min(deltaTime, 0.1) * this.config.speed;
 
 		while (this.accumulator >= this.world.timestep) {
-			// Remember where everything was, so we can draw in between steps
+			// Remember where everything was, so we can draw in between steps (asleep = not moving)
 			this.links.forEach(link => {
-				link.prevPos.copy(link.body.translation());
-				link.prevQuat.copy(link.body.rotation());
+				if (!link.body.isSleeping()) {
+					link.prevPos.copy(link.body.translation());
+					link.prevQuat.copy(link.body.rotation());
+				}
 			});
 
 			this.listeners.forEach(callback => callback(this.world.timestep));
@@ -101,19 +110,32 @@ export default class SleekPhysics {
 	// drawing the latest step as-is makes moving things judder. Instead draw them "alpha" of the way
 	// from the previous step to the latest one, which is smooth at any frame rate (and ~1 step behind)
 	sync (alpha = 1) {
-		this.links.forEach(({object3d, body, prevPos, prevQuat}) => {
-			if (body.isFixed()) {
-				return;
+		this.links.forEach(link => {
+			const {object3d, body, prevPos, prevQuat} = link;
+
+			// Most props are asleep most of the time (Rapier stops simulating things that have settled). Put one
+			// exactly where it stopped once, then leave it until it wakes up
+			if (body.isSleeping()) {
+				if (link.isResting) {
+					return;
+				}
+
+				link.isResting = true;
+				prevPos.copy(body.translation());
+				prevQuat.copy(body.rotation());
+			}
+			else {
+				link.isResting = false;
 			}
 
 			pos.copy(prevPos).lerp(nextPos.copy(body.translation()), alpha);
 			quat.copy(prevQuat).slerp(nextQuat.copy(body.rotation()), alpha);
-			matrix.compose(pos, quat, object3d.getWorldScale(scale));
+			matrix.compose(pos, quat, link.scale);
 
 			object3d.parent.updateWorldMatrix(true, false);
 			parentInverse.copy(object3d.parent.matrixWorld).invert();
 			matrix.premultiply(parentInverse);
-			matrix.decompose(object3d.position, object3d.quaternion, scale);
+			matrix.decompose(object3d.position, object3d.quaternion, unused);
 		});
 	}
 }

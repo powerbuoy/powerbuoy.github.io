@@ -36,6 +36,13 @@ export default class Particles {
 	}
 
 	step (deltaTime) {
+		// Nothing going on (most of the time), nothing to do
+		if (!this.particles.length) {
+			this.mesh.count = 0;
+
+			return;
+		}
+
 		this.particles = this.particles.filter(particle => (particle.age += deltaTime) < particle.life);
 
 		this.particles.forEach((particle, i) => {
@@ -44,9 +51,15 @@ export default class Particles {
 			this.mesh.setColorAt(i, particle.color);
 		});
 
-		this.mesh.count = this.particles.length;
-		this.mesh.instanceMatrix.needsUpdate = true;
-		this.mesh.instanceColor.needsUpdate = true;
+		// Only the live ones are sent to the GPU, not the whole pool
+		const {instanceMatrix, instanceColor} = this.mesh;
+		const count = this.particles.length;
+
+		this.mesh.count = count;
+		instanceMatrix.addUpdateRange(0, count * 16);
+		instanceColor.addUpdateRange(0, count * 3);
+		instanceMatrix.needsUpdate = true;
+		instanceColor.needsUpdate = true;
 	}
 
 	update (particle, t, deltaTime) {}

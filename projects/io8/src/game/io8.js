@@ -50,9 +50,16 @@ const EFFECTS = {
 	}
 };
 
+// Scratch objects reused every physics step instead of allocating new ones
 const up = new THREE.Vector3();
 const velocity = new THREE.Vector3();
 const quat = new THREE.Quaternion();
+const legsUp = new THREE.Vector3();
+const anchor = new THREE.Vector3();
+const headPosition = new THREE.Vector3();
+const headOffset = new THREE.Vector3();
+const anchorVelocity = new THREE.Vector3();
+const headVelocity = new THREE.Vector3();
 
 export default class IO8 extends SleekEntity {
 	keys = new Set();
@@ -82,9 +89,12 @@ export default class IO8 extends SleekEntity {
 	sinceThrust = 0;
 	sinceDamage = 0;
 
-	// His velocity (centre of mass) over the last few physics steps, newest last, and the biggest speed change
-	// of the crash going on right now (0 when there isn't one), see updateHealth()
+	// His velocity (centre of mass) over the last few physics steps, kept in a ring (`newest` is where the latest
+	// went, `stored` how many there are so far), and the biggest speed change of the crash going on right now
+	// (0 when there isn't one), see updateHealth()
 	velocities = [];
+	newest = -1;
+	stored = 0;
 	crash = 0;
 
 	constructor (object3d, physics, conf = {}) {
@@ -202,6 +212,11 @@ export default class IO8 extends SleekEntity {
 		// Thrusters
 		this.flames = get('RobotThrusters');
 		this.thrusterLights = [light('RobotThrustersLeftLight'), light('RobotThrustersRightLight')];
+
+		// Only the flame meshes are hidden when off, not the lights in the same group: a hidden light changes how
+		// many lights there are, which makes three recompile every shader. Off they're just intensity 0
+		this.flameMeshes = [];
+		this.flames.traverse(obj => obj.isMesh && this.flameMeshes.push(obj));
 		this.thrusterIntensities = this.thrusterLights.map(l => l.intensity);
 		this.setThrusters(false);
 	}
@@ -478,16 +493,27 @@ export default class IO8 extends SleekEntity {
 		const steps = Math.max(1, Math.round(window / timestep));
 
 		velocity.set(0, 0, 0);
-		[this.wheel, this.legs, this.head].forEach(body => velocity.addScaledVector(body.linvel(), body.mass()));
+		velocity.addScaledVector(this.wheel.linvel(), this.wheel.mass());
+		velocity.addScaledVector(this.legs.linvel(), this.legs.mass());
+		velocity.addScaledVector(this.head.linvel(), this.head.mass());
 		velocity.divideScalar(this.wheel.mass() + this.legs.mass() + this.head.mass());
 
-		this.velocities.push(velocity.clone());
+		// The one `steps` ago is the next slot round the ring, about to be overwritten
+		while (this.velocities.length <= steps) {
+			this.velocities.push(new THREE.Vector3());
+		}
 
-		if (this.velocities.length <= steps) {
+		const size = this.velocities.length;
+
+		this.newest = (this.newest + 1) % size;
+		this.velocities[this.newest].copy(velocity);
+		this.stored = Math.min(size, this.stored + 1);
+
+		if (this.stored < size) {
 			return;
 		}
 
-		const change = velocity.distanceTo(this.velocities.shift());
+		const change = velocity.distanceTo(this.velocities[(this.newest + 1) % size]);
 		const hurt = speed => damage * Math.max(0, speed - safe) ** 2;
 
 		if (change > safe) {
@@ -534,20 +560,25 @@ export default class IO8 extends SleekEntity {
 	// rests at the natural height and only squashes when something pushes (landing, bumps, hitting things)
 	suspension (timestep) {
 		const {stiffness, damping, travel} = this.config.suspension;
-		const up = new THREE.Vector3(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation()));
-		const anchor = new THREE.Vector3().copy(this.neckAnchor).applyQuaternion(quat).add(this.legs.translation());
-		const head = new THREE.Vector3().copy(this.head.translation());
+
+		legsUp.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation()));
+		anchor.copy(this.neckAnchor).applyQuaternion(quat).add(this.legs.translation());
+		headPosition.copy(this.head.translation());
 
 		// How far the head has moved up (+) or down (-) the legs, and how fast
-		const offset = head.clone().sub(anchor).dot(up);
+		const offset = headOffset.copy(headPosition).sub(anchor).dot(legsUp);
 		const legsCom = this.legs.worldCom();
 		const spin = this.legs.angvel().z;
-		const anchorVelocity = new THREE.Vector3().copy(this.legs.linvel()).add({x: -spin * (anchor.y - legsCom.y), y: spin * (anchor.x - legsCom.x), z: 0});
-		const speed = new THREE.Vector3().copy(this.head.linvel()).sub(anchorVelocity).dot(up);
+
+		anchorVelocity.copy(this.legs.linvel());
+		anchorVelocity.x -= spin * (anchor.y - legsCom.y);
+		anchorVelocity.y += spin * (anchor.x - legsCom.x);
+
+		const speed = headVelocity.copy(this.head.linvel()).sub(anchorVelocity).dot(legsUp);
 
 		// Much stiffer past the end of the travel, like hitting the end stop
 		const beyond = offset < travel[0] ? offset - travel[0] : offset > travel[1] ? offset - travel[1] : 0;
-		const spring = -stiffness * offset + 9.81 * up.y;
+		const spring = -stiffness * offset + 9.81 * legsUp.y;
 		const endStop = -stiffness * 60 * beyond;
 
 		// The spring is a real spring: its strength is set for the head's normal weight, not whatever it weighs
@@ -555,9 +586,9 @@ export default class IO8 extends SleekEntity {
 		// damping follow the actual weight, so however heavy it gets it stops there (instead of pushing through)
 		// and settles instead of wobbling
 		const force = this.headMass * spring + this.head.mass() * (endStop - damping * speed);
-		const impulse = up.multiplyScalar(force * timestep);
+		const impulse = legsUp.multiplyScalar(force * timestep);
 
-		this.head.applyImpulseAtPoint(impulse, head, true);
+		this.head.applyImpulseAtPoint(impulse, headPosition, true);
 		this.legs.applyImpulseAtPoint(impulse.negate(), anchor, true);
 
 		this.springOffset = offset;
@@ -640,7 +671,8 @@ export default class IO8 extends SleekEntity {
 	}
 
 	setThrusters (on) {
-		this.flames.visible = on;
+		this.flamesOn = on;
+		this.flameMeshes.forEach(mesh => mesh.visible = on);
 		this.thrusterLights.forEach((l, i) => l.intensity = on ? this.thrusterIntensities[i] : 0);
 	}
 
@@ -649,6 +681,9 @@ export default class IO8 extends SleekEntity {
 
 		this.headlight.intensity = on ? this.headlightIntensity : 0;
 		this.headlightBulb.material.emissiveIntensity = on ? this.headlightGlow : 0;
+
+		// No point drawing its shadow map while it's off (see Sunlight.step())
+		this.headlight.shadow.autoUpdate = on;
 	}
 
 	step (deltaTime) {
@@ -679,7 +714,7 @@ export default class IO8 extends SleekEntity {
 
 		// The sound follows the flames, sputter included
 		if (this.thrusterSound) {
-			const volume = this.flames.visible ? this.config.thrusterVolume : 0;
+			const volume = this.flamesOn ? this.config.thrusterVolume : 0;
 			const current = this.thrusterSound.getVolume();
 
 			this.thrusterSound.setVolume(current + (volume - current) * Math.min(1, deltaTime * 20));

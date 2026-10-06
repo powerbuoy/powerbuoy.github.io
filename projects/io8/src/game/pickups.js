@@ -108,15 +108,23 @@ export default class Pickups {
 		});
 	}
 
-	// A random pickup at x, `height` above y
+	// A random pickup at x, y (the spawner picks the height)
 	spawn (x, y) {
 		const model = this.models[Math.floor(Math.random() * this.models.length)];
-		const object3d = model.object3d.clone();
+		const object3d = this.create(model);
 
 		object3d.position.set(x, y, 0);
-		object3d.add(new THREE.Mesh(this.bubbleGeometry, model.bubble));
 		this.scene.add(object3d);
 		this.pickups.add({model, object3d, baseY: y, phase: Math.random() * Math.PI * 2, popping: 0});
+	}
+
+	// A pickup in its bubble, not placed anywhere yet
+	create (model) {
+		const object3d = model.object3d.clone();
+
+		object3d.add(new THREE.Mesh(this.bubbleGeometry, model.bubble));
+
+		return object3d;
 	}
 
 	// Call every frame with io8 (for the pickup check and despawning)

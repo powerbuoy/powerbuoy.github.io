@@ -15,11 +15,12 @@
 				--foreground: #fff;
 				--accent: #f90;
 				--card-background: rgb(0 0 0 / 0.2);
-				--card-padding: 1rem;
-				--card-radius: 0.25rem;
+				--hud-background: rgb(0 0 0 / 0.35);
 
 				/* Spacing */
 				--ui-padding: 2.5%;
+				--card-padding: 1rem;
+				--card-radius: 0.25rem;
 			}
 
 			/* Base */
@@ -68,14 +69,12 @@
 				justify-content: center;
 				gap: 1rem;
 
-				transition: opacity 0.3s ease;
-
 				> a {
 					display: block;
 					font-size: 4rem;
 					line-height: 1.2;
 					font-weight: bolder;
-					text-shadow: 0 0 0.2 rgba(0, 0, 0, 0.6);
+					text-shadow: 0 0 0.2rem rgba(0, 0, 0, 0.6);
 					transition: scale 0.2s ease;
 
 					&:hover {
@@ -97,17 +96,17 @@
 
 			html.paused #start {
 				display: flex;
-				opacity: 1;
 			}
 
 			/* UI */
 			#ui {
 				/* Each UI card */
+				/* No backdrop blur here (unlike the paused menu): the game moves under the cards, so the browser
+				would re-blur it every frame. A darker background keeps them readable instead */
 				& > * {
-					background: var(--card-background);
+					background: var(--hud-background);
 					padding: var(--card-padding);
 					border-radius: var(--card-radius);
-					backdrop-filter: blur(20px);
 
 					position: fixed;
 					z-index: 99;

@@ -15,7 +15,11 @@ const FORWARD = new THREE.Vector3(0, 0, -1);
 
 	A light parented to something (the sun or moon disc) always shines from that towards io8, so it follows
 	when the disc moves (the day/night cycle turns them), and fades out as the disc sets below the horizon.
-	A light on its own keeps the direction it has in Blender
+	A light on its own keeps the direction it has in Blender.
+
+	Of the lights on discs, only the brightest one casts shadows: every surface samples every shadow map,
+	even a dark light's, so the sun's and the moon's together cost far more than one. They hand over while
+	both are faded out near the horizon, and as there's always exactly one, no shader has to recompile
 */
 export default class Sunlight {
 	lights = [];
@@ -55,15 +59,28 @@ export default class Sunlight {
 	// Call every frame with the point shadows should be sharpest around (io8)
 	step (focus) {
 		const [low, high] = this.config.fade;
+		let brightest = null;
 
 		this.lights.forEach(({light, source, intensity}) => {
 			if (source) {
 				direction.copy(focus).sub(source.getWorldPosition(position)).normalize();
 				light.quaternion.setFromUnitVectors(FORWARD, direction);
 				light.intensity = intensity * THREE.MathUtils.smoothstep(-direction.y, low, high);
+
+				if (!brightest || light.intensity > brightest.intensity) {
+					brightest = light;
+				}
 			}
 
 			this.follow(light, focus);
+		});
+
+		// See above. Its shadow map isn't redrawn while it's completely faded out either
+		this.lights.forEach(({light, source}) => {
+			if (source) {
+				light.castShadow = light === brightest;
+				light.shadow.autoUpdate = light.castShadow && light.intensity > 0;
+			}
 		});
 	}
 

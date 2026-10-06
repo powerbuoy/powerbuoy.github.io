@@ -91,8 +91,8 @@ export default class Sky {
 		this.camera = camera;
 		this.cycle = conf.cycle ?? 0;
 
-		// The lighting is re-rendered from the sky whenever it's changed by this many hours (a few ms each time,
-		// so not every frame, and the sky changes slowly enough that nobody sees it step)
+		// The lighting is re-rendered from the sky whenever it's changed by this many hours (not every frame, the
+		// sky changes slowly enough that nobody sees it step)
 		this.environmentStep = 0.1;
 
 		// Turned so the sun is up at noon, see above
@@ -145,6 +145,12 @@ export default class Sky {
 			depthWrite: false
 		})));
 
+		// The sky is rendered into a small cube (a smooth gradient needs no detail), then turned into the lighting
+		// by the PMREM generator. Both targets are made once and reused, so the lighting texture never changes
+		// identity: a new one would make every material re-check its shader
+		this.renderer = renderer;
+		this.cube = new THREE.WebGLCubeRenderTarget(64, {type: THREE.HalfFloatType});
+		this.cubeCamera = new THREE.CubeCamera(0.1, 1000, this.cube);
 		this.pmrem = new THREE.PMREMGenerator(renderer);
 		scene.environmentIntensity = conf.environment ?? 1;
 
@@ -173,15 +179,12 @@ export default class Sky {
 		this.pivot.updateMatrixWorld(true);
 	}
 
-	// Render the sky into the environment map (a few ms, so redo it when the sky changes, not every frame)
+	// Render the sky into the environment map. Only when the sky has changed, see environmentStep
 	updateEnvironment () {
-		const target = this.pmrem.fromScene(this.environmentScene, 0, 0.1, 1000);
-
+		this.cubeCamera.update(this.renderer, this.environmentScene);
+		this.environment = this.pmrem.fromCubemap(this.cube.texture, this.environment);
 		this.environmentTime = this.time;
-
-		this.environment?.dispose();
-		this.environment = target;
-		this.scene.environment = target.texture;
+		this.scene.environment = this.environment.texture;
 	}
 
 	// The map's sky.json (next to its .gltf), or null when it has none. A typo in the file is an error, not "no sky"

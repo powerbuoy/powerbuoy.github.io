@@ -4,7 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import Explosion from './explosion.js';
 import {ROBOT_GROUPS} from './io8.js';
 
-// Sound names are files in Kenney's sci-fi pack, or "pack/name" for another Kenney pack (e.g. "impact-sounds/impactGeneric_light")
+// Where the Kenney sound packs are (see config.sounds)
 const SOUNDS = './assets/audio';
 
 const Y = new THREE.Vector3(0, 1, 0);
@@ -52,7 +52,8 @@ export default class Lasers {
 			// and how big it looks (see Blasts, 1 = io8 blowing up)
 			blast: {radius: 3, impulse: 167, size: 0.5},
 
-			// Sounds (5 variations of each, a random one plays) and their volumes (0-1)
+			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
+			// another Kenney pack (e.g. "impact-sounds/impactGeneric_light"). And their volumes (0-1)
 			// (`empty` is the dry click when you fire with no charge left), and optionally their pitch (1 = as recorded)
 			sounds: {fire: 'laserRetro', blast: 'explosionCrunch', empty: 'impact-sounds/impactGeneric_light'},
 			volume: {fire: 0.18, blast: 0.7, hit: 0.6, empty: 0.5},

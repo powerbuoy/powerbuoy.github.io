@@ -20,6 +20,9 @@ export default class SleekEntity {
 	bodies = {};
 	colliders = [];
 
+	// The first body, for position
+	mainBody = null;
+
 	// The meshes the colliders were made from (_Shape, or _Mesh when there's no _Shape)
 	shapeMeshes = [];
 
@@ -38,8 +41,11 @@ export default class SleekEntity {
 
 		this.createBodies();
 
-		this.stepListener = timestep => this.physicsStep(timestep);
-		this.physics.onStep(this.stepListener);
+		// Only entities that do something every physics step (io8) listen, plain props don't
+		if (this.physicsStep !== SleekEntity.prototype.physicsStep) {
+			this.stepListener = timestep => this.physicsStep(timestep);
+			this.physics.onStep(this.stepListener);
+		}
 	}
 
 	createBodies () {
@@ -87,6 +93,7 @@ export default class SleekEntity {
 			}
 
 			this.bodies[name] = body;
+			this.mainBody ??= body;
 			this.physics.link(obj, body);
 		});
 	}
@@ -98,16 +105,20 @@ export default class SleekEntity {
 			this.physics.world.removeRigidBody(body);
 		});
 
-		this.physics.offStep(this.stepListener);
+		if (this.stepListener) {
+			this.physics.offStep(this.stepListener);
+		}
+
 		this.object3d.removeFromParent();
 		this.bodies = {};
+		this.mainBody = null;
 		this.colliders = [];
 		this.shapeMeshes = [];
 	}
 
 	// World position of the first body, handy for distance checks
 	get position () {
-		return Object.values(this.bodies)[0]?.translation() ?? this.object3d.position;
+		return this.mainBody?.translation() ?? this.object3d.position;
 	}
 
 	// Called every rendered frame

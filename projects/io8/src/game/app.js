@@ -30,7 +30,7 @@ const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
 export default class App extends SleekScene {
 	constructor (el) {
-		// No envMap: the map's sky (see Sky) is what lights and reflects everything
+		// The map's sky (see Sky) is what lights and reflects everything
 		super(el, {
 			fov: 45,
 
@@ -87,8 +87,7 @@ export default class App extends SleekScene {
 			this.impacts.init(),
 			this.pickups.init(),
 			this.lasers.init(),
-			this.spawner.init(),
-			super.init()
+			this.spawner.init()
 		]);
 
 		this.map = new SleekEntity(map, this.physics, {name: 'Map'});
@@ -113,11 +112,11 @@ export default class App extends SleekScene {
 
 		this.damage = new Damage(this.scene, this.blasts, this.player);
 
-		this.blasts.warmUp(this.renderer);
-
-		// FPS counter, top left
-		this.stats = new Stats();
-		this.el.appendChild(this.stats.dom);
+		// FPS counter, top left, only with ?debug in the address (it redraws itself every frame)
+		if (new URLSearchParams(location.search).has('debug')) {
+			this.stats = new Stats();
+			this.el.appendChild(this.stats.dom);
+		}
 
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.controls.enabled = false;
@@ -134,6 +133,8 @@ export default class App extends SleekScene {
 		});
 
 		this.updateCamera(1);
+		this.sunlight.step(this.player.focusObject.getWorldPosition(target));
+		this.warmUp();
 	}
 
 	play () {
@@ -148,6 +149,32 @@ export default class App extends SleekScene {
 		this.audio.pause();
 		this.player.hasInput = false;
 		this.player.keys.clear();
+	}
+
+	// Compile every shader now, or each one hitches the game (~100 ms) the first time it's seen. three only
+	// compiles what's visible and in the scene, so hidden things (thruster flames, the stars by day) are shown
+	// for it and things added later (laser bolts, pickups) get a stand-in. Rendered once rather than just
+	// compiled, so the shadow versions are made too
+	warmUp () {
+		const hidden = [];
+		const standIns = [new THREE.Mesh(this.lasers.geometry, this.lasers.material), ...this.pickups.models.map(model => this.pickups.create(model))];
+
+		this.scene.traverse(obj => {
+			if (!obj.visible) {
+				hidden.push(obj);
+				obj.visible = true;
+			}
+		});
+
+		standIns.forEach(obj => {
+			obj.position.copy(this.camera.position).add({x: 0, y: 0, z: -3});
+			this.scene.add(obj);
+		});
+
+		this.composer.render();
+
+		standIns.forEach(obj => obj.removeFromParent());
+		hidden.forEach(obj => obj.visible = false);
 	}
 
 	// Blow io8 up (when he's out of health), Restart in the menu gets him back
@@ -180,7 +207,7 @@ export default class App extends SleekScene {
 		this.map.step(deltaTime);
 		// Keep stuff to crash into ahead of io8
 		this.spawner.update(this.player.focusObject.getWorldPosition(target).x);
-		this.stats.update();
+		this.stats?.update();
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
 		this.hud.set('fuel', this.player.fuelLevel, Math.round(this.player.fuelLevel * 100));

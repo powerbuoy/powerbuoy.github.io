@@ -106,7 +106,7 @@ export default class Explosion {
 		Turn every visible mesh in object3d into its own piece of debris with a collider made from
 		its shape. velocityOf(mesh) says how fast that part was already moving (so debris keeps momentum).
 		An object with a "debris: whole" custom property in Blender flies as one piece with everything under it
-		(e.g. on RobotHead_Mesh to keep the whole head intact).
+		(e.g. on RobotHead_RigidBody to keep the whole head intact).
 		Lights and other non-mesh children just come along with their piece
 	*/
 	shatter (object3d, velocityOf = () => null) {

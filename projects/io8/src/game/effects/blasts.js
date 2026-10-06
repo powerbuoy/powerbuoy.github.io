@@ -88,9 +88,4 @@ export default class Blasts {
 		camera.rotateY(wave(1.2, 2.9, 3) * angle);
 		camera.rotateZ(wave(0.7, 1.9, 4) * angle * 0.5);
 	}
-
-	// Compile every layer's shader now, so the first blast doesn't hitch
-	warmUp (renderer) {
-		renderer.compile(this.scene, this.camera);
-	}
 }

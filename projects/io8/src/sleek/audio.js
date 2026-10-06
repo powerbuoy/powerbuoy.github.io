@@ -42,7 +42,6 @@ export default class SleekAudio {
 		window.addEventListener('pointerdown', start);
 	}
 
-	// Play a one-off sound at a point in the world. rate changes the pitch (and speed)
 	// Stops every sound where it is (looping ones included) until resume()
 	pause () {
 		this.isPaused = true;
@@ -54,6 +53,7 @@ export default class SleekAudio {
 		this.listener.context.resume();
 	}
 
+	// Play a one-off sound at a point in the world. rate changes the pitch (and speed)
 	playAt (buffer, position, {volume = 1, rate = 1} = {}) {
 		const sound = this.pool[this.poolIndex];
 

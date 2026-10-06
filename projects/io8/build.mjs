@@ -30,7 +30,7 @@ const QUALITY = {color: 80, data: 92};
 const DATA_SLOTS = /^(normalTexture|metallicRoughnessTexture|occlusionTexture)$/;
 
 // Never copied into dist/
-const SKIP = new Set(['.DS_Store']);
+const SKIP = new Set(['.DS_Store', 'desktop.ini', 'Kenney.url', 'Patreon.url']);
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 

@@ -4,17 +4,12 @@ import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
-import SleekLoader from './loader.js';
-
 export default class SleekScene {
 	isPlaying = false;
 
 	constructor (el, conf = {}) {
 		this.el = el;
 		this.config = Object.assign({
-			envMap: false,
-			background: true,
-			backgroundBlurriness: 0,
 			fov: 50,
 			far: 500,
 			pixelRatio: 1,
@@ -26,7 +21,9 @@ export default class SleekScene {
 		// Keep near/far reasonably tight instead of using logarithmicDepthBuffer, which kills early depth testing (halved fps on an M1)
 		this.camera = new THREE.PerspectiveCamera(this.config.fov, 1, 0.1, this.config.far);
 
-		this.renderer = new THREE.WebGLRenderer({antialias: true});
+		// No antialias: everything is drawn through the composer (bloom) into its own render target, so the
+		// canvas's multisampling would never reach the 3D scene, it would only cost memory
+		this.renderer = new THREE.WebGLRenderer();
 		// Retina at full res is 4x the pixels, roughly halves fps. Try 1.5 or window.devicePixelRatio on a fast GPU
 		this.renderer.setPixelRatio(this.config.pixelRatio);
 		this.renderer.shadowMap.enabled = true;
@@ -39,23 +36,6 @@ export default class SleekScene {
 		// Observe the element rather than the window so the canvas can live anywhere
 		new ResizeObserver(() => this.resize()).observe(this.el);
 		this.resize();
-	}
-
-	async init () {
-		if (this.config.envMap) {
-			const texture = await SleekLoader.loadTexture(this.config.envMap);
-
-			texture.mapping = THREE.EquirectangularReflectionMapping;
-			texture.colorSpace = THREE.SRGBColorSpace;
-
-			this.scene.environment = texture;
-
-			// The same picture as the sky, blur it (0-1) if it's too busy behind the action
-			if (this.config.background) {
-				this.scene.background = texture;
-				this.scene.backgroundBlurriness = this.config.backgroundBlurriness;
-			}
-		}
 	}
 
 	// OutputPass does tone mapping and color space conversion, so it must always be last
