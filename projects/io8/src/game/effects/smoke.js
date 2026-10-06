@@ -6,26 +6,17 @@ const spin = new THREE.Quaternion();
 const euler = new THREE.Euler();
 
 /*
-	Low-poly puffs that drift up, swell and shrink away. Solid and lit like everything else (so they're
+	Puffs that drift up, swell and shrink away. Solid and lit like everything else (so they're
 	grey at noon, dark at night and warm at sunset), which also makes them cheap: no see-through overdraw.
 	Spawned in the world, not on whatever's smoking, so they trail behind it
 */
 export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
 		const material = new THREE.MeshStandardMaterial({roughness: 1});
-		const geometry = new THREE.IcosahedronGeometry(0.5, 0);
 
-		// Shaded smooth like everything modelled in Blender. three gives a 20-sided icosahedron one normal per
-		// face (faceted, whatever the material says), so point every normal straight out from the middle instead
-		const {position, normal} = geometry.attributes;
-
-		for (let i = 0; i < position.count; i++) {
-			normal.setXYZ(i, position.getX(i), position.getY(i), position.getZ(i));
-		}
-
-		geometry.normalizeNormals();
-
-		super(scene, geometry, material, 96);
+		// 320 triangles, round enough to sit with the Blender models (and shaded smooth like them: three only gives
+		// faceted normals at detail 0). 96 puffs is still only ~30k triangles in one draw call
+		super(scene, new THREE.IcosahedronGeometry(0.5, 2), material, 96);
 
 		this.config = Object.assign({
 			// How big a puff gets (m), how long it lasts (s), how fast it rises (m/s), how far from the emitter it
