@@ -14,8 +14,7 @@
 				--background: #000;
 				--foreground: #fff;
 				--accent: #f90;
-				--card-background: rgb(0 0 0 / 0.2);
-				--hud-background: rgb(0 0 0 / 0.35);
+				--card-background: rgb(0 0 0 / 0.35);
 
 				/* Spacing */
 				--ui-padding: 2.5%;
@@ -56,7 +55,6 @@
 			/* Start menu */
 			#start {
 				background: var(--card-background);
-				backdrop-filter: blur(20px);
 
 				position: fixed;
 				inset: 0;
@@ -101,10 +99,8 @@
 			/* UI */
 			#ui {
 				/* Each UI card */
-				/* No backdrop blur here (unlike the paused menu): the game moves under the cards, so the browser
-				would re-blur it every frame. A darker background keeps them readable instead */
 				& > * {
-					background: var(--hud-background);
+					background: var(--card-background);
 					padding: var(--card-padding);
 					border-radius: var(--card-radius);
 

@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 // Shadow settings per kind of light. A point light shines every way, so its shadow is 6 renders (one per
-// cube face), hence the much smaller default. A "shadowSize" custom property on the light overrides the size
+// cube face), hence the much smaller default. A "shadowSize" custom property on the light overrides the size.
+// normalBias (m) samples the shadow a little off the surface: without it, light at a shallow angle (a low sun,
+// the headlight along the road) makes surfaces shadow themselves in rings and stripes ("shadow acne")
 const LIGHT_SHADOWS = {
-	PointLight: {size: 512, bias: -0.002, near: 0.1},
-	SpotLight: {size: 2048, bias: -0.0002, near: 0.01},
-	DirectionalLight: {size: 2048, bias: -0.0002, near: 0.01}
+	PointLight: {size: 512, bias: -0.002, normalBias: 0.02, near: 0.1},
+	SpotLight: {size: 2048, bias: -0.0002, normalBias: 0.02, near: 0.01},
+	DirectionalLight: {size: 2048, bias: -0.0002, normalBias: 0.03, near: 0.01}
 };
 
 // One manager for every load so a single progress bar covers everything
@@ -54,11 +56,12 @@ export default class SleekLoader {
 			// Lights too (same rule as meshes, "shadow: 0" turns it off). They're the expensive part of shadows,
 			// so switch off the ones you don't need, like small lights inside something that would block them anyway
 			else if (node.isLight && Number(SleekLoader.inherited(node, 'shadow') ?? 1) && LIGHT_SHADOWS[node.type]) {
-				const {size, bias, near} = LIGHT_SHADOWS[node.type];
+				const {size, bias, normalBias, near} = LIGHT_SHADOWS[node.type];
 				const mapSize = Number(node.userData.shadowSize ?? size);
 
 				node.castShadow = true;
 				node.shadow.bias = bias;
+				node.shadow.normalBias = normalBias;
 				node.shadow.mapSize.set(mapSize, mapSize);
 				node.shadow.camera.near = near;
 				node.shadow.camera.far = node.distance || 50;
