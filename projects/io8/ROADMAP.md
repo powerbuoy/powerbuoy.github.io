@@ -44,46 +44,16 @@ Notes:
 
 ## 2. Pickups (power-ups)
 
-Floating pickups placed on the map that io8 drives or flies through.
+Done: floating pickups in glowing bubbles, spawned at random in the air along the road by the spawner (`pickups.js`). Each is a model in `assets/gltf/pickups/<Name>/<Name>.gltf` (listed in `MODELS`), with custom properties on its root object: `effect` (see `EFFECTS` in `io8.js`), `amount`, `duration` (none = instant) and optionally `pitch` (pickup sound). Effects so far: `speed`, `weight`, `health`.
+
+Ideas for more:
 
 - **Fuel**: refills the tank or makes it bigger for a while
-- **Speed**: raises `maxSpeed` for a few seconds
-- Ideas for more:
-	- **Shield**: smash through anything without slowing down (e.g. temporarily raise `driveFactor`)
-	- **Super thrust**: stronger thrust, no fuel drain, for a few seconds
-	- **Slow-mo**: lower `physics.config.speed` for a moment (the old todo list wanted slow-mo too)
-	- **Points**: collectibles for a score
-	- **Big io8**: briefly scale up... probably hard with joints, skip unless it's easy
-
-### Blender convention
-
-Empties, same as the props, so the map stays clean and consistent:
-
-- **Empty name: `Pickup_<Model>`**, e.g. `Pickup_FuelCan`, `Pickup_SpeedBolt`. No spaces, Blender's `.001` suffixes are ignored
-- **The model lives in its own file**, found from the name: `assets/gltf/pickups/<Model>/<Model>.gltf`. A new pickup type needs no code change, just a new model file
-- **The model's custom properties are the defaults** (on the root object in its own .blend), **the empty's custom properties override them** for that one placement (e.g. "this fuel can gives double")
-- **Position is used as-is**, including height: pickups float where you put them, they don't snap to the ground like props. Rotation is the starting rotation, scale is ignored
-- Tip: set the empty's display to Sphere, sized like the pickup, to see it in Blender
-
-Custom properties:
-
-| Property   | Meaning                                                            | Example                                                     |
-| ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `effect`   | what it does                                                       | `fuel`, `speed`, `thrust`, `shield`, `slowmo`, `points`     |
-| `amount`   | how much                                                           | fuel: `1` = full tank, speed: `1.5` = 50% faster             |
-| `duration` | seconds the effect lasts, `0` = instant (refills, points)          | `5`                                                         |
-| `respawn`  | seconds until it comes back, `0` = once only                       | `10`                                                        |
-
-The model file itself: the visible mesh, plus an optional `_Shape` child for the pickup area (otherwise a sphere around the model). Emissive material for glow, no real lights.
-
-Notes (code side):
-
-- New `pickups.js` next to `spawner.js`: find `Pickup_` empties in the map, load each model once (like the prop models), merge model + empty custom properties, clone per empty
-- Build/remove them by distance from io8 like the props, but remember which were collected so they don't come back (unless `respawn`)
-- Rapier **sensor** collider (`ColliderDesc.setSensor(true)`) on a fixed body so io8 passes through, detected with intersection events (`EventQueue` + `ActiveEvents.COLLISION_EVENTS`) or `world.intersectionPairsWith`. Only react to io8's colliders
-- Spin and bob in `step()`, a little pop/fade when collected
-- Effects: a small "active effects" list on `IO8` that changes config values and puts them back when `duration` runs out. Stacking the same effect should refresh the timer rather than multiply
-- Fuel (section 1) has to exist before the fuel pickup makes sense
+- **Shield**: smash through anything without slowing down (e.g. temporarily raise `driveFactor`)
+- **Super thrust**: stronger thrust, no fuel drain, for a few seconds
+- **Slow-mo**: lower `physics.config.speed` for a moment (the old todo list wanted slow-mo too)
+- **Points**: collectibles for a score
+- **Big io8**: briefly scale up... probably hard with joints, skip unless it's easy
 
 ## 2b. Lasers
 

@@ -18,4 +18,5 @@ Custom properties go on the Object tab. After each export, the code side follows
 
 ## Pickups
 
+- **Speed and Weight:** delete their unused `respawn` custom property (left over from the dropped hand-placed pickups)
 - **Health:** replace the temporary `assets/gltf/pickups/Health/Health.gltf` (a copy of Weight with the arrow turned up and a red glow) with a real model, same custom properties: `effect: health`, `amount: 0.25` (share of full health), no `duration`
