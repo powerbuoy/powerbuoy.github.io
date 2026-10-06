@@ -45,8 +45,9 @@ const shader = {
 		varying float vBrightness;
 
 		void main () {
-			// Round, with a soft edge
-			float edge = smoothstep(0.5, 0.2, length(gl_PointCoord - 0.5));
+			// Round, with a soft edge (smoothstep's edges have to go up, the other way round is undefined in GLSL
+			// and some GPUs return garbage, which bloom spreads into black squares)
+			float edge = 1.0 - smoothstep(0.2, 0.5, length(gl_PointCoord - 0.5));
 
 			// The sky drowns out the faint stars first, so the bright ones come out first at dusk
 			float visible = max(0.0, vBrightness - daylight);

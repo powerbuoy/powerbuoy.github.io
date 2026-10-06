@@ -18,8 +18,10 @@ const FORWARD = new THREE.Vector3(0, 0, -1);
 	A light on its own keeps the direction it has in Blender.
 
 	Of the lights on discs, only the brightest one casts shadows: every surface samples every shadow map,
-	even a dark light's, so the sun's and the moon's together cost far more than one. They hand over while
-	both are faded out near the horizon, and as there's always exactly one, no shader has to recompile
+	even a dark light's, so the sun's and the moon's together cost far more than one. The sun sets as the
+	moon rises (seen from the camera they reach the horizon together), so near the handover both are about
+	as bright: its shadow fades out as the other light catches up, so the swap itself is invisible. As
+	there's always exactly one, no shader has to recompile
 */
 export default class Sunlight {
 	lights = [];
@@ -60,6 +62,7 @@ export default class Sunlight {
 	step (focus) {
 		const [low, high] = this.config.fade;
 		let brightest = null;
+		let next = null;
 
 		this.lights.forEach(({light, source, intensity}) => {
 			if (source) {
@@ -68,7 +71,11 @@ export default class Sunlight {
 				light.intensity = intensity * THREE.MathUtils.smoothstep(-direction.y, low, high);
 
 				if (!brightest || light.intensity > brightest.intensity) {
+					next = brightest;
 					brightest = light;
+				}
+				else if (!next || light.intensity > next.intensity) {
+					next = light;
 				}
 			}
 
@@ -82,6 +89,10 @@ export default class Sunlight {
 				light.shadow.autoUpdate = light.castShadow && light.intensity > 0;
 			}
 		});
+
+		if (brightest) {
+			brightest.shadow.intensity = brightest.intensity > 0 ? 1 - (next?.intensity ?? 0) / brightest.intensity : 0;
+		}
 	}
 
 	// Put the light half the box's depth back along its direction from the focus. The position is snapped
