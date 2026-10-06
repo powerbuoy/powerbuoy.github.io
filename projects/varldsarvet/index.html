@@ -53,6 +53,10 @@
 				--font-heading: "Metal Mania", var(--font-body);
 			}
 
+			* {
+				box-sizing: border-box;
+			}
+
 			/* Base */
 			html {
 				color-scheme: dark;
@@ -112,7 +116,18 @@
 					img {
 						display: block;
 						width: min(50%, 20rem);
+						height: auto;
 						margin-inline: auto;
+
+						/* The logo is a single-color SVG, so filters can recolor it to match the text */
+						filter: brightness(0);
+
+						@media (prefers-color-scheme: dark) {
+							filter: brightness(0) invert(1);
+						}
+
+						/* Fixed dark mode for now */
+						filter: brightness(0) invert(1);
 					}
 				}
 			}
@@ -135,11 +150,13 @@
 			#band {
 				> div {
 					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+					grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
 					gap: 3rem;
 				}
 
 				figure {
+					margin: 0;
+
 					img {
 						aspect-ratio: 1/1;
 						object-fit: contain;
@@ -207,7 +224,7 @@
 		<header>
 
 			<h1>
-				<img src="assets/site-logo.png" alt="Världsarvet">
+				<img src="assets/site-logo.svg" alt="Världsarvet" width="1098" height="1124">
 			</h1>
 
 		</header>
