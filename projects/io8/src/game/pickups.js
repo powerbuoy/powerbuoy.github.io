@@ -2,6 +2,8 @@ import * as THREE from 'three';
 
 import SleekLoader from '../sleek/loader.js';
 
+import {DESPAWN} from './spawner.js';
+
 // Pickup models, in assets/gltf/pickups/<Name>/<Name>.gltf. What each one does comes from the custom properties
 // on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
 // one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default)
@@ -71,8 +73,8 @@ export default class Pickups {
 			// Seconds to shrink away when picked up
 			pop: 0.15,
 
-			// Removed once this far behind or ahead of io8, like the props
-			despawn: {behind: 8, ahead: 35}
+			// Removed once this far behind or ahead of io8, the same as the props (the spawner places them)
+			despawn: DESPAWN
 		}, conf);
 	}
 

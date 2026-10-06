@@ -20,6 +20,7 @@ import Sunlight from './sunlight.js';
 import Sky from './sky.js';
 import Blasts from './effects/blasts.js';
 import Damage from './damage.js';
+import FollowCamera from './camera.js';
 
 // Swap for your own map. Conventions (and what the map needs) are in the README
 const MAP = './assets/gltf/windowsxpmap/windowsxpmap.gltf';
@@ -30,10 +31,9 @@ const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
 export default class App extends SleekScene {
 	constructor (el) {
-		// The map's sky (see Sky) is what lights and reflects everything
+		// The map's sky (see Sky) is what lights and reflects everything, the field of view is per camera view
+		// (see FollowCamera)
 		super(el, {
-			fov: 45,
-
 			// Draw distance (m), far enough for a sun and moon kilometres away, and the stars
 			far: 5000
 		});
@@ -41,9 +41,6 @@ export default class App extends SleekScene {
 		this.physics = new SleekPhysics();
 		this.hud = new Hud();
 		this.spawner = new Spawner(this.scene, this.physics);
-		this.cameraTarget = new THREE.Vector3();
-		this.cameraLead = 0;
-		this.cameraLift = 0;
 
 		// Mouse position in -1..1 screen coordinates, null until it first moves
 		this.pointer = null;
@@ -76,10 +73,11 @@ export default class App extends SleekScene {
 
 		const sciFi = name => this.audio.load(`./assets/audio/kenney_sci-fi-sounds/Audio/${name}.ogg`);
 
-		const [robot, map, sky, engineSound, thrusterSound, boom, crunch] = await Promise.all([
+		const [robot, map, sky, views, engineSound, thrusterSound, boom, crunch] = await Promise.all([
 			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
 			SleekLoader.loadObject(MAP),
 			Sky.load(MAP),
+			FollowCamera.load(),
 			this.audio.load('./assets/audio/freesound/407540__sojan__sci-fi-engine-loop.ogg'),
 			this.audio.load('./assets/audio/freesound/512815__mostyxs__good-jetpack-sound-loop.wav'),
 			Promise.all([0, 1].map(i => sciFi(`lowFrequency_explosion_00${i}`))),
@@ -124,11 +122,20 @@ export default class App extends SleekScene {
 		// OrbitControls puts an inline cursor: auto on the canvas, which hides the crosshair from app.css
 		this.renderer.domElement.style.cursor = '';
 
-		// O toggles the orbit camera
+		this.follow = new FollowCamera(this.camera, this.ground, views);
+
+		// O toggles the orbit camera, the number keys pick a view (see FollowCamera)
 		window.addEventListener('keydown', e => {
-			if (e.code === 'KeyO' && !e.repeat && this.isPlaying) {
+			if (e.repeat || !this.isPlaying) {
+				return;
+			}
+
+			if (e.code === 'KeyO') {
 				this.controls.enabled = !this.controls.enabled;
-				this.controls.target.copy(this.cameraTarget);
+				this.controls.target.copy(this.follow.target);
+			}
+			else {
+				this.follow.pick(e.code);
 			}
 		});
 
@@ -256,56 +263,7 @@ export default class App extends SleekScene {
 
 	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other
 	updateCamera (deltaTime) {
-		const follow = 4;
-
-		// Easing after io8 at rate `follow` leaves the camera speed / follow behind, which pushes io8 towards
-		// the middle of the screen when it's fast. Aiming that far ahead cancels it out, so io8 stays put on
-		// screen at any speed. The speed is smoothed so io8's wobble doesn't shake the camera
-		this.cameraLead += (this.player.focusBody.linvel().x / follow - this.cameraLead) * Math.min(1, deltaTime * 2);
-
-		this.player.focusObject.getWorldPosition(target);
-		target.x += this.cameraLead;
-		this.cameraTarget.lerp(target, Math.min(1, deltaTime * follow));
-
-		// How far (m) the camera sits to the right of io8, and how far back
-		const shift = 0.3;
-		const distance = 7.5;
-
-		// Where io8 goes on screen, -1 is the left edge and 1 the right, the rest is room to see ahead. The camera
-		// turns right until he's there, which depends on how wide the screen is (a narrow portrait screen needs
-		// much less turn, or he'd end up off it). Measured at his depth, so a little out for things in front/behind
-		const screenX = -0.5;
-		const halfWidth = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this.camera.aspect;
-		const ahead = distance * Math.tan(Math.atan(-screenX * halfWidth) - Math.atan(shift / distance));
-
-		// Height follows io8 too, for hills. 0.32 keeps the framing the flat road had
-		const x = this.cameraTarget.x + shift;
-		const y = this.cameraTarget.y + 0.32;
-		const lift = this.cameraLiftFor(x, y, this.cameraTarget.y + 0.5, distance);
-
-		// Straight up when the ground needs it (so it never dips in), eased back down so it doesn't bob over every bump
-		this.cameraLift = lift > this.cameraLift ? lift : this.cameraLift + (lift - this.cameraLift) * Math.min(1, deltaTime * 2);
-
-		this.camera.position.set(x, y + this.cameraLift, distance);
-		this.camera.lookAt(x + ahead, this.cameraTarget.y + 0.5, this.cameraTarget.z);
-
+		this.follow.update(deltaTime, this.player.focusObject.getWorldPosition(target), this.player.focusBody.linvel().x);
 		this.blasts.shake(this.camera);
-	}
-
-	// How much higher than `y` the camera (at depth z) has to be for it, and its view of io8 (lookY at the road,
-	// z = 0), to stay `clearance` above the terrain in front of the road. Checked at a few points along the way
-	cameraLiftFor (x, y, lookY, z, clearance = 0.3) {
-		let lift = 0;
-
-		[1, 0.8, 0.6, 0.4].forEach(t => {
-			const ground = this.ground.heightAt(x, z * t);
-
-			// The line of sight at t of the way from the road to the camera is at lookY + (cameraY - lookY) * t
-			if (ground !== null) {
-				lift = Math.max(lift, (ground + clearance - lookY) / t + lookY - y);
-			}
-		});
-
-		return lift;
 	}
 }

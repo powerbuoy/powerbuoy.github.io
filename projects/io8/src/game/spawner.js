@@ -13,20 +13,24 @@ const MODELS = {
 // What each prop sounds like when it hits something (see impacts.js)
 const IMPACT = {cardboard: 'cardboard'};
 
+// How far behind and ahead of io8 (m) the road is filled in. Ahead has to reach past what the camera can see
+// (view 3 looks a long way down the road), or things visibly pop in
+const RANGE = {behind: 6, ahead: 80};
+
+// The road is built in chunks of this many metres, each with a couple of obstacles and some background clutter
+const CHUNK = 10;
+
+// Anything that ends up this far from io8 (debris and pickups included) is removed, a chunk past the range so
+// what was just built doesn't go straight away
+export const DESPAWN = {behind: RANGE.behind + 2, ahead: RANGE.ahead + CHUNK};
+
 const CONFIG = {
-	// The road is built in chunks, each with a couple of obstacles and some background clutter.
-	// forget is how far away a chunk has to be before it can be built again (when driving back),
-	// keep it well past despawn so a rebuilt chunk never lands on top of its own leftovers
-	chunk: {size: 10, behind: 6, count: 3, forget: 30},
 
 	// Nothing spawns closer than this to either end of the map
 	edge: 2,
 
 	// An obstacle slot every spacing m (offset from the map's x = 0), each one used by chance
 	obstacles: {spacing: 15, offset: 2, chance: 0.7},
-
-	// Anything that ends up this far from io8 (debris included) is removed
-	despawn: {behind: 8, ahead: 35},
 
 	// Chance of a pickup in each chunk, and how high above the ground (m). io8 is about 1.15 m tall with his
 	// antenna up, so they're all out of reach without flying
@@ -96,26 +100,29 @@ export default class Spawner {
 
 	// Fixed size window of chunk indices around io8, new ones get filled
 	updateChunks (x) {
-		const {size, behind, count, forget} = CONFIG.chunk;
-		const first = Math.floor((x - behind) / size);
+		const last = Math.floor((x + RANGE.ahead) / CHUNK);
 
-		for (let index = first; index < first + count; index++) {
+		for (let index = Math.floor((x - RANGE.behind) / CHUNK); index <= last; index++) {
 			if (!this.chunks.has(index)) {
 				this.chunks.add(index);
 				this.createChunk(index);
 			}
 		}
 
-		// The props themselves are cleaned up by distance in despawn() (debris wanders off from its chunk)
+		// The props themselves are cleaned up by distance in despawn() (debris wanders off from its chunk). A chunk
+		// is only forgotten (so it can be built again when driving back) well past that, so a rebuilt chunk never
+		// lands on top of its own leftovers
 		this.chunks.forEach(index => {
-			if (Math.abs(index * size + size / 2 - x) > forget) {
+			const dx = index * CHUNK + CHUNK / 2 - x;
+
+			if (dx < -(DESPAWN.behind + CHUNK * 2) || dx > DESPAWN.ahead + CHUNK * 2) {
 				this.chunks.delete(index);
 			}
 		});
 	}
 
 	despawn (x) {
-		const {behind, ahead} = CONFIG.despawn;
+		const {behind, ahead} = DESPAWN;
 
 		this.props.forEach(prop => {
 			const {x: propX, y: propY} = prop.position;
@@ -131,7 +138,7 @@ export default class Spawner {
 	}
 
 	createChunk (index) {
-		const {size} = CONFIG.chunk;
+		const size = CHUNK;
 		const start = index * size;
 
 		// The obstacle slots that fall inside this chunk (none in some, as the spacing is bigger than a chunk)
