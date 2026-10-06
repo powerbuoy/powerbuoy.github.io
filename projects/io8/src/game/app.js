@@ -30,10 +30,8 @@ const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
 export default class App extends SleekScene {
 	constructor (el) {
+		// No envMap: the map's sky (see Sky) is what lights and reflects everything
 		super(el, {
-			// Lights and reflects everything, but isn't drawn behind it (the map's night sky is black)
-			envMap: './assets/neuer_zollhof_1k.jpg',
-			background: false,
 			fov: 45,
 
 			// Draw distance (m), far enough for a sun and moon kilometres away, and the stars
