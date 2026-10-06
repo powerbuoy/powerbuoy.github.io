@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html lang="sv">
+
+	<head>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="Världsarvet coverband, Kyrkbyn">
+
+		<title>Världsarvet</title>
+
+		<style>
+			/* Fonts */
+			@font-face {
+				font-family: "Metal Mania";
+				font-style: normal;
+				font-weight: normal;
+				font-display: swap;
+				src: url("assets/fonts/metal-mania.woff2") format("woff2");
+			}
+
+			@font-face {
+				font-family: "Barlow";
+				font-style: normal;
+				font-weight: normal;
+				font-display: swap;
+				src: url("assets/fonts/barlow-400.woff2") format("woff2");
+			}
+
+			@font-face {
+				font-family: "Barlow";
+				font-style: normal;
+				font-weight: bold;
+				font-display: swap;
+				src: url("assets/fonts/barlow-700.woff2") format("woff2");
+			}
+
+			/* Variables */
+			:root {
+				/* Layout */
+				--site-width-min: 85vw;
+				--site-width-max: 960px;
+				--site-width: min(var(--site-width-min), var(--site-width-max));
+				--site-padding: calc((100vw - var(--site-width)) / 2);
+
+				/* Colors */
+				--bg-color: light-dark(white, black);
+				--text-color: light-dark(black, white);
+
+				/* Typography */
+				--font-body: Barlow, Helvetica, sans-serif;
+				--font-heading: "Metal Mania", var(--font-body);
+			}
+
+			/* Base */
+			html {
+				color-scheme: dark;
+				background-color: var(--bg-color);
+				color: var(--text-color);
+				font: 100%/1.6 var(--font-body);
+			}
+
+			body {
+				margin: 0;
+			}
+
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6 {
+				font: 6rem/1 var(--font-heading);
+				margin: 0 0 1.5rem;
+			}
+
+			h2 {
+				font-size: 5rem;
+			}
+
+			h3 {
+				font-size: 2rem;
+			}
+
+			p {
+				margin: 0 0 1rem;
+				max-width: 75ch;
+			}
+
+			figure {
+				margin: 0 0 1rem;
+
+				img {
+					display: block;
+					width: 100%;
+					height: auto;
+				}
+			}
+
+			img {
+				max-width: 100%;
+			}
+
+			/* Header */
+			body > header {
+				margin: 2rem var(--site-padding);
+
+				h1 {
+					margin: 0;
+
+					img {
+						display: block;
+						width: min(50%, 20rem);
+						margin-inline: auto;
+					}
+				}
+			}
+
+			/* All sections */
+			section {
+				margin: 5rem var(--site-padding);
+				text-align: center;
+
+				p {
+					margin-inline: auto;
+				}
+			}
+
+			/* About */
+			#about {
+			}
+
+			/* Band */
+			#band {
+				> div {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+					gap: 3rem;
+				}
+
+				figure {
+					img {
+						aspect-ratio: 1/1;
+						object-fit: contain;
+						border-radius: 50%;
+						margin-bottom: 1rem;
+						border: 0.5rem solid var(--text-color);
+					}
+
+					h3 {
+						margin-bottom: 0;
+					}
+
+					h3 + p {
+						margin-bottom: 0.5rem;
+					}
+
+					small {
+						text-transform: uppercase;
+					}
+				}
+			}
+
+			/* Gallery */
+			#gallery {
+				figure {
+					margin: 0;
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+
+					a {
+						display: block;
+						overflow: hidden;
+
+						img {
+							display: block;
+							aspect-ratio: 1 / 1;
+							object-fit: cover;
+							transition: scale 1.2s ease;
+
+							&:hover {
+								scale: 1.2;
+							}
+						}
+					}
+				}
+			}
+
+			/* Footer */
+			body > footer {
+				margin: 2rem var(--site-padding);
+				text-align: center;
+				font-size: smaller;
+				text-transform: uppercase;
+
+				p {
+					margin-inline: auto;
+				}
+			}
+		</style>
+
+	</head>
+
+	<body>
+
+		<header>
+
+			<h1>
+				<img src="assets/site-logo.png" alt="Världsarvet">
+			</h1>
+
+		</header>
+
+		<main>
+
+			<section id="about">
+
+				<h2>Om oss</h2>
+
+				<p>Ex anim do dolore dolor occaecat deserunt nostrud aliqua. Cupidatat enim labore elit consectetur quis tempor et eiusmod non excepteur deserunt eu incididunt proident.</p>
+
+			</section>
+
+			<section id="band">
+
+				<h2>Bandet</h2>
+
+				<div>
+
+					<figure>
+
+						<img src="assets/the-band/henke.jpg" alt="Henke" loading="lazy" width="960" height="960">
+
+						<figcaption>
+
+							<h3>Henrik Hmm</h3>
+
+							<p><small>Sång, akustisk gitarr</small></p>
+
+							<p>Duis laborum id qui voluptate est elit elit eiusmod</p>
+
+						</figcaption>
+
+					</figure>
+
+					<figure>
+
+						<img src="assets/the-band/magnus.jpg" alt="Magnus" loading="lazy" width="960" height="960">
+
+						<figcaption>
+
+							<h3>Magnus Rubenson</h3>
+
+							<p><small>Trummor</small></p>
+
+							<p>Minim eu deserunt reprehenderit in Lorem nulla mollit sint dolore</p>
+
+						</figcaption>
+
+					</figure>
+
+					<figure>
+
+						<img src="assets/the-band/anton.jpg" alt="Anton" loading="lazy" width="960" height="960">
+
+						<figcaption>
+
+							<h3>Anton Olason</h3>
+
+							<p><small>Bas</small></p>
+
+							<p>Ad eiusmod aliqua aute in eiusmod mollit non mollit proident</p>
+
+						</figcaption>
+
+					</figure>
+
+					<figure>
+
+						<img src="assets/the-band/peter.jpg" alt="Peter" loading="lazy" width="960" height="960">
+
+						<figcaption>
+
+							<h3>Peter Hmm</h3>
+
+							<p><small>Elgitarr</small></p>
+
+							<p>Elit aliqua pariatur deserunt proident dolore sint</p>
+
+						</figcaption>
+
+					</figure>
+
+				</div>
+
+			</section>
+
+			<section id="contact">
+
+				<h2>Kontakt</h2>
+
+				<p>Ad laborum ipsum duis sint tempor ipsum.</p>
+
+				<pre>[FORM_EMBED_SCRIPT]</pre>
+
+			</section>
+
+			<section id="gallery">
+
+				<h2>Galleri</h2>
+
+				<figure>
+
+					<a href="assets/gallery/IMG20260801174014.jpg" target="_blank"><img src="assets/gallery/thumbnails/IMG20260801174014.jpg" alt="Bandet riggar inför spelning under markisen vid Iraj i kyrkbyn" loading="lazy" width="800" height="600"></a>
+					<a href="assets/gallery/IMG20260801191205.jpg" target="_blank"><img src="assets/gallery/thumbnails/IMG20260801191205.jpg" alt="Bandet spelar live, med kyrktornet i bakgrunden" loading="lazy" width="800" height="600"></a>
+					<a href="assets/gallery/IMG20260801191745.jpg" target="_blank"><img src="assets/gallery/thumbnails/IMG20260801191745.jpg" alt="Sångaren i hatt sjunger och spelar akustisk gitarr" loading="lazy" width="600" height="800"></a>
+					<a href="assets/gallery/IMG20260801203051.jpg" target="_blank"><img src="assets/gallery/thumbnails/IMG20260801203051.jpg" alt="Bandet spelar i motljus när solen går ner" loading="lazy" width="800" height="600"></a>
+
+				</figure>
+
+			</section>
+
+		</main>
+
+		<footer>
+
+			<p>Copyright &copy; 2026 Världsarvet</p>
+
+		</footer>
+
+	</body>
+
+</html>
