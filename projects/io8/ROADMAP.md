@@ -4,9 +4,7 @@ Where io8 is heading, from "physics toy" towards a proper game with hand-built d
 
 ## Blender to-do
 
-Changes made straight in the exported files that also need doing in the .blend files, or the next export overwrites them:
-
-- **Map** (`map/map.gltf`): `Street_Shape` was moved up 2.5 cm to line up with the visible road. Only matters if you re-export this old map, the new one replaces it anyway
+See [BLENDER-TODO.md](BLENDER-TODO.md).
 
 ## 0. Custom map (next up)
 

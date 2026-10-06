@@ -15,8 +15,16 @@ const CONTROLS = {
 	brake: ['KeyS']
 };
 
-// Timed power-ups. Each one changes something on io8 and returns how to put it back when it runs out
+// Power-ups. A timed one (it has a duration) changes something on io8 and returns how to put it back when it
+// runs out, an instant one (no duration) just does its thing
 const EFFECTS = {
+	// Instant. amount = how much of full health it gives back (0-1), never past full
+	health (io8, amount) {
+		const {capacity} = io8.config.health;
+
+		io8.health = Math.min(capacity, io8.health + capacity * amount);
+	},
+
 	// amount = how many times faster
 	speed (io8, amount) {
 		const original = io8.config.maxSpeed;
@@ -99,8 +107,8 @@ export default class IO8 extends SleekEntity {
 			// Hitting things hard hurts: how much his speed changes within `window` seconds (a fall stopping, a wall,
 			// a blast) past `safe` m/s does damage * excess² (like crash energy). A 1.5 m drop lands at ~5 m/s,
 			// 5 m at ~10, 10 m at ~14. Health comes back `refillDelay` seconds after the last hit, empty to full in
-			// `refillTime` seconds (null for no healing). At 0 he blows up
-			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: 30},
+			// `refillTime` seconds (null for no healing, health pickups only). At 0 he blows up
+			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null},
 
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},
@@ -398,6 +406,12 @@ export default class IO8 extends SleekEntity {
 	// The meter goes back to full and drains over the new total
 	addEffect (name, {amount, duration}) {
 		const active = this.effects.get(name);
+
+		if (!duration) {
+			EFFECTS[name](this, amount);
+
+			return;
+		}
 
 		if (active) {
 			active.remaining += duration;

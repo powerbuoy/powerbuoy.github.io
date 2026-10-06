@@ -3,9 +3,9 @@ import * as THREE from 'three';
 import SleekLoader from '../sleek/loader.js';
 
 // Pickup models, in assets/gltf/pickups/<Name>/<Name>.gltf. What each one does comes from the custom properties
-// on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration, and optionally pitch (of the
-// pickup sound, 1 = as recorded, the default)
-const MODELS = ['Speed', 'Weight'];
+// on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
+// one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default)
+const MODELS = ['Speed', 'Weight', 'Health'];
 
 const position = new THREE.Vector3();
 
