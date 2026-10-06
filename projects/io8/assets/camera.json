@@ -2,8 +2,8 @@
 	"glide": 3,
 	"views": {
 		"1": {"fov": 50, "yaw": -15, "distance": 5.5, "shift": 0, "height": 1.4, "lookUp": 0.7, "lookAhead": 3.5, "screenX": 0},
-		"3": {"fov": 45, "yaw": 0, "distance": 7.5, "shift": 0.3, "height": 0.32, "lookUp": 0.5, "lookAhead": 0, "screenX": -0.5},
 		"2": {"fov": 45, "yaw": 0, "distance": 4.2, "shift": 0.2, "height": 0.35, "lookUp": 0.5, "lookAhead": 0, "screenX": -0.35},
-		"4": {"fov": 50, "yaw": 60, "distance": 10, "shift": 0, "height": 1.6, "lookUp": 0.7, "lookAhead": 0, "screenX": -0.75}
+		"3": {"fov": 45, "yaw": 0, "distance": 7.5, "shift": 0.3, "height": 0.32, "lookUp": 0.5, "lookAhead": 0, "screenX": -0.5},
+		"4": {"fov": 30, "yaw": 60, "distance": 10, "shift": 0, "height": 1.6, "lookUp": 0.7, "lookAhead": 0, "screenX": -0.75}
 	}
 }

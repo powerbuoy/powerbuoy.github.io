@@ -6,6 +6,9 @@ const right = new THREE.Vector3();
 const back = new THREE.Vector3();
 const look = new THREE.Vector3();
 const goal = new THREE.Vector3();
+const forward = new THREE.Vector3();
+const toFocus = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0);
 
 // What a view in camera.json gets for anything it leaves out (see below)
 const DEFAULTS = {fov: 45, yaw: 0, distance: 7.5, shift: 0, height: 0.3, lookUp: 0.5, lookAhead: 0, screenX: 0};
@@ -43,7 +46,11 @@ export default class FollowCamera {
 			glide: views.glide ?? 3,
 
 			// How far (m) it stays above the terrain between it and io8
-			clearance: 0.3
+			clearance: 0.3,
+
+			// io8 is always kept at least this far in from the sides of the screen (1 = the edge). A view that looks
+			// down the road (lookAhead) would otherwise turn him right off a narrow (portrait) screen
+			margin: 0.75
 		}, conf);
 
 		this.view = this.views['1'];
@@ -112,7 +119,26 @@ export default class FollowCamera {
 
 		this.lift = lift > this.lift ? lift : this.lift + (lift - this.lift) * Math.min(1, deltaTime * 2);
 		position.y += this.lift;
+		this.keepInView(focus, halfWidth);
 		this.camera.lookAt(look);
+	}
+
+	// Turn the camera (around the vertical) just enough that io8 stays within `margin` of the screen's sides.
+	// halfWidth is tan(half the horizontal field of view), how wide the screen is
+	keepInView (focus, halfWidth) {
+		const {position} = this.camera;
+
+		forward.subVectors(look, position).setY(0);
+		toFocus.subVectors(focus, position).setY(0);
+
+		// How far round io8 is from straight ahead, + to the left, and the most the screen allows
+		const angle = Math.atan2(forward.z * toFocus.x - forward.x * toFocus.z, forward.dot(toFocus));
+		const allowed = Math.atan(this.config.margin * halfWidth);
+		const excess = Math.abs(angle) - allowed;
+
+		if (excess > 0) {
+			look.sub(position).applyAxisAngle(UP, Math.sign(angle) * excess).add(position);
+		}
 	}
 
 	// How much higher the camera has to be for it, and its line of sight down to io8 (lookY above him), to stay
