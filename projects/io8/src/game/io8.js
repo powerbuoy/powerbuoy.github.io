@@ -13,6 +13,7 @@ const CONTROLS = {
 	backward: ['KeyA'],
 	thrust: ['KeyW'],
 	brake: ['KeyS'],
+	jump: ['Space'],
 	antenna: ['KeyF'],
 	light: ['KeyC'],
 	satellite: ['KeyV']
@@ -70,6 +71,7 @@ const headPosition = new THREE.Vector3();
 const headOffset = new THREE.Vector3();
 const anchorVelocity = new THREE.Vector3();
 const headVelocity = new THREE.Vector3();
+const jumpImpulse = new THREE.Vector3();
 
 export default class IO8 extends SleekEntity {
 	keys = new Set();
@@ -80,6 +82,9 @@ export default class IO8 extends SleekEntity {
 	antennaIsUp = false;
 	satelliteIsSpinning = true;
 	isThrusting = false;
+
+	// Seconds the jump key has been held, 0 when it isn't (see updateJump())
+	jumpHeld = 0;
 
 	// World point (on io8's plane) the head looks at, null = straight ahead. Set by the app from the mouse
 	aim = null;
@@ -126,6 +131,11 @@ export default class IO8 extends SleekEntity {
 			// go of the thrusters (anywhere, in the air too), empty to full in `refillTime` seconds.
 			// Below `low` (0-1) the flames sputter
 			fuel: {capacity: 2, refillDelay: 1, refillTime: 1.5, low: 0.25},
+
+			// Hold to charge, let go to jump: a tap jumps height[0] m, `charge` seconds or more height[1] m. Charging
+			// squashes the leg springs down to `squash` of their travel. Like thrust, the push is worked out from his
+			// normal weight, so the weight power-up keeps him (almost) on the ground
+			jump: {height: [0.1, 1], charge: 0.6, squash: 0.8},
 
 			// Hitting things hard hurts: how much his speed changes within `window` seconds (a fall stopping, a wall,
 			// a blast) past `safe` m/s does damage * excess² (like crash energy). A 1.5 m drop lands at ~5 m/s,
@@ -250,6 +260,9 @@ export default class IO8 extends SleekEntity {
 		this.wheelRadius = size.y / 2;
 
 		this.colliders.forEach(collider => collider.setCollisionGroups(ROBOT_GROUPS));
+
+		// What he stands on, see isGrounded
+		this.wheelColliders = this.colliders.filter(collider => collider.parent().handle === wheel.handle);
 
 		// Wheel spins freely inside the legs, the motor on this joint is how we drive
 		this.wheelJoint = this.physics.world.createImpulseJoint(
@@ -426,6 +439,7 @@ export default class IO8 extends SleekEntity {
 			this.legs.applyImpulse(up, true);
 		}
 
+		this.updateJump(timestep);
 		this.updateFuel(timestep);
 		this.updateHealth(timestep);
 		this.updateEffects(timestep);
@@ -474,6 +488,55 @@ export default class IO8 extends SleekEntity {
 				this.effects.delete(name);
 			}
 		});
+	}
+
+	// Charges while the key is held, jumps when it's let go, if the wheel is on something. The push is along the
+	// legs (like thrust), as an instant speed change that would lift his normal weight to the charged height,
+	// shared by the parts by what they weigh right now so they all leave together
+	updateJump (timestep) {
+		if (this.isDown('jump')) {
+			this.jumpHeld += timestep;
+
+			return;
+		}
+
+		if (!this.jumpHeld) {
+			return;
+		}
+
+		const [low, high] = this.config.jump.height;
+		const height = low + (high - low) * this.jumpCharge;
+
+		this.jumpHeld = 0;
+
+		if (!this.isGrounded) {
+			return;
+		}
+
+		const bodies = [this.wheel, this.legs, this.head];
+		const weight = bodies.reduce((sum, body) => sum + body.mass(), 0);
+		const speed = Math.sqrt(2 * 9.81 * height);
+
+		up.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation())).multiplyScalar(speed * this.mass / weight);
+		bodies.forEach(body => body.applyImpulse(jumpImpulse.copy(up).multiplyScalar(body.mass()), true));
+	}
+
+	// 0-1, how charged the jump is
+	get jumpCharge () {
+		return Math.min(1, this.jumpHeld / this.config.jump.charge);
+	}
+
+	// The tyre is touching something (or within a hair of it: Rapier keeps contact points a little ahead of time).
+	// NOTE: numSolverContacts() can't be used, it always reads 0 between steps
+	get isGrounded () {
+		const world = this.physics.world;
+		let touching = false;
+
+		this.wheelColliders.forEach(collider => world.contactPairsWith(collider, other => {
+			world.contactPair(collider, other, manifold => touching ||= manifold.numContacts() > 0);
+		}));
+
+		return touching;
 	}
 
 	// Burns while thrusting, refills once you've let go of the thrusters for a moment
@@ -577,9 +640,11 @@ export default class IO8 extends SleekEntity {
 	}
 
 	// The head riding on the leg springs. A spring along the legs between them, with gravity taken off so it
-	// rests at the natural height and only squashes when something pushes (landing, bumps, hitting things)
+	// rests at the natural height and only squashes when something pushes (landing, bumps, hitting things),
+	// or when charging a jump pulls it down
 	suspension (timestep) {
 		const {stiffness, damping, travel} = this.config.suspension;
+		const rest = travel[0] * this.config.jump.squash * this.jumpCharge;
 
 		legsUp.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation()));
 		anchor.copy(this.neckAnchor).applyQuaternion(quat).add(this.legs.translation());
@@ -598,7 +663,7 @@ export default class IO8 extends SleekEntity {
 
 		// Much stiffer past the end of the travel, like hitting the end stop
 		const beyond = offset < travel[0] ? offset - travel[0] : offset > travel[1] ? offset - travel[1] : 0;
-		const spring = -stiffness * offset + 9.81 * legsUp.y;
+		const spring = -stiffness * (offset - rest) + 9.81 * legsUp.y;
 		const endStop = -stiffness * 60 * beyond;
 
 		// The spring is a real spring: its strength is set for the head's normal weight, not whatever it weighs
@@ -636,7 +701,7 @@ export default class IO8 extends SleekEntity {
 		// part that got hit), so bumping a light box sounds like the box, not like io8
 		const weight = () => this.wheel.mass() + this.legs.mass() + this.head.mass();
 
-		impacts.register(this.colliders.filter(collider => collider.parent().handle === this.wheel.handle), 'tyre', weight);
+		impacts.register(this.wheelColliders, 'tyre', weight);
 		impacts.register(this.colliders.filter(collider => collider.parent().handle !== this.wheel.handle), 'robot', weight);
 
 		// Always playing, just silent until the flames are on, so starting and stopping is a quick fade, not a click
