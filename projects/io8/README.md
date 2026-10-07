@@ -14,7 +14,7 @@ Serve the folder with any static server and open it, e.g. through Apache, `npx s
 
 The code keeps asking for `.gltf` either way, the built version loads the `.glb` instead (see `SleekLoader`).
 
-Add `?debug` to the address for an FPS counter. The number keys switch camera views, set up in `assets/camera.json` (see `src/game/camera.js` for what each value does). `window.app` is exposed for poking at things in the console, e.g. `app.player.config.balance.stiffness = 400` (springs and motors are re-read every step).
+Add `?fps` to the address for an FPS counter, `?shapes` to see the collision shapes (what the physics actually uses) over the game, or `?shapes_only` to see nothing but them. `?fps` works with either (`?fps&shapes`). The number keys switch camera views, set up in `assets/camera.json` (see `src/game/camera.js` for what each value does). `window.app` is exposed for poking at things in the console, e.g. `app.player.config.balance.stiffness = 400` (springs and motors are re-read every step).
 
 ## Structure
 

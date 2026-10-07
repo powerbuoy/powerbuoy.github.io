@@ -7,6 +7,7 @@ import SleekPhysics from '../sleek/physics.js';
 import SleekLoader from '../sleek/loader.js';
 import SleekAudio from '../sleek/audio.js';
 import SleekEntity from '../sleek/entity.js';
+import SleekPhysicsDebug from '../sleek/physics-debug.js';
 
 import IO8 from './io8.js';
 import Spawner from './spawner.js';
@@ -110,10 +111,22 @@ export default class App extends SleekScene {
 
 		this.damage = new Damage(this.scene, this.blasts, this.player);
 
-		// FPS counter, top left, only with ?debug in the address (it redraws itself every frame)
-		if (new URLSearchParams(location.search).has('debug')) {
+		// Debugging, switched on in the address: ?fps for an FPS counter (top left), ?shapes for the collision
+		// shapes over the game, ?shapes_only for nothing but them, or ?fps with either. Nothing costs anything when
+		// it's off
+		const debug = new URLSearchParams(location.search);
+
+		if (debug.has('fps')) {
 			this.stats = new Stats();
 			this.el.appendChild(this.stats.dom);
+		}
+
+		if (debug.has('shapes') || debug.has('shapes_only')) {
+			this.shapes = new SleekPhysicsDebug(this.scene, this.physics);
+		}
+
+		if (debug.has('shapes_only')) {
+			this.camera.layers.set(SleekPhysicsDebug.LAYER);
 		}
 
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -199,6 +212,7 @@ export default class App extends SleekScene {
 
 	step (deltaTime) {
 		this.physics.step(deltaTime);
+		this.shapes?.update();
 
 		// Out of health: blown up here, between physics steps (explode() can't run during one)
 		if (this.player.health <= 0) {
