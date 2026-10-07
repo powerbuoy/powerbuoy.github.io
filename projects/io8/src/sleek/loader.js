@@ -66,6 +66,13 @@ export default class SleekLoader {
 				node.shadow.camera.near = near;
 				node.shadow.camera.far = node.distance || 50;
 			}
+
+			// How light falls off with distance: 2 (the default, glTF can't carry anything else) is physical, the
+			// square of the distance, so blinding up close and dim further out. "decay: 1" in Blender falls off far
+			// more gently, for lights that should reach (a headlight down the road) without blowing out what's near
+			if (node.isLight && node.userData.decay !== undefined) {
+				node.decay = Number(node.userData.decay);
+			}
 		});
 
 		return gltf.scene;

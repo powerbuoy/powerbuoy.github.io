@@ -46,6 +46,7 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `restitution` | `_RigidBody`/shape | default 0                                                            |
 | `collider`    | `_RigidBody`/shape | `hull`, `trimesh`, `cuboid` or `ball`. Default: hull if dynamic, trimesh if fixed |
 | `shadow`      | mesh/light         | `0` = no shadows, `receive` = receives them but doesn't cast any (for big things like terrain, which would otherwise be drawn into every shadow map). Default on, for meshes and lights. Applies to everything under the object too (put it on a parent to switch off a whole part) |
+| `decay`       | light              | how the light falls off with distance: `2` (default) is physical, `1` much more gently, so it reaches further without blinding what's close |
 | `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot and sun |
 | `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_RigidBody` to keep the head intact). Default: every mesh is its own piece |
 | `emit`        | an empty on io8    | `smoke`: damage smoke and sparks come from here (any number of them, a random one each time). Parent it to the part it should move with |
