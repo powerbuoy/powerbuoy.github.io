@@ -23,7 +23,7 @@ import Damage from './damage.js';
 import FollowCamera from './camera.js';
 
 // Swap for your own map. Conventions (and what the map needs) are in the README
-const MAP = './assets/gltf/windowsxpmap/windowsxpmap.gltf';
+const MAP = './assets/gltf/maps/windowsxpmap/windowsxpmap.gltf';
 
 const target = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();

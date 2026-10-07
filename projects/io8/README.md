@@ -57,7 +57,7 @@ Rigid body nodes should have a scale of 1, put any scale on the shape meshes ins
 
 The map is loaded from `MAP` in `src/game/app.js`.
 
-- Export as GLTF into `assets/gltf/<name>/`
+- Export as GLTF into `assets/gltf/maps/<name>/`
 - Same conventions as everything else: a `Something_RigidBody` with no `mass` (fixed), a `_Mesh` child for looks and optionally a `_Shape` child for collisions (otherwise the mesh collides as it is). Several rigid bodies are fine (road pieces, ramps, walls)
 - The shape becomes a triangle mesh, so hills, dips and overhangs all work. It can be the same mesh as the visible one, or a simpler copy
 - io8 drives along **+X at z = 0**. Keep the ground at least 3 m deep on the negative Z side (clutter stands at z = -1 to -1.8) and 1 m on the positive side (pyramids stick out ~0.75 m)
