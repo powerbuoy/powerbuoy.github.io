@@ -19,7 +19,7 @@
 			"name": "Speed",
 			"extras": {
 				"effect": "speed",
-				"amount": 4,
+				"amount": 3,
 				"duration": 10,
 				"respawn": 0,
 				"pitch": 1.25

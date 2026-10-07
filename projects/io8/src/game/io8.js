@@ -115,7 +115,7 @@ export default class IO8 extends SleekEntity {
 	constructor (object3d, physics, conf = {}) {
 		super(object3d, physics, Object.assign({
 			name: 'Robot',
-			maxSpeed: 5,
+			maxSpeed: 7.5,
 
 			// The wheel motor drives him up to maxSpeed, brakes and rolls, see physicsStep(). Acceleration based, so
 			// roughly "how many g's", whatever he weighs
