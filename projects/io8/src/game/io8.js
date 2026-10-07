@@ -550,7 +550,12 @@ export default class IO8 extends SleekEntity {
 		const target = this.aim ? Math.atan2(this.aim.y - pos.y, this.aim.x - pos.x) : IO8.angleZ(this.legs.rotation());
 		const error = IO8.wrapAngle(target - headAngle);
 		const relativeSpin = this.head.angvel().z - this.legs.angvel().z;
-		const impulse = this.neckInertia * this.massScale * (stiffness * error - damping * relativeSpin) * timestep;
+
+		// The head's weight pulls it round the neck (the head's origin) unless it's balanced on it. A spring only
+		// pushes back once it's off target, so it would settle a few degrees low, and shots with it. So the neck
+		// holds the weight up like a servo would, and the spring only has to do the aiming
+		const hold = (this.head.worldCom().x - pos.x) * this.head.mass() * 9.81;
+		const impulse = (this.neckInertia * this.massScale * (stiffness * error - damping * relativeSpin) + hold) * timestep;
 
 		this.head.applyTorqueImpulse({x: 0, y: 0, z: impulse}, true);
 		this.legs.applyTorqueImpulse({x: 0, y: 0, z: -impulse}, true);
