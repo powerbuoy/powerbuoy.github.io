@@ -11,6 +11,7 @@ Custom properties go on the Object tab. After each export, the code side follows
 
 ## io8
 
+- **Wheel:** `collider: ball` custom property on `RobotWheel_RigidBody` (already set in the exported `io8v6.gltf`, a re-export overwrites it). Its hull was a 32-sided polygon, so it bumped over a corner ~100 times a second and io8 felt like he caught on something and jumped ahead. He's locked to his plane, so a sphere rolls like a perfect wheel
 - **Headlight** (`RobotHeadlight`, already changed in the exported `io8v6.gltf` to try it, a re-export overwrites it): tilt it up 16° so the beam centre is ~4° below horizontal (it was ~20°, lighting only the road 1.5 m ahead), Power 300 → 750 W plus a `decay: 1` custom property (gentler falloff: not blinding up close, reaches further), Custom Distance 8 → 28 m, spot size 60° → 80°, blend 0.15 → 0.4 (a softer edge)
 - **Performance:** `shadowSize: 1024` on `RobotHeadlight` (2048 is more than it needs), and `shadow: 0` on tiny parts (screws, stickers, plates): io8 is 65 parts, each drawn again in every shadow map
 - **Damage emitters:** empties with `emit: smoke` (one on the head, one low on the body), parented to the part they move with. Code then: remove the temporary head fallback in `io8.js`
