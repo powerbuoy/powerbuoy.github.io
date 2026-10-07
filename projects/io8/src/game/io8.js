@@ -101,6 +101,9 @@ export default class IO8 extends SleekEntity {
 		super(object3d, physics, Object.assign({
 			name: 'Robot',
 			maxSpeed: 5,
+
+			// The wheel motor drives him up to maxSpeed, brakes and rolls, see physicsStep(). Acceleration based, so
+			// roughly "how many g's", whatever he weighs
 			driveFactor: 100,
 			brakeFactor: 40,
 			rollFactor: 0.05,
@@ -228,6 +231,13 @@ export default class IO8 extends SleekEntity {
 		this.legs = legs;
 		this.head = head;
 		this.legsObject = this.object3d.getObjectByName('RobotLegs_RigidBody');
+
+		// Speed along the road is the wheel's spin times its radius, measured from what it rolls on (its collision
+		// shape, or the mesh without one). Half its height, as he's upright when he's built
+		const tyre = this.object3d.getObjectByName('RobotWheel_Shape') ?? this.object3d.getObjectByName('RobotWheel_Mesh');
+		const size = new THREE.Box3().setFromObject(tyre).getSize(new THREE.Vector3());
+
+		this.wheelRadius = size.y / 2;
 
 		this.colliders.forEach(collider => collider.setCollisionGroups(ROBOT_GROUPS));
 
@@ -383,15 +393,22 @@ export default class IO8 extends SleekEntity {
 	physicsStep (timestep) {
 		const drive = this.drive;
 
-		// Drive (positive motor velocity rolls towards +X, which is where the robot faces)
+		// The wheel motor drives him up to top speed, like an e-bike: faster than that (downhill), it lets the wheel
+		// roll instead of holding him back, so going downhill on the gas is never slower than rolling down. It only
+		// switches over where it was hardly pushing anyway, so it's smooth. Positive motor speed rolls towards +X.
+		// Rolling (no gas) is a little resistance: the motor's strength can't be 0, Rapier takes that as locked solid
+		const {maxSpeed, driveFactor, brakeFactor, rollFactor} = this.config;
+		const topSpin = maxSpeed / this.wheelRadius;
+		const spin = -(this.wheel.angvel().z - this.legs.angvel().z);
+
 		if (this.isBraking) {
-			this.wheelJoint.configureMotorVelocity(0, this.config.brakeFactor);
+			this.wheelJoint.configureMotorVelocity(0, brakeFactor);
 		}
-		else if (drive) {
-			this.wheelJoint.configureMotorVelocity(drive * this.config.maxSpeed / 0.25, this.config.driveFactor);
+		else if (drive && spin * drive < topSpin) {
+			this.wheelJoint.configureMotorVelocity(drive * topSpin, driveFactor);
 		}
 		else {
-			this.wheelJoint.configureMotorVelocity(0, this.config.rollFactor);
+			this.wheelJoint.configureMotorVelocity(0, rollFactor);
 		}
 
 		// Springs are set every step so you can tweak app.player.config live in the console.
@@ -632,7 +649,7 @@ export default class IO8 extends SleekEntity {
 		this.engineSound = audio.positional(engine, {loop: true, volume: this.config.engine.volume.idle});
 
 		// Wheel spin at normal top speed, remembered now so a speed boost revs higher instead of rescaling
-		this.engineTopSpin = this.config.maxSpeed / 0.25;
+		this.engineTopSpin = this.config.maxSpeed / this.wheelRadius;
 		this.legsObject.add(this.engineSound);
 		this.engineSound.play();
 	}
