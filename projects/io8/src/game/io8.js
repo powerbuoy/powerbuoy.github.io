@@ -12,7 +12,17 @@ const CONTROLS = {
 	forward: ['KeyD'],
 	backward: ['KeyA'],
 	thrust: ['KeyW'],
-	brake: ['KeyS']
+	brake: ['KeyS'],
+	antenna: ['KeyF'],
+	light: ['KeyC'],
+	satellite: ['KeyV']
+};
+
+// Actions that happen once per press rather than while held
+const TOGGLES = {
+	antenna: io8 => io8.antennaIsUp = !io8.antennaIsUp,
+	light: io8 => io8.toggleLight(),
+	satellite: io8 => io8.satelliteIsSpinning = !io8.satelliteIsSpinning
 };
 
 // Power-ups. A timed one (it has a duration) changes something on io8 and returns how to put it back when it
@@ -314,19 +324,7 @@ export default class IO8 extends SleekEntity {
 				return;
 			}
 
-			switch (e.code) {
-				case 'KeyF':
-					this.antennaIsUp = !this.antennaIsUp;
-					break;
-
-				case 'KeyC':
-					this.toggleLight();
-					break;
-
-				case 'KeyV':
-					this.satelliteIsSpinning = !this.satelliteIsSpinning;
-					break;
-			}
+			Object.keys(TOGGLES).forEach(action => CONTROLS[action].includes(e.code) && TOGGLES[action](this));
 		});
 
 		window.addEventListener('keyup', e => this.keys.delete(e.code));
