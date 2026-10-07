@@ -6,7 +6,8 @@ import {DESPAWN} from './spawner.js';
 
 // Pickup models, in assets/gltf/pickups/<Name>/<Name>.gltf. What each one does comes from the custom properties
 // on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
-// one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default)
+// one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default) and frequency (how
+// often it shows up compared to the others: 2 is twice as often as a 1, the default, 0.5 half as often)
 const MODELS = ['Speed', 'Weight', 'Health'];
 
 const position = new THREE.Vector3();
@@ -60,7 +61,7 @@ export default class Pickups {
 			sound: {src: './assets/audio/kenney_sci-fi-sounds/Audio/forceField_000.ogg', volume: 0.8},
 
 			// How close (m) any part of io8 has to get to pick one up
-			reach: 0.45,
+			reach: 0.65,
 
 			// The glowing bubble around each pickup, the size of `reach` so it shows how close you need to get.
 			// strength = how bright the edge glows, power = how thin the glowing edge is, fill = glow in the middle
@@ -82,9 +83,9 @@ export default class Pickups {
 		this.sound = await this.audio.load(this.config.sound.src);
 		this.models = await Promise.all(MODELS.map(async name => {
 			const object3d = await SleekLoader.loadObject(`./assets/gltf/pickups/${name}/${name}.gltf`);
-			const {effect, amount, duration, pitch = 1} = object3d.children[0].userData;
+			const {effect, amount, duration, pitch = 1, frequency = 1} = object3d.children[0].userData;
 
-			return {name, object3d, effect, amount: Number(amount), duration: Number(duration), pitch: Number(pitch), bubble: this.createBubbleMaterial(object3d)};
+			return {name, object3d, effect, amount: Number(amount), duration: Number(duration), pitch: Number(pitch), frequency: Number(frequency), bubble: this.createBubbleMaterial(object3d)};
 		}));
 
 		this.bubbleGeometry = new THREE.SphereGeometry(this.config.reach, 32, 16);
@@ -112,7 +113,9 @@ export default class Pickups {
 
 	// A random pickup at x, y (the spawner picks the height)
 	spawn (x, y) {
-		const model = this.models[Math.floor(Math.random() * this.models.length)];
+		// Weighted by frequency
+		let roll = Math.random() * this.models.reduce((sum, {frequency}) => sum + frequency, 0);
+		const model = this.models.find(({frequency}) => (roll -= frequency) < 0) ?? this.models.at(-1);
 		const object3d = this.create(model);
 
 		object3d.position.set(x, y, 0);
