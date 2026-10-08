@@ -99,8 +99,10 @@ export default class IO8 extends SleekEntity {
 	// How many times heavier than normal (the weight power-up)
 	massScale = 1;
 
-	// How fast the wheel spins compared to normal top speed, eased (drives the engine sound)
+	// How fast the wheel spins compared to normal top speed, and how much the gas is on (0-1), both eased
+	// (they drive the engine sound)
 	engineRevs = 0;
+	engineGas = 0;
 	sinceThrust = 0;
 	sinceDamage = 0;
 
@@ -148,7 +150,7 @@ export default class IO8 extends SleekEntity {
 
 			// Engine sound pitch (playback rate) and volume, from how fast the wheel spins: `idle` when still,
 			// `top` at normal top speed. Past that (a speed boost) the pitch keeps climbing at the same rate, up to
-			// `max` (4x speed reaches 2.5), the volume doesn't
+			// `max` (4x speed reaches 2.5), the volume doesn't. Only on the gas: rolling or braking, it fades out
 			engine: {pitch: {idle: 0.5, top: 1, max: 2.5}, volume: {idle: 0.15, top: 0.5}},
 
 			// Thruster sound volume while firing (it fades in and out with the flames)
@@ -704,7 +706,8 @@ export default class IO8 extends SleekEntity {
 		this.legsObject.add(this.thrusterSound);
 		this.thrusterSound.play();
 
-		this.engineSound = audio.positional(engine, {loop: true, volume: this.config.engine.volume.idle});
+		// Same here, silent until you hit the gas
+		this.engineSound = audio.positional(engine, {loop: true, volume: 0});
 
 		// Wheel spin at normal top speed, remembered now so a speed boost revs higher instead of rescaling
 		this.engineTopSpin = this.config.maxSpeed / this.wheelRadius;
@@ -712,7 +715,9 @@ export default class IO8 extends SleekEntity {
 		this.engineSound.play();
 	}
 
-	// The engine revs with the wheel: pitch and volume follow how fast it spins (relative to the legs)
+	// The engine revs with the wheel: pitch and volume follow how fast it spins (relative to the legs), but you
+	// only hear it on the gas. Held gas counts even past top speed where the motor freewheels (downhill), so it
+	// doesn't cut out there
 	updateEngineSound (deltaTime) {
 		if (!this.engineSound) {
 			return;
@@ -720,12 +725,14 @@ export default class IO8 extends SleekEntity {
 
 		const {pitch, volume} = this.config.engine;
 		const revs = Math.abs(this.legs.angvel().z - this.wheel.angvel().z) / this.engineTopSpin;
+		const gas = this.drive && !this.isBraking ? 1 : 0;
 
-		// Eased a little so it doesn't jitter with every bump
+		// Eased a little so it doesn't jitter with every bump, and fades in and out instead of clicking
 		this.engineRevs += (revs - this.engineRevs) * Math.min(1, deltaTime * 8);
+		this.engineGas += (gas - this.engineGas) * Math.min(1, deltaTime * 10);
 
 		this.engineSound.setPlaybackRate(Math.min(pitch.max, pitch.idle + (pitch.top - pitch.idle) * this.engineRevs));
-		this.engineSound.setVolume(volume.idle + (volume.top - volume.idle) * Math.min(1, this.engineRevs));
+		this.engineSound.setVolume(this.engineGas * (volume.idle + (volume.top - volume.idle) * Math.min(1, this.engineRevs)));
 	}
 
 	// Where laser bolts leave from and which way they go: the "Muzzle" empty on the gun (its X axis is the
