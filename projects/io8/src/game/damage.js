@@ -36,7 +36,8 @@ export default class Damage {
 		// Puffs already in the air finish even after he's blown up
 		this.smoke.step(deltaTime);
 
-		if (player.isExploded) {
+		// Nothing to show it from (a model without emitters)
+		if (player.isExploded || !player.emitters.length) {
 			return;
 		}
 

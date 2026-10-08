@@ -9,10 +9,6 @@ Custom properties go on the Object tab. After each export, the code side follows
 - **Clouds:** a few puffy blob shapes in a collection, scattered with Geometry Nodes on a plane a bit bigger than the terrain (Distribute Points on Faces → Instance on Points, random scale/rotation, *no* Realize Instances). Under a `Clouds` empty with `drift` (m/s). Opaque matte white, no emission, `shadow: 0`. Export with GPU instances on. Code then: drift, shrink/grow at the edges
 - **Performance:** `shadow: receive` on `Terrain_RigidBody` and `Road_RigidBody` (they're ~100k triangles drawn into every shadow map just to shade themselves), split the terrain into tiles so off-screen parts aren't drawn, and smaller sun/moon textures (512 px is plenty at their size on screen)
 
-## io8
-
-- **Damage emitters:** empties with `emit: damage` (one on the head, one low on the body), parented to the part they move with. Code then: remove the temporary head fallback in `io8.js`
-
 ## Props
 
 - **Cardboard:** `collider: cuboid` on `CardboardBox_RigidBody` (cheaper and steadier than a hull, stacks settle sooner)
