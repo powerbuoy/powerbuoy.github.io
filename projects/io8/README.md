@@ -67,6 +67,23 @@ The map is loaded from `MAP` in `src/game/app.js`.
 - Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky), `date` (`"MM-DD"`) the time of year for the stars, and `environment` how strongly the sky lights the scene (default 1). See `src/game/sky.js`
 - Optional **`SkyPivot`** empty with the sun and moon on it, sun straight up (model it at midday, moon on the opposite side): it turns with the time like a clock hand, rising on the left. It moves with the camera like the rest of the sky, so the sun and moon don't drift. A Sun lamp parented to the sun or moon shines from it towards io8 and fades out as it sets
 
+## Making a pickup
+
+Pickups float in a glowing bubble along the road, placed at random by the spawner. See `src/game/pickups.js`.
+
+- Export as GLTF to `assets/gltf/pickups/<Name>/<Name>.gltf` and add `<Name>` to `MODELS` in `pickups.js`
+- One root object (the first object in the scene) with everything else under it. The custom properties below go on it
+- No `_RigidBody`, it isn't physics: io8 picks it up by getting within 0.65 m of its middle (`reach`), and the bubble is that size, so keep the model inside it
+- Give it an emissive material for the glow, no real lights. The bubble takes its colour from the first emissive material it finds (white without one)
+
+| Property    | Meaning                                                                |
+| ----------- | ---------------------------------------------------------------------- |
+| `effect`    | what it does: `speed`, `weight` or `health` (see `EFFECTS` in `src/game/io8.js` for adding more) |
+| `amount`    | how strong, depending on the effect: `speed` how many times faster (multiplies the top speed), `weight` how many times heavier, `health` the share of full health it gives back (0-1, never past full) |
+| `duration`  | seconds it lasts. Leave it out for an instant one (`health`). Picking up an effect that's already running adds its time instead of its strength, so two speed boosts last twice as long but aren't twice as fast |
+| `pitch`     | optional, the pickup sound's pitch: 1 (default) as recorded, higher is brighter |
+| `frequency` | optional, how often it shows up compared to the others: 1 (default), 2 twice as often, 0.5 half as often |
+
 ## Physics gotchas
 
 - Rapier's per-axis locks (`setEnabledRotations` / `setEnabledTranslations`) explode as soon as the body has a joint. Full `lockRotations()` is fine. That's why the robot is kept upright and 2.5D by a hidden rotation-locked "gyro" body hinged to the legs, plus a generic joint that locks Z, rather than by locking axes on the parts themselves.
