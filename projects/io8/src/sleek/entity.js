@@ -154,13 +154,13 @@ export default class SleekEntity {
 			return RAPIER.ColliderDesc.trimesh(vertices, indices, RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES);
 		}
 
-		if (type === 'cuboid' || type === 'ball') {
+		if (type === 'cuboid' || type === 'sphere') {
 			geometry.computeBoundingBox();
 
 			const box = geometry.boundingBox;
 			const center = box.getCenter(new THREE.Vector3());
 			const size = box.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-			const desc = type === 'ball'
+			const desc = type === 'sphere'
 				? RAPIER.ColliderDesc.ball(Math.max(size.x, size.y, size.z))
 				: RAPIER.ColliderDesc.cuboid(size.x, size.y, size.z);
 
