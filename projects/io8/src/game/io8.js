@@ -61,6 +61,10 @@ const EFFECTS = {
 	}
 };
 
+// How stiffly axle friction holds the wheel still in the legs (acceleration based), its torque limit is what
+// lets it slip, see physicsStep()
+const AXLE_HOLD = 10000;
+
 // Scratch objects reused every physics step instead of allocating new ones
 const up = new THREE.Vector3();
 const velocity = new THREE.Vector3();
@@ -119,11 +123,15 @@ export default class IO8 extends SleekEntity {
 			name: 'Robot',
 			maxSpeed: 7.5,
 
-			// The wheel motor drives him up to maxSpeed, brakes and rolls, see physicsStep(). Acceleration based, so
-			// roughly "how many g's", whatever he weighs
+			// The wheel motor drives him up to maxSpeed, see physicsStep(). Acceleration based, so roughly "how many g's",
+			// whatever he weighs
 			driveFactor: 100,
-			brakeFactor: 40,
-			rollFactor: 0.05,
+
+			// Friction at the axle, between the legs and the wheel, as a share of his weight (like a rolling resistance
+			// coefficient): `roll` off the gas (the tyre flexing and the bearing), `brake` the brake pads. Below it the
+			// wheel holds still in the legs, above it, it slips. 0.015 is about a bike tyre on tarmac
+			roll: 0.015,
+			brake: 0.8,
 
 			// Thrust as an acceleration (m/s², gravity is 9.81) of io8's normal weight, so changing his masses in
 			// Blender doesn't need retuning. The weight power-up doesn't count, so it can't lift him any more
@@ -404,19 +412,21 @@ export default class IO8 extends SleekEntity {
 		// The wheel motor drives him up to top speed, like an e-bike: faster than that (downhill), it lets the wheel
 		// roll instead of holding him back, so going downhill on the gas is never slower than rolling down. It only
 		// switches over where it was hardly pushing anyway, so it's smooth. Positive motor speed rolls towards +X.
-		// Rolling (no gas) is a little resistance: the motor's strength can't be 0, Rapier takes that as locked solid
-		const {maxSpeed, driveFactor, brakeFactor, rollFactor} = this.config;
+		// Off the gas it's friction at the axle: a stiff motor holding the wheel still in the legs, but only up to
+		// a torque (rolling resistance or the brake times his weight), past that it slips like real friction
+		const {maxSpeed, driveFactor, roll, brake} = this.config;
 		const topSpin = maxSpeed / this.wheelRadius;
 		const spin = -(this.wheel.angvel().z - this.legs.angvel().z);
 
-		if (this.isBraking) {
-			this.wheelJoint.configureMotorVelocity(0, brakeFactor);
-		}
-		else if (drive && spin * drive < topSpin) {
+		if (drive && !this.isBraking && spin * drive < topSpin) {
 			this.wheelJoint.configureMotorVelocity(drive * topSpin, driveFactor);
+			this.wheelJoint.setMotorMaxForce(Infinity);
 		}
 		else {
-			this.wheelJoint.configureMotorVelocity(0, rollFactor);
+			const friction = this.isBraking ? brake : roll;
+
+			this.wheelJoint.configureMotorVelocity(0, AXLE_HOLD);
+			this.wheelJoint.setMotorMaxForce(friction * this.mass * this.massScale * 9.81 * this.wheelRadius);
 		}
 
 		// Springs are set every step so you can tweak app.player.config live in the console.
