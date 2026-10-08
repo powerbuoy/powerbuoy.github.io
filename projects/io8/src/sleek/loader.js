@@ -8,7 +8,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 const LIGHT_SHADOWS = {
 	PointLight: {size: 512, bias: -0.002, normalBias: 0.02, near: 0.1},
 	SpotLight: {size: 2048, bias: -0.0002, normalBias: 0.02, near: 0.01},
-	DirectionalLight: {size: 2048, bias: -0.0002, normalBias: 0.03, near: 0.01}
+	DirectionalLight: {size: 4096, bias: -0.0002, normalBias: 0.03, near: 0.01}
 };
 
 // One manager for every load so a single progress bar covers everything

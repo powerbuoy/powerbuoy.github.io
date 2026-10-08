@@ -1,6 +1,6 @@
 # Roadmap
 
-Where io8 is heading, from "physics toy" towards a proper game with hand-built levels. Blender work is in [BLENDER-TODO.md](BLENDER-TODO.md), each item there says what code follows its export (light pool, cloud drift, box decal variants, damage emitters).
+Where io8 is heading, from "physics toy" towards a proper game with hand-built levels. Blender work is in [BLENDER-TODO.md](BLENDER-TODO.md), each item there says what code follows its export (cloud drift, box decal variants, damage emitters).
 
 ## Done
 
