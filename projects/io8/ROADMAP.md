@@ -32,4 +32,5 @@ Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thr
 
 ## Housekeeping
 
+- **Map performance, if it's ever needed** (90 fps on mobile for now): split the terrain (~82k triangles) into tiles so off-screen parts aren't drawn, and smaller sun/moon textures (2048 × 1024 now, 512 × 256 is plenty at their size on screen)
 - Rapier is the `-compat` build (2.8 MB, its WASM inlined in `lib/rapier/rapier.mjs`). The plain `@dimforge/rapier3d` build loads a separate, smaller `.wasm`, if load time ever matters
