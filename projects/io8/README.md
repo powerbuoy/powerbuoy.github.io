@@ -49,7 +49,7 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `decay`       | light              | how the light falls off with distance: `2` (default) is physical, `1` much more gently, so it reaches further without blinding what's close |
 | `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot, 4096 for sun |
 | `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_RigidBody` to keep the head intact). Default: every mesh is its own piece |
-| `emit`        | an empty on io8    | `smoke`: damage smoke and sparks come from here (any number of them, a random one each time). Parent it to the part it should move with |
+| `emit`        | an empty on io8    | `damage`: damage smoke and sparks come from here (any number of them, a random one each time). Parent it to the part it should move with |
 
 Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
 

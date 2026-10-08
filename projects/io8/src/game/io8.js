@@ -190,11 +190,11 @@ export default class IO8 extends SleekEntity {
 		this.eye = get('RobotEye');
 		this.muzzleObject = get('Muzzle');
 
-		// Where damage smokes and sparks from (see Damage): empties tagged with an "emit: smoke" custom property.
+		// Where damage smokes and sparks from (see Damage): empties tagged with an "emit: damage" custom property.
 		// TEMPORARY: the middle of the head until they're placed in Blender
 		this.emitters = [];
 		this.object3d.traverse(obj => {
-			if (obj.userData.emit === 'smoke') {
+			if (obj.userData.emit === 'damage') {
 				this.emitters.push(obj);
 			}
 		});

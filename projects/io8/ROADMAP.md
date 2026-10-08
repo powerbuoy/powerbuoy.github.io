@@ -17,6 +17,7 @@ Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thr
 
 - **More pickups**: fuel (refill or a bigger tank for a while), shield (smash through anything), super thrust (no fuel drain), slow-mo (lower `physics.config.speed`), points
 - **Hand-placed props**: empties named `Prop_<Model>_<Layout>` (e.g. `Prop_Cardboard_Pyramid`) that build a layout on the ground under them, with optional `rows`/`count`/`width`/`height`, built and removed by distance like the random ones. Would replace the random obstacles in `spawner.js` for hand-built levels
+- **Emitters anywhere**: once there's something to put them on (a sparking pole, a smoking wreck), let empties in the map and props emit too, not just io8. `emit`: `damage` (smoke and sparks, as on io8 now), `smoke` or `sparks`; an optional `rate` (per second) makes it emit all the time, without one it follows io8's health like now. Needs a small shared system that finds emitters in every loaded model, instead of only io8's
 - **Lasers**: a faint laser sight, recoil (a small kick on the head, the neck spring makes it look nice), a stiffer neck while firing if aim feels sloppy
 - **Grappling hook** on right click
 - A flipbook fireball if the explosions need more

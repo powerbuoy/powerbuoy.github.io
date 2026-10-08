@@ -11,9 +11,7 @@ Custom properties go on the Object tab. After each export, the code side follows
 
 ## io8
 
-- **Headlight** (`RobotHeadlight`, already changed in the exported `io8v6.gltf` to try it, a re-export overwrites it): tilt it up 16° so the beam centre is ~4° below horizontal (it was ~20°, lighting only the road 1.5 m ahead), Power 300 → 750 W, Custom Distance 8 → 28 m, spot size 60° → 80°, blend 0.15 → 0.4 (a softer edge)
-- **Performance:** `shadow: 0` on tiny parts (screws, stickers, plates): io8 is 65 parts, each drawn again in every shadow map
-- **Damage emitters:** empties with `emit: smoke` (one on the head, one low on the body), parented to the part they move with. Code then: remove the temporary head fallback in `io8.js`
+- **Damage emitters:** empties with `emit: damage` (one on the head, one low on the body), parented to the part they move with. Code then: remove the temporary head fallback in `io8.js`
 
 ## Props
 
