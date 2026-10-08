@@ -14,6 +14,4 @@ Custom properties go on the Object tab. After each export, the code side follows
 
 ## Pickups
 
-- **Speed:** `amount` 4 → 3 (already changed in the exported `Speed.gltf`, a re-export overwrites it). io8's top speed went from 5 to 7.5 m/s, so 3x (22.5 m/s) is fast enough
-- **Speed and Weight:** delete their unused `respawn` custom property (left over from the dropped hand-placed pickups)
 - **Health:** replace the temporary `assets/gltf/pickups/Health/Health.gltf` (a copy of Weight with the arrow turned up and a red glow) with a real model, same custom properties: `effect: health`, `amount: 0.25` (share of full health), no `duration`

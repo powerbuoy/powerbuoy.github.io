@@ -21,7 +21,6 @@
 				"effect": "speed",
 				"amount": 3,
 				"duration": 10,
-				"respawn": 0,
 				"pitch": 1.25
 			},
 			"children": [

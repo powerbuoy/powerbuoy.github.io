@@ -21,7 +21,6 @@
 				"effect": "weight",
 				"amount": 50,
 				"duration": 10,
-				"respawn": 0,
 				"pitch": 0.8
 			},
 			"children": [
