@@ -27,8 +27,9 @@ export default class SleekPhysics {
 		this.config = Object.assign({
 			gravity: {x: 0, y: -9.81, z: 0},
 			// Rapier caps how far a body can turn per step (45°), so the step rate caps how fast anything can
-			// spin: 60 steps/s is 47 rad/s, which is io8's wheel at 11.7 m/s. 120 steps/s doubles that
-			timestep: 1 / 120,
+			// spin: 60 steps/s is 47 rad/s, which is io8's wheel at 11.7 m/s. 240 steps/s is 4x that (47 m/s), and
+			// halves how much he shakes boosted (22.5 m/s) on the bumpy road compared to 120, for ~0.15 ms a frame
+			timestep: 1 / 240,
 			speed: 1
 		}, conf);
 
