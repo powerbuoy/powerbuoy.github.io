@@ -21,7 +21,8 @@
 				"effect": "speed",
 				"amount": 3,
 				"duration": 10,
-				"pitch": 1.25
+				"pitch": 1.25,
+				"bubble": [0.1, 0.75, 1]
 			},
 			"children": [
 				1

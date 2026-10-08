@@ -7,7 +7,8 @@ import {DESPAWN} from './spawner.js';
 // Pickup models, in assets/gltf/pickups/<Name>/<Name>.gltf. What each one does comes from the custom properties
 // on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
 // one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default) and frequency (how
-// often it shows up compared to the others: 2 is twice as often as a 1, the default, 0.5 half as often)
+// often it shows up compared to the others: 2 is twice as often as a 1, the default, 0.5 half as often) and
+// bubble (its colour, white by default)
 const MODELS = ['Speed', 'Weight', 'Health'];
 
 const position = new THREE.Vector3();
@@ -91,20 +92,16 @@ export default class Pickups {
 		this.bubbleGeometry = new THREE.SphereGeometry(this.config.reach, 32, 16);
 	}
 
-	// Tinted with the pickup's own glow colour (its first emissive material), white if it has none
+	// Tinted with the root object's bubble property, white without one. A Blender colour property (Linear Color)
+	// exports as an array of linear values, so it's used as is; a string is a CSS colour like '#ff3344' (sRGB)
 	createBubbleMaterial (object3d) {
 		const {strength, power, fill} = this.config.bubble;
-		let color = null;
-
-		object3d.traverse(obj => {
-			if (!color && obj.isMesh && obj.material.emissive?.getHex()) {
-				color = obj.material.emissive.clone();
-			}
-		});
+		const {bubble = '#ffffff'} = object3d.children[0].userData;
+		const color = Array.isArray(bubble) ? new THREE.Color().setRGB(...bubble.slice(0, 3), THREE.LinearSRGBColorSpace) : new THREE.Color(bubble);
 
 		return new THREE.ShaderMaterial({
 			...bubbleShader,
-			uniforms: {color: {value: color ?? new THREE.Color(0xffffff)}, strength: {value: strength}, power: {value: power}, fill: {value: fill}},
+			uniforms: {color: {value: color}, strength: {value: strength}, power: {value: power}, fill: {value: fill}},
 			transparent: true,
 			depthWrite: false,
 			blending: THREE.AdditiveBlending

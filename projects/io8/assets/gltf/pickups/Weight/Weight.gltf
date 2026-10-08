@@ -21,7 +21,8 @@
 				"effect": "weight",
 				"amount": 50,
 				"duration": 10,
-				"pitch": 0.8
+				"pitch": 0.8,
+				"bubble": [1, 0.4, 0.05]
 			},
 			"children": [
 				1

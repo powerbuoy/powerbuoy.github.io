@@ -74,7 +74,7 @@ Pickups float in a glowing bubble along the road, placed at random by the spawne
 - Export as GLTF to `assets/gltf/pickups/<Name>/<Name>.gltf` and add `<Name>` to `MODELS` in `pickups.js`
 - One root object (the first object in the scene) with everything else under it. The custom properties below go on it
 - No `_RigidBody`, it isn't physics: io8 picks it up by getting within 0.65 m of its middle (`reach`), and the bubble is that size, so keep the model inside it
-- Give it an emissive material for the glow, no real lights. The bubble takes its colour from the first emissive material it finds (white without one)
+- Any materials you like. If it should glow, use an emissive material, not real lights
 
 | Property    | Meaning                                                                |
 | ----------- | ---------------------------------------------------------------------- |
@@ -83,6 +83,7 @@ Pickups float in a glowing bubble along the road, placed at random by the spawne
 | `duration`  | seconds it lasts. Leave it out for an instant one (`health`). Picking up an effect that's already running adds its time instead of its strength, so two speed boosts last twice as long but aren't twice as fast |
 | `pitch`     | optional, the pickup sound's pitch: 1 (default) as recorded, higher is brighter |
 | `frequency` | optional, how often it shows up compared to the others: 1 (default), 2 twice as often, 0.5 half as often |
+| `bubble`    | optional, the bubble's colour: a colour property (Float Array, subtype Linear Color, 3 values) or a hex string like `#ff3344`. Default white |
 
 ## Physics gotchas
 
