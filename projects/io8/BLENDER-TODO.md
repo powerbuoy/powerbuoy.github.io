@@ -11,7 +11,3 @@ Custom properties go on the Object tab. After each export, the code side follows
 
 - **Cardboard:** `collider: cuboid` on `CardboardBox_RigidBody` (cheaper and steadier than a hull, stacks settle sooner)
 - **Cardboard decals:** a few versions of the cardboard material with decals baked into the texture (Fragile, arrows, label, plain...). glTF Variants tab (N panel): one variant per design, put its material in the slot and Assign to Variant, then set the slot back to the default. Export with material variants on. Code then: the spawner picks a random variant per box (set the material directly, cloning copies userData as JSON)
-
-## Pickups
-
-- **Health:** replace the temporary `assets/gltf/pickups/Health/Health.gltf` (a copy of Weight with the arrow turned up and a red glow) with a real model, same custom properties: `effect: health`, `amount: 0.25` (share of full health), no `duration`
