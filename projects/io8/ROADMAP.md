@@ -4,7 +4,7 @@ Where io8 is heading, from "physics toy" towards a proper game with hand-built l
 
 ## Done
 
-Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thruster fuel, lasers with ammo, explosions (fireball, sparks, flash, camera shake), area-based blast physics, health from crash damage with smoke and sparks, speed/weight/health pickups, gradient sky with a day/night cycle, sun/moon shadows that follow io8, real night sky, start menu with pause.
+Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thruster fuel, lasers with ammo, explosions (fireball, sparks, flash, camera shake), area-based blast physics, health from crash damage with smoke and sparks, speed/weight/health pickups, gradient sky with a day/night cycle, sun/moon shadows that follow io8, real night sky, start menu with pause, an island in a sea with moving water.
 
 ## To do
 
@@ -12,6 +12,8 @@ Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thr
 - **Obstacles in the air**: things at thruster height (signs, pipes, hanging crates, a low beam across the road), some solid, some breakable, so flying isn't always safe and fuel matters. Solid ones can be part of the map; swinging ones are dynamic bodies on a joint (`JointData.rope` or `spherical`)
 - **A goal**: score by distance, plus a bonus for smashed boxes
 - **Road gaps / ramps**: pits to thrust over, ramps to launch off
+- **The sea**: the road runs into it at both ends, so keep boxes and pickups off the underwater part (the spawner places them on any ground) and decide what happens when io8 drives in (sinks and shorts out? floats? splash, bubbles)
+- **Sun and moon behind the horizon**: they set into the sea 2.5 km out, in front of its edge. Draw them behind everything like the sky dome (they're infinitely far away), so the scene hides them wherever they are
 
 ## Ideas
 
