@@ -21,7 +21,7 @@ import Sunlight from './sunlight.js';
 import Sky from './sky.js';
 import Water from './water.js';
 import Blasts from './effects/blasts.js';
-import Damage from './damage.js';
+import Emitters from './emitters.js';
 import FollowCamera from './camera.js';
 
 // Swap for your own map. Conventions (and what the map needs) are in the README
@@ -90,7 +90,11 @@ export default class App extends SleekScene {
 			this.spawner.init()
 		]);
 
+		this.emitters = new Emitters(this.scene, this.blasts);
+		this.spawner.setEmitters(this.emitters);
+
 		this.map = new SleekEntity(map, this.physics, {name: 'Map'});
+		this.emitters.add(this.map.object3d);
 		this.scene.add(this.map.object3d);
 		this.ground = new Ground(this.map);
 		this.sunlight = new Sunlight(this.map.object3d, this.scene);
@@ -111,7 +115,8 @@ export default class App extends SleekScene {
 
 		this.spawner.update(start.x);
 
-		this.damage = new Damage(this.scene, this.blasts, this.player);
+		// His emitters without a rate show how hurt he is
+		this.emitters.add(this.player.object3d, this.player);
 
 		// Debugging, switched on in the address: ?fps for an FPS counter (top left), ?shapes for the collision
 		// shapes over the game, ?shapes_only for nothing but them, or ?fps with either. Nothing costs anything when
@@ -230,7 +235,7 @@ export default class App extends SleekScene {
 		this.player.step(deltaTime);
 		this.explosion?.step(deltaTime);
 		this.blasts.step(deltaTime);
-		this.damage.step(deltaTime);
+		this.emitters.step(deltaTime);
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
 		this.fire = false;
 		this.map.step(deltaTime);

@@ -72,6 +72,10 @@ export default class Spawner {
 		this.impacts = impacts;
 	}
 
+	setEmitters (emitters) {
+		this.emitters = emitters;
+	}
+
 	setPickups (pickups) {
 		this.pickups = pickups;
 	}
@@ -132,6 +136,7 @@ export default class Spawner {
 			// Anything that fell off the world goes too
 			if (dx < -behind || dx > ahead || propY < -10) {
 				this.impacts?.unregister(prop.colliders);
+				this.emitters?.remove(prop.object3d);
 				prop.destroy();
 				this.props.delete(prop);
 			}
@@ -205,6 +210,7 @@ export default class Spawner {
 
 		this.scene.add(entity.object3d);
 		this.props.add(entity);
+		this.emitters?.add(entity.object3d);
 
 		if (IMPACT[name]) {
 			this.impacts?.register(entity.colliders, IMPACT[name]);

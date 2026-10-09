@@ -29,8 +29,8 @@ export default class Smoke extends Particles {
 		}, conf);
 	}
 
-	// darkness 0-1 (0 light grey, 1 near black), velocity is the emitter's
-	spawn (position, darkness = 0, velocity = null) {
+	// darkness 0-1 (0 light grey, 1 near black), velocity is the emitter's, size scales the puff
+	spawn (position, darkness = 0, velocity = null, size = 1) {
 		const {scale, life, rise, spread, inherit} = this.config;
 		const rising = new THREE.Vector3(0, THREE.MathUtils.randFloat(...rise), 0);
 
@@ -45,7 +45,7 @@ export default class Smoke extends Particles {
 			spin: Particles.randomInBall(3),
 			quaternion: new THREE.Quaternion().random(),
 			color: new THREE.Color().setScalar(THREE.MathUtils.lerp(0.7, 0.08, darkness)),
-			maxScale: THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5),
+			maxScale: THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5) * size,
 			life: THREE.MathUtils.randFloat(...life)
 		});
 	}

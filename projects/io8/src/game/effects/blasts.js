@@ -28,7 +28,7 @@ export default class Blasts {
 			shake: {amount: 1, reach: 30, decay: 1.1, move: 0.25, turn: 4}
 		}, conf);
 
-		// Sparks are also used on their own (see Damage)
+		// Sparks are also used on their own (see Emitters)
 		this.fireball = new Fireball(scene);
 		this.sparks = new Sparks(scene);
 		this.layers = [this.fireball, this.sparks];

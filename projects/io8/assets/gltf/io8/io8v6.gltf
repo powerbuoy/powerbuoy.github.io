@@ -75,7 +75,7 @@
 	"nodes":[
 		{
 			"extras":{
-				"emit":"damage"
+				"emit":"smoke, sparks"
 			},
 			"name":"DamageEmitter"
 		},
