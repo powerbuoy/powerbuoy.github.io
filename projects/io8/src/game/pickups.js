@@ -8,7 +8,7 @@ import {DESPAWN} from './spawner.js';
 // on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
 // one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default) and frequency (how
 // often it shows up compared to the others: 2 is twice as often as a 1, the default, 0.5 half as often) and
-// bubble (its colour, white by default)
+// color (of its bubble, white by default)
 const MODELS = ['Speed', 'Weight', 'Health'];
 
 const position = new THREE.Vector3();
@@ -92,12 +92,12 @@ export default class Pickups {
 		this.bubbleGeometry = new THREE.SphereGeometry(this.config.reach, 32, 16);
 	}
 
-	// Tinted with the root object's bubble property, white without one. A Blender colour property (Linear Color)
+	// Tinted with the root object's color property, white without one. A Blender colour property (Linear Color)
 	// exports as an array of linear values, so it's used as is; a string is a CSS colour like '#ff3344' (sRGB)
 	createBubbleMaterial (object3d) {
 		const {strength, power, fill} = this.config.bubble;
-		const {bubble = '#ffffff'} = object3d.children[0].userData;
-		const color = Array.isArray(bubble) ? new THREE.Color().setRGB(...bubble.slice(0, 3), THREE.LinearSRGBColorSpace) : new THREE.Color(bubble);
+		const {color: value = '#ffffff'} = object3d.children[0].userData;
+		const color = Array.isArray(value) ? new THREE.Color().setRGB(...value.slice(0, 3), THREE.LinearSRGBColorSpace) : new THREE.Color(value);
 
 		return new THREE.ShaderMaterial({
 			...bubbleShader,

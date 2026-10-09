@@ -83,7 +83,7 @@ Pickups float in a glowing bubble along the road, placed at random by the spawne
 | `duration`  | seconds it lasts. Leave it out for an instant one (`health`). Picking up an effect that's already running adds its time instead of its strength, so two speed boosts last twice as long but aren't twice as fast |
 | `pitch`     | optional, the pickup sound's pitch: 1 (default) as recorded, higher is brighter |
 | `frequency` | optional, how often it shows up compared to the others: 1 (default), 2 twice as often, 0.5 half as often |
-| `bubble`    | optional, the bubble's colour: a colour property (Float Array, subtype Linear Color, 3 values) or a hex string like `#ff3344`. Default white |
+| `color`     | optional, the colour of its bubble: a colour property (Float Array, subtype Linear Color, 3 values) or a hex string like `#ff3344`. Default white |
 
 ## Physics gotchas
 
