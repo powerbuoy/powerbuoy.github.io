@@ -216,6 +216,10 @@ export default class App extends SleekScene {
 		this.physics.step(deltaTime);
 		this.shapes?.update();
 
+		if (!this.player.isExploded && this.water.isUnder(this.player.head.translation())) {
+			this.player.drown(deltaTime);
+		}
+
 		// Out of health: blown up here, between physics steps (explode() can't run during one)
 		if (this.player.health <= 0) {
 			this.explode();

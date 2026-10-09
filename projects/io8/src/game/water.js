@@ -2,14 +2,18 @@ import * as THREE from 'three';
 
 /*
 	Moving water. Any mesh called "Water" in the map (Blender's .001 suffixes are ignored) keeps the material
-	it has in Blender (it needs a normal map), with its normal map drifting: the map is read twice and the two are blended, the second
-	larger and turned. One pattern shows its tiling as a grid from far away, two that never line up don't.
+	it has in Blender, with its normal map (if it has one) drifting: the map is read twice and the two are
+	blended, the second larger and turned. One pattern shows its tiling as a grid from far away, two that
+	never line up don't.
 
 	Each layer drifts along the waves in the normal map (`wind`, the direction they run in the image, see
-	water_nor_gl_1k.png). Speeds are in tiles a second (how the map repeats in Blender, ~20 m on windowsxpmap)
+	water_nor_gl_1k.png). Speeds are in tiles a second (how the map repeats in Blender, ~20 m on windowsxpmap).
+
+	It also knows where the water is, for anything that shouldn't go in it (io8)
 */
 export default class Water {
 	layers = [];
+	surfaces = [];
 	time = 0;
 
 	constructor (map, conf = {}) {
@@ -23,11 +27,35 @@ export default class Water {
 			]
 		}, conf);
 
+		map.updateWorldMatrix(true, true);
 		map.traverse(obj => {
-			if (obj.isMesh && obj.name.replace(/\.\d+$/, '') === 'Water' && obj.material.normalMap) {
-				this.patch(obj.material);
+			if (obj.isMesh && obj.name.replace(/\.\d+$/, '') === 'Water') {
+				this.surfaces.push(new THREE.Box3().setFromObject(obj));
+
+				if (obj.material.normalMap) {
+					this.patch(obj.material);
+				}
 			}
 		});
+	}
+
+	// How high the water is at (x, z), the highest surface there, or null where there's none
+	levelAt (x, z) {
+		let level = null;
+
+		this.surfaces.forEach(box => {
+			if (x >= box.min.x && x <= box.max.x && z >= box.min.z && z <= box.max.z && (level === null || box.max.y > level)) {
+				level = box.max.y;
+			}
+		});
+
+		return level;
+	}
+
+	isUnder ({x, y, z}) {
+		const level = this.levelAt(x, z);
+
+		return level !== null && y < level;
 	}
 
 	// Swaps three's one normal map read for the two layers. Each layer's UVs are scaled, turned and moved

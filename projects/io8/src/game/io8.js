@@ -150,8 +150,9 @@ export default class IO8 extends SleekEntity {
 			// Hitting things hard hurts: how much his speed changes within `window` seconds (a fall stopping, a wall,
 			// a blast) past `safe` m/s does damage * excess² (like crash energy). A 1.5 m drop lands at ~5 m/s,
 			// 5 m at ~10, 10 m at ~14. Health comes back `refillDelay` seconds after the last hit, empty to full in
-			// `refillTime` seconds (null for no healing, health pickups only). At 0 he blows up
-			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null},
+			// `refillTime` seconds (null for no healing, health pickups only). With his head under water it all
+			// drains in `drown` seconds. At 0 he blows up
+			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null, drown: 0.3},
 
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},
@@ -617,6 +618,14 @@ export default class IO8 extends SleekEntity {
 		if (refillTime && this.sinceDamage > refillDelay && this.health > 0) {
 			this.health = Math.min(capacity, this.health + capacity / refillTime * timestep);
 		}
+	}
+
+	// Call every frame his head is under water (see Water), he shorts out within `drown` seconds
+	drown (deltaTime) {
+		const {capacity, drown} = this.config.health;
+
+		this.health = Math.max(0, this.health - capacity / drown * deltaTime);
+		this.sinceDamage = 0;
 	}
 
 	// 0-1, for the health meter
