@@ -36,6 +36,10 @@ export default class FollowCamera {
 	lead = 0;
 	lift = 0;
 
+	// Where it was when io8 blew up and how long ago, see retreat()
+	wreck = null;
+	retreating = 0;
+
 	// views is camera.json, see load()
 	constructor (camera, ground, water, views, conf = {}) {
 		this.camera = camera;
@@ -52,7 +56,11 @@ export default class FollowCamera {
 
 			// io8 is always kept at least this far in from the sides of the screen (1 = the edge). A view that looks
 			// down the road (lookAhead) would otherwise turn him right off a narrow (portrait) screen
-			margin: 0.75
+			margin: 0.75,
+
+			// Once he's blown up it backs away `distance` m and rises `height` m, over `time` seconds (easing in and
+			// out), still looking the way it was
+			retreat: {distance: 12, height: 15, time: 15}
 		}, conf);
 
 		this.view = this.views['1'];
@@ -74,6 +82,31 @@ export default class FollowCamera {
 		this.view = view;
 
 		return true;
+	}
+
+	// Call every frame once io8 has blown up, instead of update(): it stops following and slowly backs away
+	// from where it was and rises (see config.retreat), looking the same way, never into a hill or the sea
+	retreat (deltaTime) {
+		const {position, quaternion} = this.camera;
+		const {distance, height, time} = this.config.retreat;
+
+		// Away from where it looks, along the ground
+		if (!this.wreck) {
+			this.wreck = {position: position.clone(), quaternion: quaternion.clone(), away: this.camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize().negate()};
+		}
+
+		this.retreating += deltaTime;
+
+		const away = THREE.MathUtils.smoothstep(this.retreating, 0, time);
+
+		position.copy(this.wreck.position).addScaledVector(this.wreck.away, distance * away);
+
+		const floor = Math.max(this.ground.heightAt(position.x, position.z) ?? -Infinity, this.water.levelAt(position.x, position.z) ?? -Infinity);
+
+		position.y = Math.max(position.y + height * away, floor + this.config.clearance);
+
+		// The explosion's shake turns the camera a little every frame, from here rather than adding up
+		quaternion.copy(this.wreck.quaternion);
 	}
 
 	// focus is where io8 is, speed his speed along the road (m/s). A big deltaTime (1) snaps straight there

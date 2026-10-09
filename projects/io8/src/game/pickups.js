@@ -133,7 +133,7 @@ export default class Pickups {
 	step (deltaTime, player) {
 		const {reach, spin, bob, pop, despawn} = this.config;
 		const time = performance.now() / 1000;
-		const focusX = player.focusObject.getWorldPosition(position).x;
+		const focusX = player.getFocusPosition(position).x;
 		const parts = player.isExploded ? [] : [player.wheel, player.legs, player.head].map(body => new THREE.Vector3().copy(body.translation()));
 
 		this.pickups.forEach(pickup => {

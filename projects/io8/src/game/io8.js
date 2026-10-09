@@ -364,13 +364,9 @@ export default class IO8 extends SleekEntity {
 		return this.isDown('brake');
 	}
 
-	// What the camera (and spawner) should follow: the legs, or the head once it's flying on its own
-	get focusObject () {
-		return this.isExploded ? this.headPiece.object3d : this.legsObject;
-	}
-
-	get focusBody () {
-		return this.isExploded ? this.headPiece.body : this.legs;
+	// Where the camera, spawner and sunlight centre on: his legs, or where he blew up
+	getFocusPosition (target) {
+		return this.isExploded ? target.copy(this.wreck) : this.legsObject.getWorldPosition(target);
 	}
 
 	// Blow io8 apart: every mesh becomes a piece of debris keeping the speed its part had,
@@ -392,10 +388,8 @@ export default class IO8 extends SleekEntity {
 			return null;
 		};
 
-		const pieces = explosion.shatter(this.object3d, velocityOf);
-
-		// The camera follows the piece with the back of the head in it (the head on its own, or the whole head)
-		this.headPiece = pieces.find(piece => piece.object3d.getObjectByName('BackHead')) ?? pieces[0];
+		this.wreck = this.legsObject.getWorldPosition(new THREE.Vector3());
+		explosion.shatter(this.object3d, velocityOf);
 		this.isExploded = true;
 		this.engineSound?.stop();
 		this.thrusterSound?.stop();

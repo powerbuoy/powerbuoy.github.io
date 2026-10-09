@@ -43,7 +43,7 @@ export default class Damage {
 
 		const level = player.healthLevel;
 		const lost = (this.health ?? player.health) - player.health;
-		const velocity = player.focusBody.linvel();
+		const velocity = player.legs.linvel();
 
 		this.health = player.health;
 

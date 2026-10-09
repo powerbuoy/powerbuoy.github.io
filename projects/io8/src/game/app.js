@@ -155,7 +155,7 @@ export default class App extends SleekScene {
 		});
 
 		this.updateCamera(1);
-		this.sunlight.step(this.player.focusObject.getWorldPosition(target));
+		this.sunlight.step(this.player.getFocusPosition(target));
 		this.warmUp();
 	}
 
@@ -233,7 +233,7 @@ export default class App extends SleekScene {
 		this.fire = false;
 		this.map.step(deltaTime);
 		// Keep stuff to crash into ahead of io8
-		this.spawner.update(this.player.focusObject.getWorldPosition(target).x);
+		this.spawner.update(this.player.getFocusPosition(target).x);
 		this.stats?.update();
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
@@ -252,7 +252,7 @@ export default class App extends SleekScene {
 
 		this.sky?.step(deltaTime);
 		this.water.step(deltaTime);
-		this.sunlight.step(this.player.focusObject.getWorldPosition(target));
+		this.sunlight.step(this.player.getFocusPosition(target));
 
 		super.step(deltaTime);
 	}
@@ -284,7 +284,13 @@ export default class App extends SleekScene {
 
 	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other
 	updateCamera (deltaTime) {
-		this.follow.update(deltaTime, this.player.focusObject.getWorldPosition(target), this.player.focusBody.linvel().x);
+		if (this.player.isExploded) {
+			this.follow.retreat(deltaTime);
+		}
+		else {
+			this.follow.update(deltaTime, this.player.getFocusPosition(target), this.player.legs.linvel().x);
+		}
+
 		this.blasts.shake(this.camera);
 	}
 }
