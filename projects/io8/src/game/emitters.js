@@ -34,7 +34,7 @@ export default class Emitters {
 
 			// The crackle with each burst of sparks: a random slice `length` (s) long, faded in over `fadeIn` and out
 			// over `fadeOut` (s)
-			sound: {src: './assets/audio/freesound/871766__harrisonlace__elecarc_sparking-electricity-bed.ogg', volume: 0.6, length: [0.4, 1], fadeIn: 0.1, fadeOut: 0.4}
+			sound: {src: './assets/audio/freesound/871766__harrisonlace__elecarc_sparking-electricity-bed.ogg', volume: 0.3, length: [0.4, 1], fadeIn: 0.1, fadeOut: 0.4}
 		}, conf);
 	}
 
