@@ -19,6 +19,7 @@ import Hud from './hud.js';
 import Lasers from './lasers.js';
 import Sunlight from './sunlight.js';
 import Sky from './sky.js';
+import Water from './water.js';
 import Blasts from './effects/blasts.js';
 import Damage from './damage.js';
 import FollowCamera from './camera.js';
@@ -93,6 +94,7 @@ export default class App extends SleekScene {
 		this.scene.add(this.map.object3d);
 		this.ground = new Ground(this.map);
 		this.sunlight = new Sunlight(this.map.object3d, this.scene);
+		this.water = new Water(this.map.object3d);
 
 		// The map's sky.json if it has one, otherwise the sky stays black
 		if (sky) {
@@ -245,6 +247,7 @@ export default class App extends SleekScene {
 		}
 
 		this.sky?.step(deltaTime);
+		this.water.step(deltaTime);
 		this.sunlight.step(this.player.focusObject.getWorldPosition(target));
 
 		super.step(deltaTime);

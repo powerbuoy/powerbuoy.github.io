@@ -65,6 +65,7 @@ The map is loaded from `MAP` in `src/game/app.js`.
 - Add an empty called **`Spawn`** where io8 should start (its origin is the middle of the wheel, so put it ~0.5 m above the ground). Without one, io8 starts on the ground at x = 0
 - Slopes up to about 20° are fine to drive up. Much steeper and io8 will need its thrusters
 - Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky), `date` (`"MM-DD"`) the time of year for the stars, and `environment` how strongly the sky lights the scene (default 1). See `src/game/sky.js`
+- Optional **`Water`**: a mesh (a plain one, not a `_RigidBody`) with a normal map in its material. Its normal map drifts, read twice so the tiling doesn't show, and its reflections never point below the horizon. Everything else about it is as set up in Blender. See `src/game/water.js`
 - Optional **`SkyPivot`** empty with the sun and moon on it, sun straight up (model it at midday, moon on the opposite side): it turns with the time like a clock hand, rising on the left. It moves with the camera like the rest of the sky, so the sun and moon don't drift. A Sun lamp parented to the sun or moon shines from it towards io8 and fades out as it sets
 
 ## Making a pickup
