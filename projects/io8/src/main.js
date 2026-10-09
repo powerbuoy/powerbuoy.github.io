@@ -33,6 +33,9 @@ function setPaused (paused) {
 app.step(0);
 setPaused(true);
 
+// The end screen (html.dead) shows over the game, which keeps running behind it
+app.onExplode = () => root.classList.add('dead');
+
 document.addEventListener('click', e => {
 	if (e.target.closest('[data-action="play"]')) {
 		setPaused(false);

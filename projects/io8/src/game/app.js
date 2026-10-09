@@ -199,7 +199,8 @@ export default class App extends SleekScene {
 		hidden.forEach(obj => obj.visible = false);
 	}
 
-	// Blow io8 up (when he's out of health), Restart in the menu gets him back
+	// Blow io8 up (when he's out of health), Restart in the menu gets him back. Calls onExplode (if set) once
+	// he's in pieces, the game itself keeps running
 	explode () {
 		if (this.player.isExploded) {
 			return;
@@ -210,6 +211,7 @@ export default class App extends SleekScene {
 		this.player.explode(this.explosion);
 		this.explosion.shockwave();
 		this.impacts.register(this.explosion.pieces.map(piece => piece.body.collider(0)), 'robot');
+		this.onExplode?.();
 	}
 
 	step (deltaTime) {

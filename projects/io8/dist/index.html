@@ -13,7 +13,7 @@
 				/* Colors */
 				--background: #000;
 				--foreground: #fff;
-				--accent: #f90;
+				--accent: #cbb570;
 				--card-background: rgb(0 0 0 / 0.35);
 
 				/* Spacing */
@@ -33,9 +33,16 @@
 				margin: 0;
 			}
 
+			h1,
 			h2 {
-				font: 100 1.2rem system-ui;
+				font: bolder clamp(4rem, 15vw, 10rem)/1 system-ui;
+				letter-spacing: -0.025em;
+				text-transform: uppercase;
 				margin: 0 0 1rem;
+			}
+
+			aside h2 {
+				font-size: 1.5rem;
 			}
 
 			p {
@@ -52,33 +59,43 @@
 				font-weight: 900;
 			}
 
-			/* Start menu */
-			#start {
-				background: var(--card-background);
-
+			/* Start & end menu */
+			#start,
+			#end {
 				position: fixed;
 				inset: 0;
 				z-index: 98;
 
 				display: none;
-				padding: var(--ui-padding);
 				flex-direction: column;
 				align-items: center;
 				justify-content: center;
 				gap: 1rem;
 
+				text-align: center;
+
 				> a {
 					display: block;
-					font-size: 4rem;
-					line-height: 1.2;
-					font-weight: bolder;
-					text-shadow: 0 0 0.2rem rgba(0, 0, 0, 0.6);
+					font-size: 2.5rem;
+					line-height: 1;
+					font-weight: bold;
+					text-transform: uppercase;
 					transition: scale 0.2s ease;
 
 					&:hover {
 						scale: 1.2;
 					}
 				}
+
+				p {
+					margin: 1rem 0 0;
+				}
+			}
+
+			/* Start menu */
+			#start {
+				background: var(--card-background);
+				padding: var(--ui-padding);
 
 				> aside {
 					background: var(--card-background);
@@ -93,6 +110,17 @@
 			}
 
 			html.paused #start {
+				display: flex;
+			}
+
+			/* End menu */
+			#end {
+				> h2 {
+					color: red;
+				}
+			}
+
+			html.dead #end {
 				display: flex;
 			}
 
@@ -200,16 +228,20 @@
 
 		<section id="start">
 
+			<h1>IO8</h1>
+
 			<a role="button" data-action="play">Play</a>
 			<a role="button" data-action="restart">Restart</a>
 
-			<aside>
+			<p>WASD: drive / fly / brake<br>Space: jump<br>Click: fire</p>
 
-				<h2>Controls</h2>
+		</section>
 
-				<p>WASD: drive / fly / brake<br>Space: jump<br>Click: fire</p>
+		<section id="end">
 
-			</aside>
+			<h2>Does not compute</h2>
+
+			<a role="button" data-action="restart">Restart</a>
 
 		</section>
 
