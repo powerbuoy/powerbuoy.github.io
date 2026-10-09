@@ -60,6 +60,13 @@
 			}
 
 			/* Start & end menu */
+			html.paused,
+			html.dead {
+				#ui {
+					display: none;
+				}
+			}
+
 			#start,
 			#end {
 				position: fixed;
@@ -118,6 +125,10 @@
 				> h2 {
 					color: red;
 				}
+			}
+
+			html.dead #start {
+				display: none;
 			}
 
 			html.dead #end {
