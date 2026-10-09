@@ -73,11 +73,12 @@ export default class SleekScene {
 		this.composer.addPass(this.smaaPass);
 	}
 
-	// Samples per pixel for the composer's render targets (0 = off), can be changed any time
+	// Samples per pixel for the composer's render targets (0 = off), can be changed any time. With a stencil
+	// buffer, for materials that draw each pixel only once (see Smoke)
 	setMSAA (samples) {
 		const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
 
-		this.composer.reset(new THREE.WebGLRenderTarget(size.x, size.y, {type: THREE.HalfFloatType, samples}));
+		this.composer.reset(new THREE.WebGLRenderTarget(size.x, size.y, {type: THREE.HalfFloatType, samples, stencilBuffer: true}));
 	}
 
 	resize () {

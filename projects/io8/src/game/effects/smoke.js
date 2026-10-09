@@ -8,14 +8,25 @@ const euler = new THREE.Euler();
 
 /*
 	Puffs that drift up, swell and shrink away. Lit like everything else (so they're grey at noon, dark at night
-	and warm at sunset) and a little see-through. They don't hide each other (no depth writes), so where they
-	overlap they add up to thicker smoke and a plume reads as one. Not sorted (one instanced mesh), which doesn't
-	show as the puffs are all much the same colour
+	and warm at sunset) and a little see-through. A plume is see-through as one: the stencil buffer lets only
+	the first puff drawn on a pixel colour it, so where they overlap it's no thicker and they merge into one shape.
+	Which puff that is isn't sorted (one instanced mesh), which doesn't show as they're all much the same colour
 	Spawned in the world, not on whatever's smoking, so they trail behind it
 */
 export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
-		const material = new THREE.MeshStandardMaterial({roughness: 1, transparent: true, opacity: 0.6, depthWrite: false});
+		const material = new THREE.MeshStandardMaterial({
+			roughness: 1,
+			transparent: true,
+			opacity: 0.6,
+			depthWrite: false,
+
+			// Marks each pixel it draws, and skips the ones already marked
+			stencilWrite: true,
+			stencilRef: 1,
+			stencilFunc: THREE.NotEqualStencilFunc,
+			stencilZPass: THREE.ReplaceStencilOp
+		});
 
 		// 320 triangles, round enough to sit with the Blender models. 96 puffs is still only ~30k triangles in one
 		// draw call
