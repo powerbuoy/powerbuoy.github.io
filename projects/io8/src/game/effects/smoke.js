@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 import Particles from './particles.js';
 
@@ -14,9 +15,9 @@ export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
 		const material = new THREE.MeshStandardMaterial({roughness: 1});
 
-		// 320 triangles, round enough to sit with the Blender models (and shaded smooth like them: three only gives
-		// faceted normals at detail 0). 96 puffs is still only ~30k triangles in one draw call
-		super(scene, new THREE.IcosahedronGeometry(0.5, 2), material, 96);
+		// 320 triangles, round enough to sit with the Blender models. 96 puffs is still only ~30k triangles in one
+		// draw call
+		super(scene, Smoke.lumpy(new THREE.IcosahedronGeometry(0.5, 2)), material, 96);
 
 		this.config = Object.assign({
 			// How big a puff gets (m), how long it lasts (s), how fast it rises (m/s), how far from the emitter it
@@ -44,6 +45,7 @@ export default class Smoke extends Particles {
 			velocity: rising,
 			spin: Particles.randomInBall(3),
 			quaternion: new THREE.Quaternion().random(),
+			stretch: new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(0.5).addScalar(0.75),
 			color: new THREE.Color().setScalar(THREE.MathUtils.lerp(0.7, 0.08, darkness)),
 			maxScale: THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5) * size,
 			life: THREE.MathUtils.randFloat(...life)
@@ -54,12 +56,39 @@ export default class Smoke extends Particles {
 		// Swells quickly, then slowly shrinks to nothing
 		const grow = Math.min(1, t * 4);
 
-		particle.scale.setScalar(particle.maxScale * grow * (1 - t) ** 0.5);
+		particle.scale.copy(particle.stretch).multiplyScalar(particle.maxScale * grow * (1 - t) ** 0.5);
 		particle.position.addScaledVector(particle.velocity, deltaTime);
 
 		// Loses the emitter's speed but keeps rising, tumbling slowly
 		particle.velocity.x *= 1 - Math.min(1, deltaTime * 2);
 		particle.velocity.z *= 1 - Math.min(1, deltaTime * 2);
 		particle.quaternion.multiply(spin.setFromEuler(euler.set(particle.spin.x * deltaTime, particle.spin.y * deltaTime, particle.spin.z * deltaTime)));
+	}
+
+	// A ball with a few bulges, so the puffs read as smoke rather than bubbles. One shape for all of them, the random
+	// turn and stretch of each puff makes them look different. Welded first, so it's shaded smooth (three only gives
+	// faceted normals otherwise)
+	static lumpy (geometry, lumps = 7, height = 0.35) {
+		const welded = mergeVertices(geometry.deleteAttribute('normal').deleteAttribute('uv'));
+		const position = welded.getAttribute('position');
+		const vertex = new THREE.Vector3();
+		const centres = Array.from({length: lumps}, () => new THREE.Vector3().randomDirection());
+
+		for (let i = 0; i < position.count; i++) {
+			vertex.fromBufferAttribute(position, i);
+
+			const radius = vertex.length();
+			const direction = vertex.divideScalar(radius);
+
+			// Each lump bulges out most at its centre and fades out over a quarter of the ball or so
+			const bulge = centres.reduce((sum, centre) => sum + Math.max(0, direction.dot(centre) - 0.5) ** 2 * 4, 0);
+
+			position.setXYZ(i, ...direction.multiplyScalar(radius * (1 + bulge * height)).toArray());
+		}
+
+		geometry.dispose();
+		welded.computeVertexNormals();
+
+		return welded;
 	}
 }
