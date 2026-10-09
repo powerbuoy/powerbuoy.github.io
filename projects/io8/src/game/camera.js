@@ -9,6 +9,7 @@ const goal = new THREE.Vector3();
 const forward = new THREE.Vector3();
 const toFocus = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
+const matrix = new THREE.Matrix4();
 
 // What a view in camera.json gets for anything it leaves out (see below)
 const DEFAULTS = {fov: 45, yaw: 0, distance: 7.5, shift: 0, height: 0.3, lookUp: 0.5, lookAhead: 0, screenX: 0};
@@ -58,9 +59,10 @@ export default class FollowCamera {
 			// down the road (lookAhead) would otherwise turn him right off a narrow (portrait) screen
 			margin: 0.75,
 
-			// Once he's blown up it backs away `distance` m and rises `height` m, over `time` seconds (easing in and
-			// out), still looking the way it was
-			retreat: {distance: 12, height: 15, time: 15}
+			// Once he's blown up it follows his head for `delay` seconds, then backs away `distance` m and rises
+			// `height` m over `time` seconds (easing in and out). It keeps facing the same way, but tilts up or down
+			// to the horizon over `level` seconds, in case it was looking down at his head in the water
+			retreat: {delay: 1, distance: 100, height: 60, time: 45, level: 2}
 		}, conf);
 
 		this.view = this.views['1'];
@@ -84,15 +86,19 @@ export default class FollowCamera {
 		return true;
 	}
 
-	// Call every frame once io8 has blown up, instead of update(): it stops following and slowly backs away
-	// from where it was and rises (see config.retreat), looking the same way, never into a hill or the sea
+	// Call every frame once io8 has blown up (and the head's had its moment), instead of update(): it stops
+	// following and slowly backs away from where it was and rises (see config.retreat), facing the same way
+	// but levelling out to the horizon, never into a hill or the sea
 	retreat (deltaTime) {
 		const {position, quaternion} = this.camera;
-		const {distance, height, time} = this.config.retreat;
+		const {distance, height, time, level} = this.config.retreat;
 
-		// Away from where it looks, along the ground
+		// Away from where it looks, along the ground, and the same view tilted to the horizon
 		if (!this.wreck) {
-			this.wreck = {position: position.clone(), quaternion: quaternion.clone(), away: this.camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize().negate()};
+			const away = this.camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize().negate();
+			const horizon = new THREE.Quaternion().setFromRotationMatrix(matrix.lookAt(away, look.set(0, 0, 0), UP));
+
+			this.wreck = {position: position.clone(), quaternion: quaternion.clone(), horizon, away};
 		}
 
 		this.retreating += deltaTime;
@@ -106,7 +112,7 @@ export default class FollowCamera {
 		position.y = Math.max(position.y + height * away, floor + this.config.clearance);
 
 		// The explosion's shake turns the camera a little every frame, from here rather than adding up
-		quaternion.copy(this.wreck.quaternion);
+		quaternion.slerpQuaternions(this.wreck.quaternion, this.wreck.horizon, THREE.MathUtils.smoothstep(this.retreating, 0, level));
 	}
 
 	// focus is where io8 is, speed his speed along the road (m/s). A big deltaTime (1) snaps straight there

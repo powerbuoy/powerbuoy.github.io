@@ -289,9 +289,16 @@ export default class App extends SleekScene {
 		this.player.aim = raycaster.ray.intersectPlane(aimPlane, this.player.aim ?? new THREE.Vector3());
 	}
 
-	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other
+	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other.
+	// Once he's blown up it watches his head fly for a moment, then backs away (see FollowCamera's retreat)
 	updateCamera (deltaTime) {
-		if (this.player.isExploded) {
+		const head = this.player.headPiece;
+
+		// The head can be gone already (fell off the world), see Explosion.step()
+		if (this.player.isExploded && head && this.explosion.age < this.follow.config.retreat.delay && this.explosion.pieces.includes(head)) {
+			this.follow.update(deltaTime, head.object3d.getWorldPosition(target), head.body.linvel().x);
+		}
+		else if (this.player.isExploded) {
 			this.follow.retreat(deltaTime);
 		}
 		else {

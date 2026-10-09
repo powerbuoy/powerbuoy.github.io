@@ -95,6 +95,9 @@ export default class IO8 extends SleekEntity {
 
 	isExploded = false;
 
+	// His head's piece of debris ({object3d, body}) once he's blown up, the camera watches it for a moment
+	headPiece = null;
+
 	fuel = 0;
 
 	// Active power-ups: name -> {remaining seconds, how to undo it}
@@ -381,7 +384,7 @@ export default class IO8 extends SleekEntity {
 		};
 
 		this.wreck = this.legsObject.getWorldPosition(new THREE.Vector3());
-		explosion.shatter(this.object3d, velocityOf);
+		this.headPiece = explosion.shatter(this.object3d, velocityOf).find(piece => piece.object3d.name === 'RobotHead_RigidBody') ?? null;
 		this.isExploded = true;
 		this.engineSound?.stop();
 		this.thrusterSound?.stop();
