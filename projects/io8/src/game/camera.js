@@ -17,7 +17,8 @@ const DEFAULTS = {fov: 45, yaw: 0, distance: 7.5, shift: 0, height: 0.3, lookUp:
 	Follows io8 in one of the views from assets/camera.json, picked with the number keys (view "1" is the
 	default). Switching view glides over rather than cutting, `glide` is how fast (per second). It eases after
 	him, aims ahead by his speed so he stays put on screen however fast he goes, and rises over any terrain
-	between it and him so it never dips into a hill. Each view is where the camera sits and where it looks:
+	between it and him so it never dips into a hill (or under water). Each view is where the camera sits and
+	where it looks:
 
 	- fov: field of view (degrees, top to bottom)
 	- yaw: degrees around io8 from the side view (0, the camera out in front of the road looking across it).
@@ -36,16 +37,17 @@ export default class FollowCamera {
 	lift = 0;
 
 	// views is camera.json, see load()
-	constructor (camera, ground, views, conf = {}) {
+	constructor (camera, ground, water, views, conf = {}) {
 		this.camera = camera;
 		this.ground = ground;
+		this.water = water;
 		this.views = Object.fromEntries(Object.entries(views.views).map(([key, view]) => [key, {...DEFAULTS, ...view}]));
 		this.config = Object.assign({
 			// How quickly it eases after io8, and over to a new view (per second)
 			follow: 4,
 			glide: views.glide ?? 3,
 
-			// How far (m) it stays above the terrain between it and io8
+			// How far (m) it stays above the terrain between it and io8, and above water
 			clearance: 0.3,
 
 			// io8 is always kept at least this far in from the sides of the screen (1 = the edge). A view that looks
@@ -142,7 +144,8 @@ export default class FollowCamera {
 	}
 
 	// How much higher the camera has to be for it, and its line of sight down to io8 (lookY above him), to stay
-	// clear of the terrain in between. Checked at a few points along the way
+	// clear of the terrain in between. Checked at a few points along the way. Only the camera itself is kept
+	// above water, its line of sight may go through the surface
 	liftFor (position, lookY) {
 		const {x, z} = this.target;
 		let lift = 0;
@@ -155,6 +158,12 @@ export default class FollowCamera {
 				lift = Math.max(lift, (ground + this.config.clearance - lookY) / t + lookY - position.y);
 			}
 		});
+
+		const water = this.water.levelAt(position.x, position.z);
+
+		if (water !== null) {
+			lift = Math.max(lift, water + this.config.clearance - position.y);
+		}
 
 		return lift;
 	}

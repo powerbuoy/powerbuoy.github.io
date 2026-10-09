@@ -137,7 +137,7 @@ export default class App extends SleekScene {
 		// OrbitControls puts an inline cursor: auto on the canvas, which hides the crosshair from app.css
 		this.renderer.domElement.style.cursor = '';
 
-		this.follow = new FollowCamera(this.camera, this.ground, views);
+		this.follow = new FollowCamera(this.camera, this.ground, this.water, views);
 
 		// O toggles the orbit camera, the number keys pick a view (see FollowCamera)
 		window.addEventListener('keydown', e => {

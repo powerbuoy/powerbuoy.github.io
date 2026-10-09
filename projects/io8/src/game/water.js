@@ -9,7 +9,7 @@ import * as THREE from 'three';
 	Each layer drifts along the waves in the normal map (`wind`, the direction they run in the image, see
 	water_nor_gl_1k.png). Speeds are in tiles a second (how the map repeats in Blender, ~20 m on windowsxpmap).
 
-	It also knows where the water is, for anything that shouldn't go in it (io8)
+	It also knows where the water is, for anything that shouldn't go in it (io8, the camera)
 */
 export default class Water {
 	layers = [];
