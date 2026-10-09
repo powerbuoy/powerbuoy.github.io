@@ -53,8 +53,9 @@ export default class SleekAudio {
 		this.listener.context.resume();
 	}
 
-	// Play a one-off sound at a point in the world. rate changes the pitch (and speed)
-	playAt (buffer, position, {volume = 1, rate = 1} = {}) {
+	// Play a one-off sound at a point in the world. rate changes the pitch (and speed). offset and duration (s)
+	// play a slice of a longer sound, and fadeIn and fadeOut (s) fade it instead of starting and cutting off sharply
+	playAt (buffer, position, {volume = 1, rate = 1, offset = 0, duration, fadeIn = 0, fadeOut = 0} = {}) {
 		const sound = this.pool[this.poolIndex];
 
 		this.poolIndex = (this.poolIndex + 1) % this.pool.length;
@@ -66,8 +67,29 @@ export default class SleekAudio {
 		sound.position.copy(position);
 		sound.updateMatrixWorld();
 		sound.setBuffer(buffer);
-		sound.setVolume(volume);
 		sound.setPlaybackRate(rate);
+
+		// Pooled, so all of these are set every time, a slice or fade must not carry over to the next sound
+		sound.offset = offset;
+		sound.duration = duration;
+
+		const gain = sound.gain.gain;
+		const now = sound.context.currentTime;
+
+		gain.cancelScheduledValues(now);
+		gain.setValueAtTime(fadeIn > 0 ? 0 : volume, now);
+
+		if (fadeIn > 0 || fadeOut > 0) {
+			// How long it's heard for, which the rate speeds up or slows down. Fades longer than that together are
+			// shortened to fit, keeping their proportions
+			const length = (duration ?? buffer.duration - offset) / rate;
+			const fit = Math.min(1, length / (fadeIn + fadeOut));
+
+			gain.linearRampToValueAtTime(volume, now + fadeIn * fit);
+			gain.setValueAtTime(volume, now + length - fadeOut * fit);
+			gain.linearRampToValueAtTime(0, now + length);
+		}
+
 		sound.play();
 	}
 

@@ -72,6 +72,7 @@ export default class App extends SleekScene {
 		this.spawner.setPickups(this.pickups);
 		this.blasts = new Blasts(this.scene, this.camera);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
+		this.emitters = new Emitters(this.scene, this.blasts, this.audio);
 
 		const sciFi = name => this.audio.load(`./assets/audio/kenney_sci-fi-sounds/Audio/${name}.ogg`);
 
@@ -87,10 +88,10 @@ export default class App extends SleekScene {
 			this.impacts.init(),
 			this.pickups.init(),
 			this.lasers.init(),
+			this.emitters.init(),
 			this.spawner.init()
 		]);
 
-		this.emitters = new Emitters(this.scene, this.blasts);
 		this.spawner.setEmitters(this.emitters);
 
 		this.map = new SleekEntity(map, this.physics, {name: 'Map'});

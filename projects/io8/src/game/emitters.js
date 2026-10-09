@@ -10,14 +10,16 @@ const step = new THREE.Vector3();
 	Smoke and sparks from empties tagged with an "emit" custom property (`smoke`, `sparks` or a list like
 	`smoke, sparks`), in any model add()ed: the map, props, io8. With a `rate` an empty emits that many times a
 	second, at random moments, `size` times as big as normal. Without one it shows how hurt its owner is: smoke
-	that thickens and darkens as health drops, the odd crackle of sparks when badly hurt and a burst of sparks on
-	every hit, so healing clears it up again by itself
+	that thickens and darkens as health drops, crackles of sparks once hurt and a burst of sparks on
+	every hit, so healing clears it up again by itself. Every burst of sparks crackles: a short random slice of a
+	long recording, faded in and out
 */
 export default class Emitters {
 	groups = new Map();
 
-	constructor (scene, blasts, conf = {}) {
+	constructor (scene, blasts, audio, conf = {}) {
 		this.blasts = blasts;
+		this.audio = audio;
 		this.smoke = new Smoke(scene);
 		this.config = Object.assign({
 			// Health smoke starts below `below` health (0-1) and is `rate` puffs a second at 0
@@ -25,11 +27,19 @@ export default class Emitters {
 
 			// Health crackles start below `below` health and are `rate` a second at 0. `size` is a spark burst at
 			// size 1 (1 = io8 blowing up), for the crackles and any sparks with a rate
-			crackle: {below: 0.4, rate: 1.5, size: 0.06},
+			crackle: {below: 0.9, rate: 4, size: 0.06},
 
 			// A hit's burst: `size` per health point lost, at least `min`, at most `max`
-			hit: {size: 0.01, min: 0.04, max: 0.4}
+			hit: {size: 0.01, min: 0.04, max: 0.4},
+
+			// The crackle with each burst of sparks: a random slice `length` (s) long, faded in over `fadeIn` and out
+			// over `fadeOut` (s)
+			sound: {src: './assets/audio/freesound/871766__harrisonlace__elecarc_sparking-electricity-bed.ogg', volume: 0.6, length: [0.4, 1], fadeIn: 0.1, fadeOut: 0.4}
 		}, conf);
+	}
+
+	async init () {
+		this.sound = await this.audio.load(this.config.sound.src);
 	}
 
 	// Every emitter in object3d. An owner ({health, healthLevel, isExploded}) is what the ones without a rate show
@@ -115,7 +125,7 @@ export default class Emitters {
 
 		if (sparkers.length) {
 			if (lost > 0) {
-				this.blasts.sparks.spawn(pick(sparkers).position, THREE.MathUtils.clamp(lost * hit.size, hit.min, hit.max));
+				this.sparks(pick(sparkers).position, THREE.MathUtils.clamp(lost * hit.size, hit.min, hit.max));
 			}
 
 			if (Math.random() < crackle.rate * Math.max(0, 1 - level / crackle.below) * deltaTime) {
@@ -140,8 +150,16 @@ export default class Emitters {
 			this.smoke.spawn(emitter.position, darkness, emitter.velocity, size);
 		}
 		else {
-			this.blasts.sparks.spawn(emitter.position, this.config.crackle.size * size);
+			this.sparks(emitter.position, this.config.crackle.size * size);
 		}
+	}
+
+	sparks (position, size) {
+		const {volume, length, fadeIn, fadeOut} = this.config.sound;
+		const duration = THREE.MathUtils.randFloat(length[0], length[1]);
+
+		this.blasts.sparks.spawn(position, size);
+		this.audio.playAt(this.sound, position, {volume, duration, fadeIn, fadeOut, offset: Math.random() * (this.sound.duration - duration)});
 	}
 
 	// Where it is in the world, and how fast it's going there (smoke keeps some of that)
