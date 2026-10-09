@@ -41,6 +41,12 @@ export default class SleekLoader {
 				node.castShadow = shadow !== 'receive' && !!Number(shadow);
 				node.receiveShadow = shadow === 'receive' || !!Number(shadow);
 
+				// "fog: 0" leaves it out of the scene's fog, for things as far away as the sky (the sun and moon). Set on
+				// the material, so anything else sharing that material loses its fog too
+				if (!Number(SleekLoader.inherited(node, 'fog') ?? 1)) {
+					node.material.fog = false;
+				}
+
 				if (node.material.map) {
 					node.material.map.anisotropy = 16;
 				}

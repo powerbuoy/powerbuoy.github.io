@@ -62,7 +62,8 @@ const shader = {
 			"time": 21,
 			"cycle": 240,
 			"date": "12-21",
-			"environment": 1
+			"environment": 1,
+			"fog": 0.003
 		}
 
 	Keys are hours (0-24), each gradient's colours go from the horizon up (2 to 8 of them, any number per
@@ -82,6 +83,10 @@ const shader = {
 	The sky also lights the scene: it's rendered into the environment map, which is the light everything
 	gets from all around (what lights the shady sides) and what shiny and metal things reflect. So night
 	really is dark blue and dusk warm. `environment` is how strong that light is (optional, default 1)
+
+	`fog` (optional) is how thick the haze is: things fade into the horizon colour with distance, about two
+	thirds gone at 1 / fog metres (0.003 is two thirds at 333 m). It follows the sky's colour through the day.
+	Give SkyPivot "fog: 0" in Blender so the sun and moon stay out of it, they're as far away as the sky
 */
 export default class Sky {
 	keyframes = [];
@@ -101,6 +106,11 @@ export default class Sky {
 
 		// Where it's modelled is where it sits relative to the camera, see follow()
 		this.pivotOffset = this.pivot?.getWorldPosition(new THREE.Vector3());
+
+		// Coloured by setTime(). The sky's own shaders (dome and stars) ignore fog already
+		if (conf.fog) {
+			scene.fog = new THREE.FogExp2(0x000000, conf.fog);
+		}
 
 		// Turned by the pivot, so there are only stars when there's a sky that turns
 		if (this.pivot) {
@@ -221,6 +231,7 @@ export default class Sky {
 		});
 
 		this.stars?.setSky(this.material.uniforms.colors.value[this.stops - 1]);
+		this.scene.fog?.color.copy(this.material.uniforms.colors.value[0]);
 
 		// A whole turn a day, anticlockwise as seen from the camera (rising on the left), sun up at noon
 		if (this.pivot) {

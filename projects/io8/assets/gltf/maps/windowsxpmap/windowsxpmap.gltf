@@ -131,6 +131,9 @@
 				2,
 				4
 			],
+			"extras":{
+				"fog":0
+			},
 			"name":"SkyPivot",
 			"translation":[
 				250,
