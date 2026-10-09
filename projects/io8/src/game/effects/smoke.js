@@ -10,7 +10,9 @@ const euler = new THREE.Euler();
 	Puffs that drift up, swell and shrink away. Lit like everything else (so they're grey at noon, dark at night
 	and warm at sunset) and a little see-through. A plume is see-through as one: the stencil buffer lets only
 	the first puff drawn on a pixel colour it, so where they overlap it's no thicker and they merge into one shape.
-	Which puff that is isn't sorted (one instanced mesh), which doesn't show as they're all much the same colour
+	Which puff that is isn't sorted (one instanced mesh), which doesn't show as they're all much the same colour.
+	Lit mostly as if facing straight up (`flat`), so the puffs don't each have a light and a dark side and
+	the plume reads as one thing rather than a pile of balls
 	Spawned in the world, not on whatever's smoking, so they trail behind it
 */
 export default class Smoke extends Particles {
@@ -36,11 +38,31 @@ export default class Smoke extends Particles {
 			// How big a puff gets (m), how long it lasts (s), how fast it rises (m/s), how far from the emitter it
 			// starts (m), and how much of the emitter's own speed it keeps (0-1)
 			scale: [0.12, 0.3],
-			life: [0.8, 1.6],
+			life: [0.8, 2.6],
 			rise: [0.4, 0.9],
 			spread: 0.06,
-			inherit: 0.2
+			inherit: 0.3,
+
+			// How much it's lit as if facing straight up rather than by its own shape (0-1)
+			flat: 0.95
 		}, conf);
+
+		material.onBeforeCompile = shader => {
+			shader.uniforms.smokeFlat = {value: this.config.flat};
+			shader.fragmentShader = shader.fragmentShader
+				.replace('#include <common>', `
+					#include <common>
+
+					uniform float smokeFlat;
+				`)
+				.replace('#include <normal_fragment_begin>', `
+					#include <normal_fragment_begin>
+
+					normal = normalize( mix( normal, normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz ), smokeFlat ) );
+				`);
+		};
+
+		material.customProgramCacheKey = () => 'smoke';
 	}
 
 	// darkness 0-1 (0 light grey, 1 near black), velocity is the emitter's, size scales the puff
