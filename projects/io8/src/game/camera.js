@@ -37,7 +37,11 @@ export default class FollowCamera {
 	lead = 0;
 	lift = 0;
 
-	// Where it was when io8 blew up and how long ago, see retreat()
+	// How long since io8 blew up, where it was following his head to (before the shake) and how fast, where it was
+	// when it started backing away and how long ago, see retreat()
+	sinceBlast = 0;
+	followed = null;
+	velocity = new THREE.Vector3();
 	wreck = null;
 	retreating = 0;
 
@@ -60,9 +64,11 @@ export default class FollowCamera {
 			margin: 0.75,
 
 			// Once he's blown up it follows his head for `delay` seconds, then backs away `distance` m and rises
-			// `height` m over `time` seconds (easing in and out). It keeps facing the same way, but tilts up or down
-			// to the horizon over `level` seconds, in case it was looking down at his head in the water
-			retreat: {delay: 1, distance: 100, height: 60, time: 45, level: 2}
+			// `height` m over `time` seconds (easing in and out). As it lets go of the head it coasts on the way it
+			// was going, slowing over about `release` seconds (it drifts its speed times `release` m). It keeps
+			// facing the same way, but tilts up or down to the horizon over `level` seconds, in case it was looking
+			// down at his head in the water
+			retreat: {delay: 2, release: 3, distance: 100, height: 40, time: 60, level: 5}
 		}, conf);
 
 		this.view = this.views['1'];
@@ -86,33 +92,61 @@ export default class FollowCamera {
 		return true;
 	}
 
-	// Call every frame once io8 has blown up (and the head's had its moment), instead of update(): it stops
-	// following and slowly backs away from where it was and rises (see config.retreat), facing the same way
-	// but levelling out to the horizon, never into a hill or the sea
-	retreat (deltaTime) {
+	// Call every frame once io8 has blown up, instead of update(), with where his head is and its speed along the
+	// road (no focus once there's no head). It follows the head for a moment, then coasts to a stop and slowly
+	// backs away and rises (see config.retreat), facing the same way but levelling out to the horizon, never into a
+	// hill or the sea
+	retreat (deltaTime, focus = null, speed = 0) {
 		const {position, quaternion} = this.camera;
-		const {distance, height, time, level} = this.config.retreat;
+		const {delay, release, distance, height, time, level} = this.config.retreat;
+
+		this.sinceBlast += deltaTime;
+
+		if (focus && this.sinceBlast < delay) {
+			this.update(deltaTime, focus, speed);
+
+			if (this.followed && deltaTime > 0) {
+				this.velocity.subVectors(position, this.followed).divideScalar(deltaTime);
+			}
+
+			this.followed = (this.followed ?? new THREE.Vector3()).copy(position);
+
+			return;
+		}
 
 		// Away from where it looks, along the ground, and the same view tilted to the horizon
 		if (!this.wreck) {
 			const away = this.camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize().negate();
 			const horizon = new THREE.Quaternion().setFromRotationMatrix(matrix.lookAt(away, look.set(0, 0, 0), UP));
 
-			this.wreck = {position: position.clone(), quaternion: quaternion.clone(), horizon, away};
+			const from = (this.followed ?? position).clone();
+			// Coming down, it stops sooner, settling just above the ground (or sea) rather than landing on it
+			const room = Math.max(from.y - this.floorAt(from) - this.config.clearance, 0);
+			const settle = this.velocity.y < 0 ? Math.min(release, room / -this.velocity.y) : release;
+
+			this.wreck = {position: from, quaternion: quaternion.clone(), horizon, away, settle};
 		}
 
 		this.retreating += deltaTime;
 
 		const away = THREE.MathUtils.smoothstep(this.retreating, 0, time);
+		// Starts at the speed it had and slows exponentially (stopping after about `slow` seconds), so letting go of
+		// the head never jolts
+		const coast = slow => slow > 0 ? slow * (1 - Math.exp(-this.retreating / slow)) : 0;
 
 		position.copy(this.wreck.position).addScaledVector(this.wreck.away, distance * away);
-
-		const floor = Math.max(this.ground.heightAt(position.x, position.z) ?? -Infinity, this.water.levelAt(position.x, position.z) ?? -Infinity);
-
-		position.y = Math.max(position.y + height * away, floor + this.config.clearance);
+		position.x += this.velocity.x * coast(release);
+		position.y += this.velocity.y * coast(this.wreck.settle) + height * away;
+		position.z += this.velocity.z * coast(release);
+		position.y = Math.max(position.y, this.floorAt(position) + this.config.clearance);
 
 		// The explosion's shake turns the camera a little every frame, from here rather than adding up
 		quaternion.slerpQuaternions(this.wreck.quaternion, this.wreck.horizon, THREE.MathUtils.smoothstep(this.retreating, 0, level));
+	}
+
+	// The ground or the sea, whichever is higher, under a point
+	floorAt ({x, z}) {
+		return Math.max(this.ground.heightAt(x, z) ?? -Infinity, this.water.levelAt(x, z) ?? -Infinity);
 	}
 
 	// focus is where io8 is, speed his speed along the road (m/s). A big deltaTime (1) snaps straight there

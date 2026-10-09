@@ -293,14 +293,12 @@ export default class App extends SleekScene {
 	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other.
 	// Once he's blown up it watches his head fly for a moment, then backs away (see FollowCamera's retreat)
 	updateCamera (deltaTime) {
-		const head = this.player.headPiece;
+		if (this.player.isExploded) {
+			const head = this.player.headPiece;
+			// Its body is gone if it fell off the world (see Explosion.step()), the mesh still says where it was
+			const speed = this.explosion.pieces.includes(head) ? head.body.linvel().x : 0;
 
-		// The head can be gone already (fell off the world), see Explosion.step()
-		if (this.player.isExploded && head && this.explosion.age < this.follow.config.retreat.delay && this.explosion.pieces.includes(head)) {
-			this.follow.update(deltaTime, head.object3d.getWorldPosition(target), head.body.linvel().x);
-		}
-		else if (this.player.isExploded) {
-			this.follow.retreat(deltaTime);
+			this.follow.retreat(deltaTime, head?.object3d.getWorldPosition(target), speed);
 		}
 		else {
 			this.follow.update(deltaTime, this.player.getFocusPosition(target), this.player.legs.linvel().x);
