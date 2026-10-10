@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en" class="paused">
+<html lang="en" class="paused loading">
 
 	<head>
 
@@ -59,19 +59,53 @@
 				font-weight: 900;
 			}
 
-			/* Start & end menu */
-			html.paused,
-			html.dead {
-				#ui {
-					display: none;
+			/* HUD items: a label with a name and a meter, updated by the game through data-stat */
+			[data-stat] {
+				display: block;
+				margin: 0 0 0.5rem;
+
+				& meter {
+					display: block;
 				}
 			}
 
+			/* Otherwise a display rule like the one above wins over the hidden attribute */
+			[hidden] {
+				display: none !important;
+			}
+
+			/* Toggle visibility */
+			html.paused #start,
+			html.dead #end {
+				display: flex;
+			}
+
+			html.paused #ui,
+			html.dead #ui,
+			html.dead #start,
+			html:not(.loading) #loading,
+			html.loading #ui,
+			html.loading #start,
+			html.loading #end {
+				display: none;
+			}
+
+			/* Loading */
+			#loading {
+				position: fixed;
+				left: 50%;
+				top: 50%;
+				translate: -50% -50%;
+				margin: 0;
+				z-index: 99;
+			}
+
+			/* Start / death screens */
 			#start,
 			#end {
 				position: fixed;
 				inset: 0;
-				z-index: 98;
+				z-index: 99;
 
 				display: none;
 				flex-direction: column;
@@ -81,6 +115,12 @@
 
 				text-align: center;
 
+				/* Death screen uses h2 - start h1 */
+				> h2 {
+					color: red;
+				}
+
+				/* Buttons (start / restart etc) */
 				> a {
 					display: block;
 					padding: 1rem 2rem;
@@ -105,44 +145,10 @@
 				}
 			}
 
-			/* Start menu */
-			#start {
-				background: var(--card-background);
-				padding: var(--ui-padding);
-
-				> aside {
-					background: var(--card-background);
-					padding: 2rem;
-					margin-top: 2rem;
-					border-radius: var(--card-radius);
-
-					> :last-child {
-						margin-bottom: 0;
-					}
-				}
-			}
-
-			html.paused #start {
-				display: flex;
-			}
-
-			/* End menu */
-			#end {
-				> h2 {
-					color: red;
-				}
-			}
-
-			html.dead #start {
-				display: none;
-			}
-
-			html.dead #end {
-				display: flex;
-			}
-
 			/* UI */
 			#ui {
+				display: contents;
+
 				/* Each UI card */
 				& > * {
 					background: var(--card-background);
@@ -197,30 +203,14 @@
 					left: var(--ui-padding);
 				}
 
-				/* Hide empty cards, cards whose items are all hidden (no power-ups running) and the loader once done */
+				/* Hide empty cards, cards whose items are all hidden (no power-ups running) */
 				& > :empty,
-				& > [hidden],
 				& > :not(:has(> :not([hidden]))) {
 					display: none;
 				}
 			}
 
-			/* HUD items: a label with a name and a meter, updated by the game through data-stat */
-			[data-stat] {
-				display: block;
-				margin: 0 0 0.5rem;
-
-				& meter {
-					display: block;
-				}
-			}
-
-			/* Otherwise a display rule like the one above wins over the hidden attribute */
-			[hidden] {
-				display: none !important;
-			}
-
-			/* Game */
+			/* Game wrapper that holds the canvas */
 			#game {
 				position: fixed;
 				inset: 0;
@@ -241,8 +231,6 @@
 
 	<body>
 
-		<figure id="game"></figure>
-
 		<section id="start">
 
 			<h1>IO8</h1>
@@ -262,14 +250,14 @@
 
 		</section>
 
+		<p id="loading">Loading <output>0%</output></p>
+
+		<figure id="game"></figure>
+
 		<section id="ui">
 
 			<!-- Top left -->
-			<article id="loading">
-
-				<p>Loading <output>0%</output></p>
-
-			</article>
+			<article></article>
 
 			<!-- Top center -->
 			<article></article>

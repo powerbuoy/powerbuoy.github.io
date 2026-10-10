@@ -2,6 +2,7 @@ import SleekPhysics from './sleek/physics.js';
 import SleekLoader from './sleek/loader.js';
 import App from './game/app.js';
 
+const root = document.documentElement;
 const loading = document.getElementById('loading');
 
 SleekLoader.onProgress(progress => {
@@ -14,11 +15,11 @@ const app = new App(document.getElementById('game'));
 
 await app.init();
 
-loading.hidden = true;
+// html.loading is in the page from the start (so it applies before any script runs), until everything's in.
+// The CSS shows and hides #loading by it
+root.classList.remove('loading');
 
 // The game starts paused behind the start menu (html.paused), with its first frame drawn
-const root = document.documentElement;
-
 function setPaused (paused) {
 	root.classList.toggle('paused', paused);
 
