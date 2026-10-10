@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
-// Scratch objects reused every frame instead of allocating new ones
+// Scratch objects reused every frame instead of allocating new ones. Rapier's getters (translation(), rotation()
+// etc.) fill in a target like this too, or allocate a new object every call without one
 const pos = new THREE.Vector3();
 const quat = new THREE.Quaternion();
 const nextPos = new THREE.Vector3();
@@ -9,6 +10,14 @@ const nextQuat = new THREE.Quaternion();
 const unused = new THREE.Vector3();
 const matrix = new THREE.Matrix4();
 const parentInverse = new THREE.Matrix4();
+
+// Asleep = not moving, still where it was. A named function, not a new arrow every step
+function remember (link) {
+	if (!link.body.isSleeping()) {
+		link.body.translation(link.prevPos);
+		link.body.rotation(link.prevQuat);
+	}
+}
 
 export default class SleekPhysics {
 	accumulator = 0;
@@ -51,8 +60,8 @@ export default class SleekPhysics {
 			object3d,
 			body,
 			scale: object3d.getWorldScale(new THREE.Vector3()),
-			prevPos: new THREE.Vector3().copy(body.translation()),
-			prevQuat: new THREE.Quaternion().copy(body.rotation()),
+			prevPos: body.translation(new THREE.Vector3()),
+			prevQuat: body.rotation(new THREE.Quaternion()),
 			isResting: false
 		});
 	}
@@ -83,13 +92,8 @@ export default class SleekPhysics {
 		this.accumulator += Math.min(deltaTime, 0.1) * this.config.speed;
 
 		while (this.accumulator >= this.world.timestep) {
-			// Remember where everything was, so we can draw in between steps (asleep = not moving)
-			this.links.forEach(link => {
-				if (!link.body.isSleeping()) {
-					link.prevPos.copy(link.body.translation());
-					link.prevQuat.copy(link.body.rotation());
-				}
-			});
+			// Remember where everything was, so we can draw in between steps
+			this.links.forEach(remember);
 
 			this.listeners.forEach(callback => callback(this.world.timestep));
 			this.world.step(this.events);
@@ -122,15 +126,15 @@ export default class SleekPhysics {
 				}
 
 				link.isResting = true;
-				prevPos.copy(body.translation());
-				prevQuat.copy(body.rotation());
+				body.translation(prevPos);
+				body.rotation(prevQuat);
 			}
 			else {
 				link.isResting = false;
 			}
 
-			pos.copy(prevPos).lerp(nextPos.copy(body.translation()), alpha);
-			quat.copy(prevQuat).slerp(nextQuat.copy(body.rotation()), alpha);
+			pos.copy(prevPos).lerp(body.translation(nextPos), alpha);
+			quat.copy(prevQuat).slerp(body.rotation(nextQuat), alpha);
 			matrix.compose(pos, quat, link.scale);
 
 			object3d.parent.updateWorldMatrix(true, false);

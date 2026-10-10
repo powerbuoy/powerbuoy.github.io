@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
+import {randomItem, refill} from '../sleek/utils.js';
+
 import Explosion from './explosion.js';
 import {ROBOT_GROUPS} from './io8.js';
 
@@ -49,14 +51,14 @@ export default class Lasers {
 
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
 			// a cardboard box off at 15 m/s, see Explosion.shockwave()),
-			// and how big it looks (see Blasts, 1 = io8 blowing up)
+			// and how big it looks and sounds (see Blasts, 1 = io8 blowing up)
 			blast: {radius: 3, impulse: 167, size: 0.5},
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
 			// another Kenney pack (e.g. "impact-sounds/impactGeneric_light"). And their volumes (0-1)
 			// (`empty` is the dry click when you fire with no charge left), and optionally their pitch (1 = as recorded)
-			sounds: {fire: 'laserRetro', blast: 'explosionCrunch', empty: 'impact-sounds/impactGeneric_light'},
-			volume: {fire: 0.18, blast: 0.7, hit: 0.6, empty: 0.5},
+			sounds: {fire: 'laserRetro', empty: 'impact-sounds/impactGeneric_light'},
+			volume: {fire: 0.18, hit: 0.6, empty: 0.5},
 			pitch: {}
 		}, conf);
 
@@ -79,20 +81,16 @@ export default class Lasers {
 		await Promise.all(Object.entries(this.config.sounds).map(async ([name, file]) => {
 			const [pack, sound] = file.includes('/') ? file.split('/') : ['sci-fi-sounds', file];
 
-			this.sounds[name] = await Promise.all([0, 1, 2, 3, 4].map(i => this.audio.load(`${SOUNDS}/kenney_${pack}/Audio/${sound}_00${i}.ogg`)));
+			this.sounds[name] = await this.audio.loadVariations(`${SOUNDS}/kenney_${pack}/Audio/${sound}`);
 		}));
 	}
 
 	playSound (name, position) {
-		const variations = this.sounds[name];
-
-		this.audio.playAt(variations[Math.floor(Math.random() * variations.length)], position, {volume: this.config.volume[name], rate: this.config.pitch[name] ?? 1});
+		this.audio.playAt(randomItem(this.sounds[name]), position, {volume: this.config.volume[name], rate: this.config.pitch[name] ?? 1});
 	}
 
 	// `fire` is true on the frame the mouse was clicked (one shot per click)
 	step (deltaTime, player, fire) {
-		const {capacity, refillDelay, refillTime} = this.config.ammo;
-
 		// Any charge at all fires (a shot with less than a whole one left just empties it), so the meter
 		// never shows ammo you can't use. Every shot restarts the refill delay, so it can't be spammed
 		if (fire && !player.isExploded && this.ammo > 0) {
@@ -108,10 +106,7 @@ export default class Lasers {
 			}
 
 			this.sinceFired += deltaTime;
-
-			if (this.sinceFired > refillDelay) {
-				this.ammo = Math.min(capacity, this.ammo + capacity / refillTime * deltaTime);
-			}
+			this.ammo = refill(this.ammo, this.sinceFired, this.config.ammo, deltaTime);
 		}
 
 		this.bolts.forEach(bolt => this.move(bolt, deltaTime));
@@ -144,7 +139,6 @@ export default class Lasers {
 			// Hits io8 too if he's close, so don't shoot point blank
 			new Explosion(this.scene, this.physics, point, blast).shockwave();
 			this.blasts.spawn(point, blast.size);
-			this.playSound('blast', point);
 			this.impacts.hit(hit.collider, point, volume.hit);
 			this.remove(bolt);
 

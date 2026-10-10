@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 
+import {randomItem} from '../../sleek/utils.js';
+
 import Fireball from './fireball.js';
 import Sparks from './sparks.js';
 
 const offset = new THREE.Vector3();
 
 /*
-	What an explosion looks like: a fireball and sparks, a flash of light and a kick of
-	the camera. Only looks, the physics (debris, shockwave) is Explosion's job. spawn(position, size) anywhere,
+	What an explosion looks and sounds like: a fireball and sparks, a flash of light, a kick of the camera and a
+	bang. Only that, the physics (debris, shockwave) is Explosion's job. spawn(position, size) anywhere,
 	size 1 is io8 blowing up, smaller for a laser hit. Every layer is one pool drawn in one go, so any number
 	of blasts costs the same few draw calls
 */
@@ -15,9 +17,10 @@ export default class Blasts {
 	trauma = 0;
 	time = 0;
 
-	constructor (scene, camera, conf = {}) {
+	constructor (scene, camera, audio, conf = {}) {
 		this.scene = scene;
 		this.camera = camera;
+		this.audio = audio;
 		this.config = Object.assign({
 			// The flash of light, brightest at size 1, lighting things within `distance` (m) for `duration` (s)
 			light: {color: 0xffaa55, intensity: 15, distance: 12, duration: 0.35},
@@ -25,7 +28,16 @@ export default class Blasts {
 			// Camera kick: how much a size 1 blast right next to the camera adds (0-1), how far away (m) it's
 			// still felt, how fast it settles (per second), and at full strength how far it moves the camera (m)
 			// and turns it (degrees)
-			shake: {amount: 1, reach: 30, decay: 1.1, move: 0.25, turn: 4}
+			shake: {amount: 1, reach: 30, decay: 1.1, move: 0.25, turn: 4},
+
+			// Sounds in Kenney's sci-fi pack, `variations` of each (_000, _001...), a random one plays: the crunch on
+			// every blast, the deep boom only from size `from` up (io8 blowing up, not a laser hit). Pitch (1 = as
+			// recorded) goes from pitch[0] at size 0 to pitch[1] at size 1 (and stays there past it), so bigger
+			// blasts sound deeper
+			sounds: {
+				crunch: {name: 'explosionCrunch', variations: 5, volume: 0.7, pitch: [1.2, 0.8], from: 0},
+				boom: {name: 'lowFrequency_explosion', variations: 2, volume: 1, pitch: [1, 1], from: 1}
+			}
 		}, conf);
 
 		// Sparks are also used on their own (see Emitters)
@@ -39,10 +51,26 @@ export default class Blasts {
 		scene.add(this.light);
 	}
 
+	async init () {
+		this.sounds = Object.fromEntries(await Promise.all(Object.entries(this.config.sounds).map(async ([key, {name, variations}]) => [
+			key,
+			await this.audio.loadVariations(`./assets/audio/kenney_sci-fi-sounds/Audio/${name}`, variations)
+		])));
+	}
+
 	spawn (position, size = 1) {
-		const {light, shake} = this.config;
+		const {light, shake, sounds} = this.config;
 
 		this.layers.forEach(layer => layer.spawn(position, size));
+
+		// Silent until init() has loaded the sounds
+		for (const key in this.sounds) {
+			const {volume, pitch, from} = sounds[key];
+
+			if (size >= from) {
+				this.audio.playAt(randomItem(this.sounds[key]), position, {volume, rate: THREE.MathUtils.lerp(pitch[0], pitch[1], Math.min(1, size))});
+			}
+		}
 
 		// The light jumps to the newest blast if it's at least as big as what's still glowing
 		if (size >= this.lightLevel) {

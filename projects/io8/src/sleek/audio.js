@@ -14,6 +14,9 @@ export default class SleekAudio {
 	poolIndex = 0;
 	isPaused = false;
 
+	// Loading or loaded sounds by file, see load()
+	buffers = new Map();
+
 	constructor (camera, scene, conf = {}) {
 		this.config = Object.assign({poolSize: 16}, conf);
 		this.listener = new THREE.AudioListener();
@@ -93,8 +96,23 @@ export default class SleekAudio {
 		sound.play();
 	}
 
-	async load (src) {
-		return this.loader.loadAsync(src);
+	// Each file is fetched and decoded once, however many things ask for it. One that fails is forgotten, so
+	// asking again tries again
+	load (src) {
+		if (!this.buffers.has(src)) {
+			this.buffers.set(src, this.loader.loadAsync(src).catch(error => {
+				this.buffers.delete(src);
+
+				throw error;
+			}));
+		}
+
+		return this.buffers.get(src);
+	}
+
+	// Several takes of the same sound, numbered the way Kenney's packs are: name_000.ogg, name_001.ogg...
+	loadVariations (name, count = 5) {
+		return Promise.all(Array.from({length: count}, (v, i) => this.load(`${name}_${String(i).padStart(3, '0')}.ogg`)));
 	}
 
 	// A sound that comes from an object in the scene (louder the closer the camera, panned left/right)

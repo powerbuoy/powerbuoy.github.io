@@ -27,15 +27,18 @@ export default class Ground {
 		const top = this.bounds.max.y + 1;
 		let nearest = Infinity;
 
-		this.ray.origin = {x, y: top, z};
-		this.colliders.forEach(collider => {
+		this.ray.origin.x = x;
+		this.ray.origin.y = top;
+		this.ray.origin.z = z;
+
+		for (const collider of this.colliders) {
 			const distance = collider.castRay(this.ray, top - this.bounds.min.y + 1, true);
 
 			// -1 when it misses
 			if (distance >= 0 && distance < nearest) {
 				nearest = distance;
 			}
-		});
+		}
 
 		return nearest === Infinity ? null : top - nearest;
 	}

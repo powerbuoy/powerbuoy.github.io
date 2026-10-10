@@ -8,6 +8,8 @@ import Stars from './stars.js';
 const MAX_STOPS = 8;
 
 const pivotPosition = new THREE.Vector3();
+const from = new THREE.Color();
+const to = new THREE.Color();
 
 const shader = {
 	vertexShader: `
@@ -224,11 +226,13 @@ export default class Sky {
 		const blend = ((time - previous.hour + 24) % 24) / span;
 
 		this.time = time;
-		this.material.uniforms.colors.value.slice(0, this.stops).forEach((color, i) => {
+
+		// A loop with scratch colours, it runs every frame with a day/night cycle
+		for (let i = 0; i < this.stops; i++) {
 			const height = i / (this.stops - 1);
 
-			color.lerpColors(Sky.sample(previous.colors, height), Sky.sample(next.colors, height), blend);
-		});
+			this.material.uniforms.colors.value[i].lerpColors(Sky.sample(previous.colors, height, from), Sky.sample(next.colors, height, to), blend);
+		}
 
 		this.stars?.setSky(this.material.uniforms.colors.value[this.stops - 1]);
 		this.scene.fog?.color.copy(this.material.uniforms.colors.value[0]);
@@ -248,14 +252,14 @@ export default class Sky {
 	}
 
 	// The colour at `height` (0-1) up a gradient, so gradients with different numbers of colours can blend
-	static sample (colors, height) {
+	static sample (colors, height, target = new THREE.Color()) {
 		if (colors.length === 1) {
-			return colors[0].clone();
+			return target.copy(colors[0]);
 		}
 
 		const position = height * (colors.length - 1);
 		const index = Math.min(colors.length - 2, Math.floor(position));
 
-		return new THREE.Color().lerpColors(colors[index], colors[index + 1], position - index);
+		return target.lerpColors(colors[index], colors[index + 1], position - index);
 	}
 }

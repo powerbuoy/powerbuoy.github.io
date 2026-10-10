@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
 import SleekEntity from '../sleek/entity.js';
+import {refill} from '../sleek/utils.js';
 import Explosion from './explosion.js';
 
 // Robot parts are in their own collision group so overlapping parts (wheel/mudflap, head/legs) don't fight each other
@@ -71,11 +72,30 @@ const velocity = new THREE.Vector3();
 const quat = new THREE.Quaternion();
 const legsUp = new THREE.Vector3();
 const anchor = new THREE.Vector3();
-const headPosition = new THREE.Vector3();
 const headOffset = new THREE.Vector3();
 const anchorVelocity = new THREE.Vector3();
-const headVelocity = new THREE.Vector3();
+const headSlide = new THREE.Vector3();
 const jumpImpulse = new THREE.Vector3();
+const torque = {x: 0, y: 0, z: 0};
+
+// The bodies as they are at the start of a physics step, see readBodies()
+const wheelVelocity = new THREE.Vector3();
+const wheelSpin = new THREE.Vector3();
+const legsPosition = new THREE.Vector3();
+const legsRotation = new THREE.Quaternion();
+const legsVelocity = new THREE.Vector3();
+const legsSpin = new THREE.Vector3();
+const legsCom = new THREE.Vector3();
+const headPosition = new THREE.Vector3();
+const headRotation = new THREE.Quaternion();
+const headVelocity = new THREE.Vector3();
+const headSpin = new THREE.Vector3();
+const headCom = new THREE.Vector3();
+
+// Damage from a speed change (see IO8.updateHealth())
+function hurt (speed, safe, damage) {
+	return damage * Math.max(0, speed - safe) ** 2;
+}
 
 export default class IO8 extends SleekEntity {
 	keys = new Set();
@@ -99,6 +119,12 @@ export default class IO8 extends SleekEntity {
 	headPiece = null;
 
 	fuel = 0;
+
+	// Called with how much health a crash took (not drowning), from inside a physics step
+	onHit = null;
+
+	// Seconds of game time (it stops while paused), for things that move by themselves
+	time = 0;
 
 	// Active power-ups: name -> {remaining seconds, how to undo it}
 	effects = new Map();
@@ -168,9 +194,6 @@ export default class IO8 extends SleekEntity {
 			// Thruster sound volume while firing (it fades in and out with the flames)
 			thrusterVolume: 0.8,
 
-			// Blowing up (two sounds layered: a deep boom and a crunch, pitched down a little)
-			explosionVolume: {boom: 1, crunch: 0.7},
-
 			// The head bobs on the leg springs (parts tagged "suspension" in Blender). Acceleration based like the neck,
 			// travel is how far (m) it can squash down and stretch up before hitting the end stops
 			suspension: {stiffness: 120, damping: 5, travel: [-0.12, 0.08]}
@@ -203,6 +226,11 @@ export default class IO8 extends SleekEntity {
 		this.antenna = get('RobotAntenna');
 		this.eye = get('RobotEye');
 		this.muzzleObject = get('Muzzle');
+
+		// Better now than on the first shot
+		if (!this.muzzleObject) {
+			throw new Error('IO8: the model has no "Muzzle" empty (where laser bolts leave from, see BLENDER-TODO.md)');
+		}
 
 		// Headlight (remember its brightness and glow from Blender so toggling doesn't need magic numbers)
 		this.headlight = light('RobotHeadlight');
@@ -347,8 +375,17 @@ export default class IO8 extends SleekEntity {
 		window.addEventListener('blur', () => this.keys.clear());
 	}
 
+	// A plain loop rather than some(), it's asked several times every physics step
 	isDown (action) {
-		return CONTROLS[action].some(key => this.keys.has(key));
+		const keys = CONTROLS[action];
+
+		for (let i = 0; i < keys.length; i++) {
+			if (this.keys.has(keys[i])) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	get drive () {
@@ -384,11 +421,13 @@ export default class IO8 extends SleekEntity {
 		};
 
 		this.wreck = this.legsObject.getWorldPosition(new THREE.Vector3());
+
+		// They need his bodies to run, and the meters would freeze where they were
+		this.effects.clear();
 		this.headPiece = explosion.shatter(this.object3d, velocityOf).find(piece => piece.object3d.name === 'RobotHead_RigidBody') ?? null;
 		this.isExploded = true;
 		this.engineSound?.stop();
 		this.thrusterSound?.stop();
-		this.playExplosion(explosion.center);
 
 		// Removing a body removes its joints too
 		this.destroy();
@@ -396,8 +435,27 @@ export default class IO8 extends SleekEntity {
 		this.physics.world.removeRigidBody(this.planeAnchor);
 	}
 
+	// Each read is a call into Rapier, so what the step needs is read once, before anything pushes on the
+	// bodies. Where they are stays true all step (they only move when the world steps), but a push changes a
+	// body's velocity straight away, so velocities are read again after one where it matters
+	readBodies () {
+		this.wheel.angvel(wheelSpin);
+		this.legs.translation(legsPosition);
+		this.legs.rotation(legsRotation);
+		this.legs.linvel(legsVelocity);
+		this.legs.angvel(legsSpin);
+		this.legs.worldCom(legsCom);
+		this.head.translation(headPosition);
+		this.head.rotation(headRotation);
+		this.head.linvel(headVelocity);
+		this.head.angvel(headSpin);
+		this.head.worldCom(headCom);
+	}
+
 	physicsStep (timestep) {
 		const drive = this.drive;
+
+		this.readBodies();
 
 		// The wheel motor drives him up to top speed, like an e-bike: faster than that (downhill), it lets the wheel
 		// roll instead of holding him back, so going downhill on the gas is never slower than rolling down. It only
@@ -406,7 +464,7 @@ export default class IO8 extends SleekEntity {
 		// a torque (rolling resistance or the brake times his weight), past that it slips like real friction
 		const {maxSpeed, driveFactor, roll, brake} = this.config;
 		const topSpin = maxSpeed / this.wheelRadius;
-		const spin = -(this.wheel.angvel().z - this.legs.angvel().z);
+		const spin = -(wheelSpin.z - legsSpin.z);
 
 		if (drive && !this.isBraking && spin * drive < topSpin) {
 			this.wheelJoint.configureMotorVelocity(drive * topSpin, driveFactor);
@@ -432,7 +490,7 @@ export default class IO8 extends SleekEntity {
 		this.isThrusting = this.isDown('thrust') && this.fuel > 0;
 
 		if (this.isThrusting) {
-			up.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation())).multiplyScalar(this.config.thrust * this.mass * timestep);
+			up.set(0, 1, 0).applyQuaternion(legsRotation).multiplyScalar(this.config.thrust * this.mass * timestep);
 			this.legs.applyImpulse(up, true);
 		}
 
@@ -510,12 +568,15 @@ export default class IO8 extends SleekEntity {
 			return;
 		}
 
-		const bodies = [this.wheel, this.legs, this.head];
-		const weight = bodies.reduce((sum, body) => sum + body.mass(), 0);
 		const speed = Math.sqrt(2 * 9.81 * height);
 
-		up.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation())).multiplyScalar(speed * this.mass / weight);
-		bodies.forEach(body => body.applyImpulse(jumpImpulse.copy(up).multiplyScalar(body.mass()), true));
+		up.set(0, 1, 0).applyQuaternion(legsRotation).multiplyScalar(speed * this.mass / this.currentMass);
+		[this.wheel, this.legs, this.head].forEach(body => body.applyImpulse(jumpImpulse.copy(up).multiplyScalar(body.mass()), true));
+	}
+
+	// What he weighs right now (the weight power-up included), this.mass is his normal weight
+	get currentMass () {
+		return this.wheel.mass() + this.legs.mass() + this.head.mass();
 	}
 
 	// 0-1, how charged the jump is
@@ -538,8 +599,6 @@ export default class IO8 extends SleekEntity {
 
 	// Burns while thrusting, refills once you've let go of the thrusters for a moment
 	updateFuel (timestep) {
-		const {capacity, refillDelay, refillTime} = this.config.fuel;
-
 		if (this.isThrusting) {
 			this.fuel = Math.max(0, this.fuel - timestep);
 			this.sinceThrust = 0;
@@ -548,10 +607,7 @@ export default class IO8 extends SleekEntity {
 		}
 
 		this.sinceThrust += timestep;
-
-		if (this.sinceThrust > refillDelay) {
-			this.fuel = Math.min(capacity, this.fuel + capacity / refillTime * timestep);
-		}
+		this.fuel = refill(this.fuel, this.sinceThrust, this.config.fuel, timestep);
 	}
 
 	// 0-1, for the fuel meter
@@ -564,14 +620,19 @@ export default class IO8 extends SleekEntity {
 	// way so it barely does either. One crash takes a few steps to play out, so it's charged by its peak:
 	// as the speed change grows, only the extra damage is taken
 	updateHealth (timestep) {
-		const {capacity, safe, damage, window, refillDelay, refillTime} = this.config.health;
+		const {safe, damage, window} = this.config.health;
 		const steps = Math.max(1, Math.round(window / timestep));
 
+		const wheelMass = this.wheel.mass();
+		const legsMass = this.legs.mass();
+		const headMass = this.head.mass();
+
+		// After this step's pushes (thrust, the springs, a jump), see readBodies()
 		velocity.set(0, 0, 0);
-		velocity.addScaledVector(this.wheel.linvel(), this.wheel.mass());
-		velocity.addScaledVector(this.legs.linvel(), this.legs.mass());
-		velocity.addScaledVector(this.head.linvel(), this.head.mass());
-		velocity.divideScalar(this.wheel.mass() + this.legs.mass() + this.head.mass());
+		velocity.addScaledVector(this.wheel.linvel(wheelVelocity), wheelMass);
+		velocity.addScaledVector(this.legs.linvel(legsVelocity), legsMass);
+		velocity.addScaledVector(this.head.linvel(headVelocity), headMass);
+		velocity.divideScalar(wheelMass + legsMass + headMass);
 
 		// The one `steps` ago is the next slot round the ring, about to be overwritten
 		while (this.velocities.length <= steps) {
@@ -589,13 +650,15 @@ export default class IO8 extends SleekEntity {
 		}
 
 		const change = velocity.distanceTo(this.velocities[(this.newest + 1) % size]);
-		const hurt = speed => damage * Math.max(0, speed - safe) ** 2;
 
 		if (change > safe) {
 			if (change > this.crash) {
-				this.health = Math.max(0, this.health - (hurt(change) - hurt(this.crash)));
+				const lost = Math.min(this.health, hurt(change, safe, damage) - hurt(this.crash, safe, damage));
+
+				this.health -= lost;
 				this.crash = change;
 				this.sinceDamage = 0;
+				this.onHit?.(lost);
 			}
 		}
 		else {
@@ -604,8 +667,8 @@ export default class IO8 extends SleekEntity {
 
 		this.sinceDamage += timestep;
 
-		if (refillTime && this.sinceDamage > refillDelay && this.health > 0) {
-			this.health = Math.min(capacity, this.health + capacity / refillTime * timestep);
+		if (this.health > 0) {
+			this.health = refill(this.health, this.sinceDamage, this.config.health, timestep);
 		}
 	}
 
@@ -628,20 +691,21 @@ export default class IO8 extends SleekEntity {
 	// Equal and opposite on the legs, so flicking the aim rocks io8 a little
 	turnHead (timestep) {
 		const {stiffness, damping} = this.config.neck;
-		const headAngle = IO8.angleZ(this.head.rotation());
-		const pos = this.head.translation();
-		const target = this.aim ? Math.atan2(this.aim.y - pos.y, this.aim.x - pos.x) : IO8.angleZ(this.legs.rotation());
+		const headAngle = IO8.angleZ(headRotation);
+		const target = this.aim ? Math.atan2(this.aim.y - headPosition.y, this.aim.x - headPosition.x) : IO8.angleZ(legsRotation);
 		const error = IO8.wrapAngle(target - headAngle);
-		const relativeSpin = this.head.angvel().z - this.legs.angvel().z;
+		const relativeSpin = headSpin.z - legsSpin.z;
 
 		// The head's weight pulls it round the neck (the head's origin) unless it's balanced on it. A spring only
 		// pushes back once it's off target, so it would settle a few degrees low, and shots with it. So the neck
 		// holds the weight up like a servo would, and the spring only has to do the aiming
-		const hold = (this.head.worldCom().x - pos.x) * this.head.mass() * 9.81;
+		const hold = (headCom.x - headPosition.x) * this.head.mass() * 9.81;
 		const impulse = (this.neckInertia * this.massScale * (stiffness * error - damping * relativeSpin) + hold) * timestep;
 
-		this.head.applyTorqueImpulse({x: 0, y: 0, z: impulse}, true);
-		this.legs.applyTorqueImpulse({x: 0, y: 0, z: -impulse}, true);
+		torque.z = impulse;
+		this.head.applyTorqueImpulse(torque, true);
+		torque.z = -impulse;
+		this.legs.applyTorqueImpulse(torque, true);
 	}
 
 	// The head riding on the leg springs. A spring along the legs between them, with gravity taken off so it
@@ -651,20 +715,19 @@ export default class IO8 extends SleekEntity {
 		const {stiffness, damping, travel} = this.config.suspension;
 		const rest = travel[0] * this.config.jump.squash * this.jumpCharge;
 
-		legsUp.set(0, 1, 0).applyQuaternion(quat.copy(this.legs.rotation()));
-		anchor.copy(this.neckAnchor).applyQuaternion(quat).add(this.legs.translation());
-		headPosition.copy(this.head.translation());
+		legsUp.set(0, 1, 0).applyQuaternion(legsRotation);
+		anchor.copy(this.neckAnchor).applyQuaternion(legsRotation).add(legsPosition);
 
 		// How far the head has moved up (+) or down (-) the legs, and how fast
 		const offset = headOffset.copy(headPosition).sub(anchor).dot(legsUp);
-		const legsCom = this.legs.worldCom();
-		const spin = this.legs.angvel().z;
+		// Again, turnHead() has just pushed the legs round
+		const spin = this.legs.angvel(legsSpin).z;
 
-		anchorVelocity.copy(this.legs.linvel());
+		anchorVelocity.copy(legsVelocity);
 		anchorVelocity.x -= spin * (anchor.y - legsCom.y);
 		anchorVelocity.y += spin * (anchor.x - legsCom.x);
 
-		const speed = headVelocity.copy(this.head.linvel()).sub(anchorVelocity).dot(legsUp);
+		const speed = headSlide.subVectors(headVelocity, anchorVelocity).dot(legsUp);
 
 		// Much stiffer past the end of the travel, like hitting the end stop
 		const beyond = offset < travel[0] ? offset - travel[0] : offset > travel[1] ? offset - travel[1] : 0;
@@ -684,27 +747,11 @@ export default class IO8 extends SleekEntity {
 		this.springOffset = offset;
 	}
 
-	// A random one of each kind's variations, layered
-	playExplosion (position) {
-		if (!this.explosionSounds) {
-			return;
-		}
-
-		const pick = buffers => buffers[Math.floor(Math.random() * buffers.length)];
-		const {boom, crunch} = this.config.explosionVolume;
-
-		this.audio.playAt(pick(this.explosionSounds.boom), position, {volume: boom});
-		this.audio.playAt(pick(this.explosionSounds.crunch), position, {volume: crunch, rate: 0.8});
-	}
-
-	// Give io8 his sounds (buffers loaded by the app), they play from where he is
-	initSounds (audio, {engine, thruster, impacts, boom, crunch}) {
-		this.audio = audio;
-		this.explosionSounds = {boom, crunch};
-
+	// Give io8 his sounds (buffers loaded by the app), they play from where he is. Blowing up is Blasts' sound
+	initSounds (audio, {engine, thruster, impacts}) {
 		// Bumps and crashes: the tyre thuds, everything else clanks. Judged by io8's whole weight (not just the
 		// part that got hit), so bumping a light box sounds like the box, not like io8
-		const weight = () => this.wheel.mass() + this.legs.mass() + this.head.mass();
+		const weight = () => this.currentMass;
 
 		impacts.register(this.wheelColliders, 'tyre', weight);
 		impacts.register(this.colliders.filter(collider => collider.parent().handle !== this.wheel.handle), 'robot', weight);
@@ -732,7 +779,8 @@ export default class IO8 extends SleekEntity {
 		}
 
 		const {pitch, volume} = this.config.engine;
-		const revs = Math.abs(this.legs.angvel().z - this.wheel.angvel().z) / this.engineTopSpin;
+		// Into the physics step's scratch vectors, which it reads again before it uses them
+		const revs = Math.abs(this.legs.angvel(legsSpin).z - this.wheel.angvel(wheelSpin).z) / this.engineTopSpin;
 		const gas = this.drive && !this.isBraking ? 1 : 0;
 
 		// Eased a little so it doesn't jitter with every bump, and fades in and out instead of clicking
@@ -743,26 +791,12 @@ export default class IO8 extends SleekEntity {
 		this.engineSound.setVolume(this.engineGas * (volume.idle + (volume.top - volume.idle) * Math.min(1, this.engineRevs)));
 	}
 
-	// Where laser bolts leave from and which way they go: the "Muzzle" empty on the gun (its X axis is the
-	// barrel), or the middle of the head the way it points until the model has one
+	// Where laser bolts leave from and which way they go: the "Muzzle" empty on the head (its X axis is the barrel)
 	muzzle (position, direction) {
-		if (this.muzzleObject) {
-			this.muzzleObject.getWorldPosition(position);
-			direction.set(1, 0, 0).applyQuaternion(this.muzzleObject.getWorldQuaternion(quat));
-			direction.z = 0;
-			direction.normalize();
-		}
-		else {
-			position.copy(this.head.translation());
-			direction.copy(this.headDirection);
-		}
-	}
-
-	// Which way the head points in the world
-	get headDirection () {
-		const angle = IO8.angleZ(this.head.rotation());
-
-		return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+		this.muzzleObject.getWorldPosition(position);
+		direction.set(1, 0, 0).applyQuaternion(this.muzzleObject.getWorldQuaternion(quat));
+		direction.z = 0;
+		direction.normalize();
 	}
 
 	setThrusters (on) {
@@ -786,6 +820,7 @@ export default class IO8 extends SleekEntity {
 			return;
 		}
 
+		this.time += deltaTime;
 		this.updateEngineSound(deltaTime);
 
 		this.stretchParts.forEach(({obj, length}) => obj.scale.y = (length + this.springOffset) / length);
@@ -794,7 +829,7 @@ export default class IO8 extends SleekEntity {
 		// Satellite
 		if (this.satelliteIsSpinning) {
 			this.satellite.rotation.y -= Math.PI * 2 * deltaTime;
-			this.satelliteDish.rotation.x = Math.sin(performance.now() / 1000);
+			this.satelliteDish.rotation.x = Math.sin(this.time);
 		}
 
 		// Antenna eases towards its target, no tween library needed

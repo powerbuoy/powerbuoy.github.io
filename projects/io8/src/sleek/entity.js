@@ -22,6 +22,7 @@ export default class SleekEntity {
 
 	// The first body, for position
 	mainBody = null;
+	bodyPosition = new THREE.Vector3();
 
 	// The meshes the colliders were made from (_Shape, or _Mesh when there's no _Shape)
 	shapeMeshes = [];
@@ -116,9 +117,10 @@ export default class SleekEntity {
 		this.shapeMeshes = [];
 	}
 
-	// World position of the first body, handy for distance checks
+	// World position of the first body, handy for distance checks. The same vector every time (it's read for every
+	// prop every frame), copy it to keep it
 	get position () {
-		return this.mainBody?.translation() ?? this.object3d.position;
+		return this.mainBody?.translation(this.bodyPosition) ?? this.object3d.position;
 	}
 
 	// Called every rendered frame

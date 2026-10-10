@@ -300,7 +300,8 @@
 			"children":[
 				0,
 				21,
-				23
+				23,
+				57
 			],
 			"extras":{
 				"mass":1,
@@ -672,6 +673,9 @@
 				"mass":5
 			},
 			"name":"RobotWheel_RigidBody"
+		},
+		{
+			"name":"Muzzle"
 		}
 	],
 	"materials":[
@@ -872,7 +876,6 @@
 		},
 		{
 			"alphaMode":"BLEND",
-			"doubleSided":true,
 			"name":"glass",
 			"pbrMetallicRoughness":{
 				"baseColorFactor":[

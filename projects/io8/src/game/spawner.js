@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import SleekLoader from '../sleek/loader.js';
 import SleekEntity from '../sleek/entity.js';
+import {randomItem, pickWeighted} from '../sleek/utils.js';
 
 // Tiny gap so stacked things start apart and settle, instead of starting inside each other
 const GAP = 0.005;
@@ -147,7 +148,7 @@ export default class Spawner {
 		const size = CHUNK;
 		const start = index * size;
 
-		this.slots(start, size, CONFIG.obstacles, slot => this.pick(OBSTACLES)(this, slot + Math.random() * 1.5));
+		this.slots(start, size, CONFIG.obstacles, slot => pickWeighted(OBSTACLES, ([weight]) => weight)[1](this, slot + Math.random() * 1.5));
 
 		// Pickups up in the air
 		if (this.pickups) {
@@ -163,7 +164,7 @@ export default class Spawner {
 
 		// Some clutter along the back
 		for (let i = this.int(3); i > 0; i--) {
-			this.pick(DECORATIONS.map(fn => [1, fn]))(this, start + Math.random() * size, -1 - Math.random() * 0.8);
+			randomItem(DECORATIONS)(this, start + Math.random() * size, -1 - Math.random() * 0.8);
 		}
 	}
 
@@ -180,13 +181,6 @@ export default class Spawner {
 
 	int (max) {
 		return Math.floor(Math.random() * max);
-	}
-
-	// Weighted random pick from [[weight, value], ...]
-	pick (options) {
-		let roll = Math.random() * options.reduce((sum, [weight]) => sum + weight, 0);
-
-		return options.find(([weight]) => (roll -= weight) < 0)[1];
 	}
 
 	// y is the height above the ground (for stacking). Returns null when there's no ground to put it on

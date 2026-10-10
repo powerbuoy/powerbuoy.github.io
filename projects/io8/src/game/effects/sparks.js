@@ -35,11 +35,11 @@ export default class Sparks extends Particles {
 			direction.randomDirection();
 			direction.y = Math.abs(direction.y) * 0.8 + 0.2;
 
-			this.add({
-				position: new THREE.Vector3().copy(position),
-				velocity: direction.clone().normalize().multiplyScalar(THREE.MathUtils.randFloat(speed[0], speed[1]) * Math.sqrt(size)),
-				life: THREE.MathUtils.randFloat(life[0], life[1])
-			});
+			const particle = this.add();
+
+			particle.position.copy(position);
+			particle.velocity.copy(direction).normalize().multiplyScalar(THREE.MathUtils.randFloat(speed[0], speed[1]) * Math.sqrt(size));
+			particle.life = THREE.MathUtils.randFloat(life[0], life[1]);
 		}
 	}
 

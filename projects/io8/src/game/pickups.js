@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import SleekLoader from '../sleek/loader.js';
+import {pickWeighted} from '../sleek/utils.js';
 
 import {DESPAWN} from './spawner.js';
 
@@ -11,7 +12,8 @@ import {DESPAWN} from './spawner.js';
 // color (of its bubble, white by default)
 const MODELS = ['Speed', 'Weight', 'Health'];
 
-const position = new THREE.Vector3();
+// Where io8's wheel, legs and head are, see step()
+const parts = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 
 // A bubble that glows at its edges and is clear in the middle (a fresnel effect): the more the surface faces
 // away from the camera, the brighter. Additive, so it only ever adds light. Can't come from Blender, glTF
@@ -53,6 +55,9 @@ const bubbleShader = {
 export default class Pickups {
 	models = [];
 	pickups = new Set();
+
+	// Seconds of game time (it stops while paused), for the bobbing
+	time = 0;
 
 	constructor (scene, audio, conf = {}) {
 		this.scene = scene;
@@ -110,9 +115,7 @@ export default class Pickups {
 
 	// A random pickup at x, y (the spawner picks the height)
 	spawn (x, y) {
-		// Weighted by frequency
-		let roll = Math.random() * this.models.reduce((sum, {frequency}) => sum + frequency, 0);
-		const model = this.models.find(({frequency}) => (roll -= frequency) < 0) ?? this.models.at(-1);
+		const model = pickWeighted(this.models, ({frequency}) => frequency);
 		const object3d = this.create(model);
 
 		object3d.position.set(x, y, 0);
@@ -129,12 +132,22 @@ export default class Pickups {
 		return object3d;
 	}
 
-	// Call every frame with io8 (for the pickup check and despawning)
-	step (deltaTime, player) {
+	// Call every frame with io8 (for the pickup check) and the x the game centres on (for despawning)
+	step (deltaTime, player, focusX) {
+		if (!this.pickups.size) {
+			return;
+		}
+
 		const {reach, spin, bob, pop, despawn} = this.config;
-		const time = performance.now() / 1000;
-		const focusX = player.getFocusPosition(position).x;
-		const parts = player.isExploded ? [] : [player.wheel, player.legs, player.head].map(body => new THREE.Vector3().copy(body.translation()));
+		const canReach = !player.isExploded;
+
+		this.time += deltaTime;
+
+		if (canReach) {
+			player.wheel.translation(parts[0]);
+			player.legs.translation(parts[1]);
+			player.head.translation(parts[2]);
+		}
 
 		this.pickups.forEach(pickup => {
 			const {object3d, model} = pickup;
@@ -152,9 +165,9 @@ export default class Pickups {
 			}
 
 			object3d.rotation.y += spin * deltaTime;
-			object3d.position.y = pickup.baseY + Math.sin(time * bob.speed * Math.PI * 2 + pickup.phase) * bob.height;
+			object3d.position.y = pickup.baseY + Math.sin(this.time * bob.speed * Math.PI * 2 + pickup.phase) * bob.height;
 
-			if (parts.some(part => part.distanceTo(object3d.position) < reach)) {
+			if (canReach && parts.some(part => part.distanceTo(object3d.position) < reach)) {
 				player.addEffect(model.effect, {amount: model.amount, duration: model.duration});
 				pickup.popping = pop;
 

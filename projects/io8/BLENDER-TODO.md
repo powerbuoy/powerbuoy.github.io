@@ -5,6 +5,8 @@ Custom properties go on the Object tab. After each export, the code side follows
 ## io8
 
 - **Emitter empty:** change its `emit` from `damage` to `smoke, sparks` (the code no longer knows `damage`; the exported io8v6.gltf is already patched by hand, so it works until the next export)
+- **Muzzle empty:** add an empty called `Muzzle` under `RobotHead_RigidBody`, where the laser bolts leave from, its X axis pointing the way they fly (Z is ignored, they stay on io8's plane). The code no longer falls back to the head without one. The exported io8v6.gltf is already patched by hand with one at the head's origin, unrotated, which is where they came from before, so it works until the next export. Put it at the front of the face, or on a gun if he gets one
+- **glass material:** turn on Backface Culling (Material tab → Settings). It's see-through and double-sided, and three.js draws see-through double-sided things twice (back faces, then front) and sets their shader up again for each, every frame. Single-sided, the face and headlight look the same from every side (checked front and back), it's only the extra work that goes (the exported io8v6.gltf is already patched by hand, so it works until the next export)
 
 ## Map (windowsxpmap)
 

@@ -11,6 +11,9 @@ const toFocus = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 const matrix = new THREE.Matrix4();
 
+// How far (0-1) from io8 to the camera the terrain is checked, see liftFor()
+const SIGHT_CHECKS = [1, 0.8, 0.6, 0.4];
+
 // What a view in camera.json gets for anything it leaves out (see below)
 const DEFAULTS = {fov: 45, yaw: 0, distance: 7.5, shift: 0, height: 0.3, lookUp: 0.5, lookAhead: 0, screenX: 0};
 
@@ -79,17 +82,9 @@ export default class FollowCamera {
 		return JSON.parse(await new THREE.FileLoader(SleekLoader.manager).loadAsync('./assets/camera.json'));
 	}
 
-	// A key's code (e.g. "Digit3"), true if there's a view for it
+	// A key's code (e.g. "Digit3"), keys without a view do nothing
 	pick (code) {
-		const view = this.views[code.replace(/^Digit/, '')];
-
-		if (!view) {
-			return false;
-		}
-
-		this.view = view;
-
-		return true;
+		this.view = this.views[code.replace(/^Digit/, '')] ?? this.view;
 	}
 
 	// Call every frame once io8 has blown up, instead of update(), with where his head is and its speed along the
@@ -164,7 +159,9 @@ export default class FollowCamera {
 		// Glide towards the picked view
 		const view = this.current;
 
-		Object.keys(view).forEach(key => view[key] += (this.view[key] - view[key]) * Math.min(1, deltaTime * glide));
+		for (const key in view) {
+			view[key] += (this.view[key] - view[key]) * Math.min(1, deltaTime * glide);
+		}
 
 		const {fov, yaw, distance, shift, height, lookUp, lookAhead, screenX} = view;
 
@@ -223,14 +220,14 @@ export default class FollowCamera {
 		const {x, z} = this.target;
 		let lift = 0;
 
-		[1, 0.8, 0.6, 0.4].forEach(t => {
+		for (const t of SIGHT_CHECKS) {
 			const ground = this.ground.heightAt(x + (position.x - x) * t, z + (position.z - z) * t);
 
 			// The line of sight at t of the way from io8 to the camera is at lookY + (cameraY - lookY) * t
 			if (ground !== null) {
 				lift = Math.max(lift, (ground + this.config.clearance - lookY) / t + lookY - position.y);
 			}
-		});
+		}
 
 		const water = this.water.levelAt(position.x, position.z);
 

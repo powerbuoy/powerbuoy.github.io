@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
+import {randomItem} from '../sleek/utils.js';
+
 // Which sound each material makes (Kenney's impact pack has 5 variations of each, _000 to _004), and optionally
 // a pitch to play it at (lower = bigger and hollower, 1 = as recorded)
 const SOUNDS = {
@@ -49,7 +51,7 @@ export default class Impacts {
 	async init () {
 		await Promise.all(Object.entries(SOUNDS).map(async ([material, sound]) => {
 			const {name, pitch = 1} = typeof sound === 'string' ? {name: sound} : sound;
-			const variations = await Promise.all([0, 1, 2, 3, 4].map(i => this.audio.load(`./assets/audio/kenney_impact-sounds/Audio/${name}_00${i}.ogg`)));
+			const variations = await this.audio.loadVariations(`./assets/audio/kenney_impact-sounds/Audio/${name}`);
 
 			this.sounds[material] = {variations, pitch};
 		}));
@@ -132,7 +134,7 @@ export default class Impacts {
 
 		const {variations, pitch: materialPitch} = this.sounds[material];
 
-		this.audio.playAt(variations[Math.floor(Math.random() * variations.length)], position.copy(point), {
+		this.audio.playAt(randomItem(variations), position.copy(point), {
 			volume,
 			rate: materialPitch * THREE.MathUtils.randFloat(pitch[0], pitch[1])
 		});

@@ -28,6 +28,9 @@ import FollowCamera from './camera.js';
 const MAP = './assets/gltf/maps/windowsxpmap/windowsxpmap.gltf';
 
 const target = new THREE.Vector3();
+const focus = new THREE.Vector3();
+const legsVelocity = new THREE.Vector3();
+const headPosition = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
 const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
@@ -70,21 +73,18 @@ export default class App extends SleekScene {
 		this.spawner.setImpacts(this.impacts);
 		this.pickups = new Pickups(this.scene, this.audio);
 		this.spawner.setPickups(this.pickups);
-		this.blasts = new Blasts(this.scene, this.camera);
+		this.blasts = new Blasts(this.scene, this.camera, this.audio);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 		this.emitters = new Emitters(this.scene, this.blasts, this.audio);
 
-		const sciFi = name => this.audio.load(`./assets/audio/kenney_sci-fi-sounds/Audio/${name}.ogg`);
-
-		const [robot, map, sky, views, engineSound, thrusterSound, boom, crunch] = await Promise.all([
+		const [robot, map, sky, views, engineSound, thrusterSound] = await Promise.all([
 			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
 			SleekLoader.loadObject(MAP),
 			Sky.load(MAP),
 			FollowCamera.load(),
 			this.audio.load('./assets/audio/freesound/407540__sojan__sci-fi-engine-loop.ogg'),
 			this.audio.load('./assets/audio/freesound/512815__mostyxs__good-jetpack-sound-loop.wav'),
-			Promise.all([0, 1].map(i => sciFi(`lowFrequency_explosion_00${i}`))),
-			Promise.all([0, 1, 2, 3, 4].map(i => sciFi(`explosionCrunch_00${i}`))),
+			this.blasts.init(),
 			this.impacts.init(),
 			this.pickups.init(),
 			this.lasers.init(),
@@ -111,13 +111,14 @@ export default class App extends SleekScene {
 		this.spawner.setGround(this.ground, start.x);
 
 		this.player = new IO8(robot, this.physics, {pos: start});
-		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts, boom, crunch});
+		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
 		this.scene.add(this.player.object3d);
 
 		this.spawner.update(start.x);
 
-		// His emitters without a rate show how hurt he is
+		// His emitters without a rate show how hurt he is, and spark when he crashes
 		this.emitters.add(this.player.object3d, this.player);
+		this.player.onHit = lost => this.emitters.hit(this.player.object3d, lost);
 
 		// Debugging, switched on in the address: ?fps for an FPS counter (top left), ?shapes for the collision
 		// shapes over the game, ?shapes_only for nothing but them, or ?fps with either. Nothing costs anything when
@@ -160,8 +161,9 @@ export default class App extends SleekScene {
 			}
 		});
 
-		this.updateCamera(1);
-		this.sunlight.step(this.player.getFocusPosition(target));
+		this.player.getFocusPosition(focus);
+		this.updateCamera(1, focus);
+		this.sunlight.step(focus);
 		this.warmUp();
 	}
 
@@ -194,8 +196,11 @@ export default class App extends SleekScene {
 			}
 		});
 
+		// 3 m straight ahead of the camera, whichever way the view turns it, or they're culled instead of compiled
+		const ahead = this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(3).add(this.camera.position);
+
 		standIns.forEach(obj => {
-			obj.position.copy(this.camera.position).add({x: 0, y: 0, z: -3});
+			obj.position.copy(ahead);
 			this.scene.add(obj);
 		});
 
@@ -224,7 +229,7 @@ export default class App extends SleekScene {
 		this.physics.step(deltaTime);
 		this.shapes?.update();
 
-		if (!this.player.isExploded && this.water.isUnder(this.player.head.translation())) {
+		if (!this.player.isExploded && this.water.isUnder(this.player.head.translation(headPosition))) {
 			this.player.drown(deltaTime);
 		}
 
@@ -232,16 +237,19 @@ export default class App extends SleekScene {
 		if (this.player.health <= 0) {
 			this.explode();
 		}
-		this.pickups.step(deltaTime, this.player);
+
+		// What the camera, spawner, pickups and sunlight centre on, once he's moved (or blown up)
+		this.player.getFocusPosition(focus);
+
+		this.pickups.step(deltaTime, this.player, focus.x);
 		this.player.step(deltaTime);
 		this.explosion?.step(deltaTime);
 		this.blasts.step(deltaTime);
 		this.emitters.step(deltaTime);
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
 		this.fire = false;
-		this.map.step(deltaTime);
 		// Keep stuff to crash into ahead of io8
-		this.spawner.update(this.player.getFocusPosition(target).x);
+		this.spawner.update(focus.x);
 		this.stats?.update();
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
@@ -254,13 +262,13 @@ export default class App extends SleekScene {
 			this.controls.update();
 		}
 		else {
-			this.updateCamera(deltaTime);
+			this.updateCamera(deltaTime, focus);
 			this.updateAim();
 		}
 
 		this.sky?.step(deltaTime);
 		this.water.step(deltaTime);
-		this.sunlight.step(this.player.getFocusPosition(target));
+		this.sunlight.step(focus);
 
 		super.step(deltaTime);
 	}
@@ -292,7 +300,7 @@ export default class App extends SleekScene {
 
 	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other.
 	// Once he's blown up it watches his head fly for a moment, then backs away (see FollowCamera's retreat)
-	updateCamera (deltaTime) {
+	updateCamera (deltaTime, focus) {
 		if (this.player.isExploded) {
 			const head = this.player.headPiece;
 			// Its body is gone if it fell off the world (see Explosion.step()), the mesh still says where it was
@@ -301,7 +309,7 @@ export default class App extends SleekScene {
 			this.follow.retreat(deltaTime, head?.object3d.getWorldPosition(target), speed);
 		}
 		else {
-			this.follow.update(deltaTime, this.player.getFocusPosition(target), this.player.legs.linvel().x);
+			this.follow.update(deltaTime, focus, this.player.legs.linvel(legsVelocity).x);
 		}
 
 		this.blasts.shake(this.camera);

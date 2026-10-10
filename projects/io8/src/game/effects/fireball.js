@@ -2,6 +2,8 @@ import * as THREE from 'three';
 
 import Particles from './particles.js';
 
+const offset = new THREE.Vector3();
+
 // White-hot, orange, deep red, gone. Way past 1 so bloom makes it glow (additive, so black = invisible)
 const RAMP = [
 	[0, new THREE.Color(4, 3, 1.6)],
@@ -33,14 +35,14 @@ export default class Fireball extends Particles {
 		const {count, spread, scale, life, speed} = this.config;
 
 		for (let i = 0; i < Math.round(count * Math.sqrt(size)); i++) {
-			const offset = Particles.randomInBall(spread * size);
+			const particle = this.add();
 
-			this.add({
-				position: offset.clone().add(position),
-				velocity: offset.clone().normalize().multiplyScalar(speed * size).add({x: 0, y: size, z: 0}),
-				maxScale: THREE.MathUtils.randFloat(scale[0], scale[1]) * size,
-				life: THREE.MathUtils.randFloat(life[0], life[1])
-			});
+			Particles.randomInBall(spread * size, offset);
+			particle.position.copy(offset).add(position);
+			particle.velocity.copy(offset).normalize().multiplyScalar(speed * size);
+			particle.velocity.y += size;
+			particle.maxScale = THREE.MathUtils.randFloat(scale[0], scale[1]) * size;
+			particle.life = THREE.MathUtils.randFloat(life[0], life[1]);
 		}
 	}
 

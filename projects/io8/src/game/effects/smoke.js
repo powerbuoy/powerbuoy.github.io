@@ -12,7 +12,7 @@ const euler = new THREE.Euler();
 	the first puff drawn on a pixel colour it, so where they overlap it's no thicker and they merge into one shape.
 	Which puff that is isn't sorted (one instanced mesh), which doesn't show as they're all much the same colour.
 	Lit mostly as if facing straight up (`flat`), so the puffs don't each have a light and a dark side and
-	the plume reads as one thing rather than a pile of balls
+	the plume reads as one thing rather than a pile of balls.
 	Spawned in the world, not on whatever's smoking, so they trail behind it
 */
 export default class Smoke extends Particles {
@@ -47,8 +47,11 @@ export default class Smoke extends Particles {
 			flat: 0.95
 		}, conf);
 
+		// Copied from config.flat every frame, so it can be tweaked live (app.emitters.smoke.config.flat)
+		this.flat = {value: this.config.flat};
+
 		material.onBeforeCompile = shader => {
-			shader.uniforms.smokeFlat = {value: this.config.flat};
+			shader.uniforms.smokeFlat = this.flat;
 			shader.fragmentShader = shader.fragmentShader
 				.replace('#include <common>', `
 					#include <common>
@@ -65,26 +68,35 @@ export default class Smoke extends Particles {
 		material.customProgramCacheKey = () => 'smoke';
 	}
 
+	createParticle () {
+		return Object.assign(super.createParticle(), {spin: new THREE.Vector3(), stretch: new THREE.Vector3()});
+	}
+
 	// darkness 0-1 (0 light grey, 1 near black), velocity is the emitter's, size scales the puff
 	spawn (position, darkness = 0, velocity = null, size = 1) {
 		const {scale, life, rise, spread, inherit} = this.config;
-		const rising = new THREE.Vector3(0, THREE.MathUtils.randFloat(...rise), 0);
+		const particle = this.add();
+
+		particle.velocity.set(0, THREE.MathUtils.randFloat(...rise), 0);
 
 		if (velocity) {
-			rising.addScaledVector(velocity, inherit);
+			particle.velocity.addScaledVector(velocity, inherit);
 		}
 
+		Particles.randomInBall(spread, particle.position).add(position);
+		Particles.randomInBall(3, particle.spin);
+		particle.quaternion.random();
+		particle.stretch.set(Math.random(), Math.random(), Math.random()).multiplyScalar(0.5).addScalar(0.75);
+		particle.color.setScalar(THREE.MathUtils.lerp(0.7, 0.08, darkness));
+
 		// Darker smoke is thicker too
-		this.add({
-			position: Particles.randomInBall(spread).add(position),
-			velocity: rising,
-			spin: Particles.randomInBall(3),
-			quaternion: new THREE.Quaternion().random(),
-			stretch: new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(0.5).addScalar(0.75),
-			color: new THREE.Color().setScalar(THREE.MathUtils.lerp(0.7, 0.08, darkness)),
-			maxScale: THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5) * size,
-			life: THREE.MathUtils.randFloat(...life)
-		});
+		particle.maxScale = THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5) * size;
+		particle.life = THREE.MathUtils.randFloat(...life);
+	}
+
+	step (deltaTime) {
+		this.flat.value = this.config.flat;
+		super.step(deltaTime);
 	}
 
 	update (particle, t, deltaTime) {
