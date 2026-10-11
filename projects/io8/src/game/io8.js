@@ -123,7 +123,8 @@ export default class IO8 extends SleekEntity {
 
 	fuel = 0;
 
-	// Called with how much health a crash took (not drowning), from inside a physics step
+	// Called with how much health a hit took (a crash or a laser blast, not drowning). Crashes call it from inside
+	// a physics step
 	onHit = null;
 
 	// Seconds of game time (it stops while paused), for things that move by themselves
@@ -660,12 +661,8 @@ export default class IO8 extends SleekEntity {
 
 		if (change > safe) {
 			if (change > this.crash) {
-				const lost = Math.min(this.health, hurt(change, safe, damage) - hurt(this.crash, safe, damage));
-
-				this.health -= lost;
+				this.damage(hurt(change, safe, damage) - hurt(this.crash, safe, damage));
 				this.crash = change;
-				this.sinceDamage = 0;
-				this.onHit?.(lost);
 			}
 		}
 		else {
@@ -677,6 +674,15 @@ export default class IO8 extends SleekEntity {
 		if (this.health > 0) {
 			this.health = refill(this.health, this.sinceDamage, this.config.health, timestep);
 		}
+	}
+
+	// Take `amount` of health (never below 0), and put off healing
+	damage (amount) {
+		const lost = Math.min(this.health, amount);
+
+		this.health -= lost;
+		this.sinceDamage = 0;
+		this.onHit?.(lost);
 	}
 
 	// Call every frame his head is under water (see Water), he shorts out within `drown` seconds

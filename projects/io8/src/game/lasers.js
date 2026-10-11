@@ -13,6 +13,7 @@ const Y = new THREE.Vector3(0, 1, 0);
 const origin = new THREE.Vector3();
 const direction = new THREE.Vector3();
 const center = new THREE.Vector3();
+const nearest = new THREE.Vector3();
 
 /*
 	Laser bolts. They fly (not an instant beam), but they're far too fast for a physics body: they'd pass
@@ -50,9 +51,10 @@ export default class Lasers {
 			ammo: {capacity: 8, refillDelay: 2, refillTime: 2.5},
 
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
-			// a cardboard box off at 15 m/s, see Explosion.shockwave()),
-			// and how big it looks and sounds (see Blasts, 1 = io8 blowing up)
-			blast: {radius: 3, impulse: 167, size: 0.5},
+			// a cardboard box off at 15 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
+			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), less the further away
+			// he is (measured to the nearest bit of him, so a shot at his feet hurts as much as one at his head)
+			blast: {radius: 3, impulse: 167, size: 0.5, damage: 40, reach: 1.5},
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
 			// another Kenney pack (e.g. "impact-sounds/impactGeneric_light"). And their volumes (0-1)
@@ -109,7 +111,7 @@ export default class Lasers {
 			this.ammo = refill(this.ammo, this.sinceFired, this.config.ammo, deltaTime);
 		}
 
-		this.bolts.forEach(bolt => this.move(bolt, deltaTime));
+		this.bolts.forEach(bolt => this.move(bolt, deltaTime, player));
 	}
 
 	fire (position, dir) {
@@ -122,7 +124,7 @@ export default class Lasers {
 		this.playSound('fire', position);
 	}
 
-	move (bolt, deltaTime) {
+	move (bolt, deltaTime, player) {
 		const {speed, range, blast, volume, length} = this.config;
 		const {mesh} = bolt;
 		const distance = speed * deltaTime;
@@ -138,6 +140,7 @@ export default class Lasers {
 			const point = mesh.position.clone().addScaledVector(bolt.direction, hit.time_of_impact);
 			// Hits io8 too if he's close, so don't shoot point blank
 			new Explosion(this.scene, this.physics, point, blast).shockwave();
+			this.hurt(player, point);
 			this.blasts.spawn(point, blast.size);
 			this.impacts.hit(hit.collider, point, volume.hit);
 			this.remove(bolt);
@@ -150,6 +153,27 @@ export default class Lasers {
 
 		if (bolt.travelled > range) {
 			this.remove(bolt);
+		}
+	}
+
+	// Damage io8 if the blast at `point` is close enough to him (see config.blast)
+	hurt (player, point) {
+		const {damage, reach} = this.config.blast;
+
+		if (player.isExploded) {
+			return;
+		}
+
+		let distance = Infinity;
+
+		player.colliders.forEach(collider => {
+			const projection = collider.projectPoint(point, true);
+
+			distance = Math.min(distance, nearest.copy(projection.point).distanceTo(point));
+		});
+
+		if (distance < reach) {
+			player.damage(damage * (1 - distance / reach));
 		}
 	}
 
