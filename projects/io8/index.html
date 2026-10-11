@@ -151,6 +151,15 @@
 				p {
 					margin: 1rem 0 0;
 				}
+
+				label {
+					cursor: pointer;
+					-webkit-tap-highlight-color: transparent;
+				}
+
+				input {
+					accent-color: var(--accent);
+				}
 			}
 
 			/* UI */
@@ -245,6 +254,8 @@
 
 			<a role="button" data-action="play">Play</a>
 			<!-- <a role="button" data-action="restart">Restart</a> -->
+
+			<label><input type="checkbox" data-toggle-fullscreen> Fullscreen</label>
 
 			<p>WASD: drive / fly / brake<br>Space: jump<br>Click: fire</p>
 

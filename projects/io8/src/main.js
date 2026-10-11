@@ -31,6 +31,35 @@ function setPaused (paused) {
 	}
 }
 
+// Fullscreen where the browser can (iPhone Safari only does it for video, the box does nothing there). Browsers
+// only allow it from a click or tap, so it's asked for when Play is pressed, and the choice is remembered
+const fullscreenBox = document.querySelector('[data-toggle-fullscreen]');
+
+try {
+	fullscreenBox.checked = localStorage.getItem('io8.fullscreen') === '1';
+}
+catch {
+	// No storage (private window), it starts unchecked
+}
+
+fullscreenBox.addEventListener('change', () => {
+	try {
+		localStorage.setItem('io8.fullscreen', fullscreenBox.checked ? '1' : '0');
+	}
+	catch {
+		// Not remembered then
+	}
+});
+
+function setFullscreen (on) {
+	if (!document.fullscreenEnabled || on === Boolean(document.fullscreenElement)) {
+		return;
+	}
+
+	// Rejected if the browser says no, the game plays on either way
+	(on ? root.requestFullscreen() : document.exitFullscreen()).catch(() => {});
+}
+
 app.step(0);
 setPaused(true);
 
@@ -39,6 +68,7 @@ app.onExplode = () => root.classList.add('dead');
 
 document.addEventListener('click', e => {
 	if (e.target.closest('[data-action="play"]')) {
+		setFullscreen(fullscreenBox.checked);
 		setPaused(false);
 	}
 
