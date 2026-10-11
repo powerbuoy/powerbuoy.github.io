@@ -40,7 +40,10 @@ export default class App extends SleekScene {
 		// The map's sky (see Sky) is what lights and reflects everything, the field of view is per camera view
 		// (see FollowCamera)
 		super(el, {
-			// Draw distance (m), far enough for a sun and moon kilometres away, and the stars
+			// Draw distance (m), far enough for a sun and moon kilometres away, and the stars. Near as far out as the
+			// camera allows (it keeps 0.3 m above the ground, see FollowCamera), so the shore doesn't flicker
+			// where the water meets the ground
+			near: 0.5,
 			far: 5000
 		});
 

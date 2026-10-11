@@ -13,6 +13,11 @@ export default class SleekScene {
 		this.el = el;
 		this.config = Object.assign({
 			fov: 50,
+
+			// Draw distance (m). Depth precision is set almost entirely by near: the depth buffer spends half its
+			// values between near and 2 * near, so far away two surfaces need roughly distance² / (near * 2^24) m
+			// between them not to flicker through each other. Raising near helps a lot, lowering far hardly at all
+			near: 0.1,
 			far: 500,
 			pixelRatio: 1,
 			bloom: {strength: 0.25, radius: 0.1, threshold: 0.85},
@@ -30,7 +35,7 @@ export default class SleekScene {
 		this.timer = new THREE.Timer();
 		this.scene = new THREE.Scene();
 		// Keep near/far reasonably tight instead of using logarithmicDepthBuffer, which kills early depth testing (halved fps on an M1)
-		this.camera = new THREE.PerspectiveCamera(this.config.fov, 1, 0.1, this.config.far);
+		this.camera = new THREE.PerspectiveCamera(this.config.fov, 1, this.config.near, this.config.far);
 
 		// No antialias here: everything is drawn through the composer (bloom) into its own render target, so the
 		// canvas's multisampling would never reach the 3D scene, it would only cost memory (see config.smaa)
