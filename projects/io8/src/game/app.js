@@ -23,6 +23,7 @@ import Water from './water.js';
 import Blasts from './effects/blasts.js';
 import Emitters from './emitters.js';
 import FollowCamera from './camera.js';
+import TouchDevice from './touch-device.js';
 
 // Swap for your own map. Conventions (and what the map needs) are in the README
 const MAP = './assets/gltf/maps/windowsxpmap/windowsxpmap.gltf';
@@ -51,20 +52,29 @@ export default class App extends SleekScene {
 		this.pointer = null;
 		this.fire = false;
 
-		// On window rather than the canvas so the UI cards on top don't block aiming
+		// On window rather than the canvas so the UI cards on top don't block aiming. Fingers are TouchDevice's
 		window.addEventListener('pointermove', e => {
-			const rect = this.el.getBoundingClientRect();
-
-			this.pointer ??= new THREE.Vector2();
-			this.pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+			if (e.pointerType !== 'touch') {
+				this.setPointer(e.clientX, e.clientY);
+			}
 		});
 
 		// One shot per left click, fired on the next frame
 		window.addEventListener('pointerdown', e => {
-			if (e.button === 0 && this.isPlaying) {
+			if (e.pointerType !== 'touch' && e.button === 0 && this.isPlaying) {
 				this.fire = true;
 			}
 		});
+
+		this.touch = new TouchDevice(this);
+	}
+
+	// Where on the page (px) the head should look, see updateAim()
+	setPointer (clientX, clientY) {
+		const rect = this.el.getBoundingClientRect();
+
+		this.pointer ??= new THREE.Vector2();
+		this.pointer.set((clientX - rect.left) / rect.width * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
 	}
 
 	async init () {
@@ -171,6 +181,7 @@ export default class App extends SleekScene {
 		super.play();
 		this.audio.resume();
 		this.player.hasInput = true;
+		this.touch.requestTilt();
 	}
 
 	// Freezes everything (physics, sounds, io8's controls), the last frame stays on screen
@@ -179,6 +190,7 @@ export default class App extends SleekScene {
 		this.audio.pause();
 		this.player.hasInput = false;
 		this.player.keys.clear();
+		this.touch.release();
 	}
 
 	// Compile every shader now, or each one hitches the game (~100 ms) the first time it's seen. three only

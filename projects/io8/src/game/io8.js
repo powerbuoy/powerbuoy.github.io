@@ -100,6 +100,9 @@ function hurt (speed, safe, damage) {
 export default class IO8 extends SleekEntity {
 	keys = new Set();
 
+	// Actions (forward, thrust...) held by something other than the keyboard, see TouchDevice
+	held = new Set();
+
 	// Off while the game is paused, see App.pause()
 	hasInput = false;
 
@@ -377,6 +380,10 @@ export default class IO8 extends SleekEntity {
 
 	// A plain loop rather than some(), it's asked several times every physics step
 	isDown (action) {
+		if (this.held.has(action)) {
+			return true;
+		}
+
 		const keys = CONTROLS[action];
 
 		for (let i = 0; i < keys.length; i++) {
