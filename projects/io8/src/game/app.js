@@ -278,6 +278,8 @@ export default class App extends SleekScene {
 			this.updateAim();
 		}
 
+		this.touch.step(deltaTime);
+
 		this.sky?.step(deltaTime);
 		this.water.step(deltaTime);
 		this.sunlight.step(focus);

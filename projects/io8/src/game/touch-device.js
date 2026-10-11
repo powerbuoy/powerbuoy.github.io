@@ -3,14 +3,26 @@
 
 	- Tilt the device left or right (like a steering wheel) to drive, full gas past TILT degrees either way
 	- A finger on the left half of the screen thrusts for as long as it's held
-	- A finger on the right half works like the mouse: touching fires, dragging aims
+	- A finger on the right half works like the mouse: touching fires, dragging aims. A mouse is always aiming
+	  before it clicks, a finger lands somewhere new, so the shot waits (up to AIM_WAIT) for the head to turn
+	  to it
 
 	Each finger keeps the job it started with, so a thumb sliding over the middle doesn't switch. Actions go
 	into io8's held set (see IO8.isDown()), aiming and firing through the app like the mouse.
 */
+import * as THREE from 'three';
 
 // Degrees the device has to lean (left or right, relative to the screen) before he drives
 const TILT = 10;
+
+// A tapped shot fires once the head points within AIM degrees of the finger, or after AIM_WAIT seconds
+// whatever it's pointing at. The head gets within 5 degrees of a half turn in about 0.15 s
+const AIM = 5;
+const AIM_WAIT = 0.25;
+
+const origin = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const toAim = new THREE.Vector3();
 
 // Which way up is, in the device's own axes (x right, y up the screen in its natural orientation), from
 // deviceorientation's angles. Only the z rotation (alpha) is left out, it doesn't change where up is
@@ -25,9 +37,13 @@ export default class TouchDevice {
 	// pointerId -> 'thrust' or 'aim'
 	fingers = new Map();
 
+	// Seconds a tapped shot has waited for the head to turn, null when there isn't one
+	shot = null;
+
 	constructor (app) {
 		this.app = app;
 		this.lean = Math.sin(TILT * Math.PI / 180);
+		this.aimed = Math.cos(AIM * Math.PI / 180);
 
 		window.addEventListener('pointerdown', e => {
 			if (e.pointerType !== 'touch' || !this.app.isPlaying) {
@@ -41,7 +57,7 @@ export default class TouchDevice {
 			else {
 				this.fingers.set(e.pointerId, 'aim');
 				this.app.setPointer(e.clientX, e.clientY);
-				this.app.fire = true;
+				this.shot = 0;
 			}
 		});
 
@@ -68,6 +84,28 @@ export default class TouchDevice {
 		}
 	}
 
+	// After the app has aimed the head at the finger (App.updateAim()), the shot goes out next frame
+	step (deltaTime) {
+		const {player} = this.app;
+
+		if (this.shot === null) {
+			return;
+		}
+
+		if (player.aim && this.shot < AIM_WAIT) {
+			player.muzzle(origin, direction);
+
+			if (direction.dot(toAim.subVectors(player.aim, origin).normalize()) < this.aimed) {
+				this.shot += deltaTime;
+
+				return;
+			}
+		}
+
+		this.app.fire = true;
+		this.shot = null;
+	}
+
 	lift (pointerId) {
 		// Not one of ours (it went down while paused)
 		if (!this.fingers.delete(pointerId)) {
@@ -82,6 +120,7 @@ export default class TouchDevice {
 	// Everything let go (paused, or the page lost focus with fingers down)
 	release () {
 		this.fingers.clear();
+		this.shot = null;
 		this.app.player?.held.clear();
 	}
 
