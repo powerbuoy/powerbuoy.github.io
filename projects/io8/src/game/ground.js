@@ -46,9 +46,20 @@ export default class Ground {
 	// Highest ground under something `width` wide centered on x, so it doesn't start half inside a slope.
 	// Null if any part of it would hang off the map
 	heightUnder (x, z, width) {
-		const heights = [x - width / 2, x, x + width / 2].map(sampleX => this.heightAt(sampleX, z));
+		let highest = -Infinity;
 
-		return heights.includes(null) ? null : Math.max(...heights);
+		// Its left edge, middle and right edge
+		for (let i = -1; i <= 1; i++) {
+			const height = this.heightAt(x + i * width / 2, z);
+
+			if (height === null) {
+				return null;
+			}
+
+			highest = Math.max(highest, height);
+		}
+
+		return highest;
 	}
 
 	contains (x, margin = 0) {

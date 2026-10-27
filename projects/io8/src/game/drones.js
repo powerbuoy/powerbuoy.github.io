@@ -44,6 +44,9 @@ class Drone extends SleekEntity {
 	anchorSpeed = 0;
 	aimAt = new THREE.Vector3();
 
+	// Lowest it can go (its middle) until it dives, kept above the ground under it by Drones
+	floor = -Infinity;
+
 	// Darting about: where it's darting to (from the anchor), how far it's got, and when the next dart is
 	dartTo = new THREE.Vector3();
 	dart = new THREE.Vector3();
@@ -145,6 +148,9 @@ class Drone extends SleekEntity {
 				next.x += Math.sin(t * 61) * warn.shake * warning;
 				next.y += Math.sin(t * 53) * warn.shake * warning;
 			}
+
+			// However it drifts, darts or dips, never into the ground
+			next.y = Math.max(next.y, this.floor);
 		}
 		else if (this.dive(timestep)) {
 			return;
@@ -270,6 +276,10 @@ export default class Drones {
 			// (easing to a new height at `follow` per second over hills), so it doesn't copy his every bump and jump
 			hover: {x: [3, 5], y: 2.7, follow: 1.5, stiffness: 4, damping: 4, wobble: {x: 1, y: 1}, time: 7},
 
+			// However it moves, its middle stays at least `clearance` m above the ground under it (the highest within
+			// `width` m), until it dives
+			floor: {clearance: 1, width: 1},
+
 			// Darting about while it hovers: somewhere new up to `size` m from its spot every `every` s (random between
 			// the two), getting most of the way there in about 1 / `speed` s
 			dart: {every: [0.8, 2.5], size: {x: 1, y: 0.8}, speed: 6},
@@ -377,6 +387,7 @@ export default class Drones {
 			drone.anchor.x += drone.anchorSpeed * deltaTime;
 			drone.anchor.y += (this.hoverHeight(drone.anchor.x, drone.anchor.y) - drone.anchor.y) * Math.min(1, hover.follow * deltaTime);
 			drone.aimAt.copy(focus);
+			drone.floor = this.floorAt(drone.position.x);
 			drone.step(deltaTime, this.lasers, canShoot, this.warn);
 		});
 
@@ -399,6 +410,14 @@ export default class Drones {
 		this.drones.add(drone);
 		this.emitters?.add(drone.object3d, drone);
 		drone.onHit = lost => this.emitters?.hit(drone.object3d, lost);
+	}
+
+	// The lowest a drone at `x` may go (see Drone.floor), no limit where there's no ground under it
+	floorAt (x) {
+		const {clearance, width} = this.config.floor;
+		const ground = this.ground?.heightUnder(x, 0, width) ?? null;
+
+		return ground === null ? -Infinity : ground + clearance;
 	}
 
 	// How high a drone at `x` hovers, or `fallback` where there's no ground under it (past the end of the map)
