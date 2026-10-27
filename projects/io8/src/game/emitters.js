@@ -12,8 +12,10 @@ const step = new THREE.Vector3();
 	second, at random moments, `size` times as big as normal. Without one it shows how hurt its owner is: smoke
 	that thickens and darkens as health drops, crackles of sparks once hurt and a burst of sparks on
 	every hit (see hit()), so healing clears it up again by itself. Every burst of sparks from an emitter crackles:
-	a short random slice of a long recording, faded in and out. One with a rate crackles one slice at a time (a
-	fuze sparks many times a second, and overlapping slices would take every sound there is)
+	a short random slice of a long recording, faded in and out. One with a rate crackles one slice at a time (an
+	electric box sparks many times a second, and overlapping slices would take every sound there is). A `sound`
+	custom property names another of config.sounds instead (`sound: fuze`), and one that loops plays all the time
+	from the emitter, instead of with each burst
 */
 export default class Emitters {
 	groups = new Map();
@@ -38,14 +40,21 @@ export default class Emitters {
 			// A hit's burst: `size` per health point lost, at least `min`, at most `max`
 			hit: {size: 0.01, min: 0.04, max: 0.4},
 
-			// The crackle with each burst of sparks: a random slice `length` (s) long, faded in over `fadeIn` and out
-			// over `fadeOut` (s)
-			sound: {src: './assets/audio/freesound/871766__harrisonlace__elecarc_sparking-electricity-bed.ogg', volume: 0.3, length: [0.4, 1], fadeIn: 0.1, fadeOut: 0.4}
+			// What the sparks sound like, by name (the emitter's `sound`, crackle without one). Each burst plays a
+			// random slice `length` (s) long, faded in over `fadeIn` and out over `fadeOut` (s). One that loops
+			// plays from the emitter all the time instead, starting anywhere in it
+			sounds: {
+				crackle: {src: './assets/audio/freesound/871766__harrisonlace__elecarc_sparking-electricity-bed.ogg', volume: 0.3, length: [0.4, 1], fadeIn: 0.1, fadeOut: 0.4},
+				fuze: {src: './assets/audio/freesound/45650__elonen__fuse_burning_loop.ogg', volume: 0.3, loop: true}
+			}
 		}, conf);
 	}
 
 	async init () {
-		this.sound = await this.audio.load(this.config.sound.src);
+		const names = Object.keys(this.config.sounds);
+		const buffers = await Promise.all(names.map(name => this.audio.load(this.config.sounds[name].src)));
+
+		this.buffers = Object.fromEntries(names.map((name, i) => [name, buffers[i]]));
 	}
 
 	// Every emitter in object3d. An owner ({healthLevel, isExploded}) is what the ones without a rate show
@@ -65,7 +74,13 @@ export default class Emitters {
 				console.warn(`Emitters: ${obj.name} has emit "${unknown.join(', ')}", only ${KINDS.join(' and ')} exist`);
 			}
 
-			const emitter = {object: obj, kinds: kinds.filter(kind => KINDS.includes(kind)), position: obj.getWorldPosition(new THREE.Vector3()), velocity: new THREE.Vector3()};
+			const sound = String(obj.userData.sound ?? 'crackle');
+
+			if (!this.config.sounds[sound]) {
+				console.warn(`Emitters: ${obj.name} has sound "${sound}", only ${Object.keys(this.config.sounds).join(', ')} exist`);
+			}
+
+			const emitter = {object: obj, kinds: kinds.filter(kind => KINDS.includes(kind)), position: obj.getWorldPosition(new THREE.Vector3()), velocity: new THREE.Vector3(), sound: this.config.sounds[sound] ? sound : 'crackle'};
 			const rate = Number(obj.userData.rate ?? 0);
 
 			if (rate > 0) {
@@ -80,6 +95,10 @@ export default class Emitters {
 				return;
 			}
 
+			if (this.config.sounds[emitter.sound].loop) {
+				emitter.loop = this.loop(emitter);
+			}
+
 			group.all.push(emitter);
 		});
 
@@ -89,7 +108,27 @@ export default class Emitters {
 	}
 
 	remove (object3d) {
+		this.groups.get(object3d)?.all.forEach(emitter => {
+			if (emitter.loop) {
+				emitter.loop.stop();
+				emitter.loop.removeFromParent();
+			}
+		});
+
 		this.groups.delete(object3d);
+	}
+
+	// The emitter's looping sound, playing from it (and moving with it) until it's remove()d
+	loop (emitter) {
+		const buffer = this.buffers[emitter.sound];
+		const sound = this.audio.positional(buffer, {loop: true, volume: this.config.sounds[emitter.sound].volume});
+
+		// Anywhere in it, so a few of them side by side don't play in step
+		sound.offset = Math.random() * buffer.duration;
+		emitter.object.add(sound);
+		sound.play();
+
+		return sound;
 	}
 
 	step (deltaTime) {
@@ -97,7 +136,7 @@ export default class Emitters {
 
 		this.groups.forEach((group, object3d) => {
 			if (group.owner?.isExploded) {
-				this.groups.delete(object3d);
+				this.remove(object3d);
 
 				return;
 			}
@@ -136,7 +175,9 @@ export default class Emitters {
 
 		if (sparkers.length) {
 			if (group.lost > 0) {
-				this.sparks(randomItem(sparkers).position, THREE.MathUtils.clamp(group.lost * hit.size, hit.min, hit.max));
+				const emitter = randomItem(sparkers);
+
+				this.sparks(emitter.position, THREE.MathUtils.clamp(group.lost * hit.size, hit.min, hit.max), emitter);
 			}
 
 			if (Math.random() < crackle.rate * Math.max(0, 1 - level / crackle.below) * deltaTime) {
@@ -167,12 +208,19 @@ export default class Emitters {
 		}
 	}
 
-	// `emitter` (optional) is one with a rate: it only starts a new crackle once its last one has finished
+	// `emitter` (optional) is the one they come from, for its sound. One with a rate only starts a new crackle once
+	// its last one has finished, and one with a loop is already making its sound
 	sparks (position, size, emitter = null) {
-		const {volume, length, fadeIn, fadeOut} = this.config.sound;
-		const duration = THREE.MathUtils.randFloat(length[0], length[1]);
-
 		this.blasts.sparks.spawn(position, size);
+
+		if (emitter?.loop) {
+			return;
+		}
+
+		const name = emitter?.sound ?? 'crackle';
+		const {volume, length, fadeIn, fadeOut} = this.config.sounds[name];
+		const duration = THREE.MathUtils.randFloat(length[0], length[1]);
+		const buffer = this.buffers[name];
 
 		if (emitter?.rate) {
 			if (this.time < emitter.crackleEnds) {
@@ -182,7 +230,7 @@ export default class Emitters {
 			emitter.crackleEnds = this.time + duration;
 		}
 
-		this.audio.playAt(this.sound, position, {volume, duration, fadeIn, fadeOut, offset: Math.random() * (this.sound.duration - duration)});
+		this.audio.playAt(buffer, position, {volume, duration, fadeIn, fadeOut, offset: Math.random() * (buffer.duration - duration)});
 	}
 
 	// Where it is in the world, and how fast it's going there (smoke keeps some of that)

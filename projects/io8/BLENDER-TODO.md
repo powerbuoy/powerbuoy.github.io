@@ -28,7 +28,7 @@ The current `assets/gltf/props/Mine/Mine.gltf` is a hand-written stand-in (a red
 - **`Mine_RigidBody`** with `mass: 3` (blasts and boxes knock it about), `explosive: 1` (anything that moves touching it sets it off) and `collider: cuboid`, at a scale of 1. Children:
 - **`Mine_Mesh`**: the body, what it collides with (or a `Mine_Shape`)
 - **`Mine_Fuze`** (or whatever it ends up being): looks only, not part of the collision
-- **`Mine_Spark`**: an empty at the fuze tip with `emit: sparks`, `rate: 25`, `size: 0.2`, so it sparks all the time. Parent it to the fuze so it flies off with it
+- **`Mine_Spark`**: an empty at the fuze tip with `emit: sparks`, `rate: 25`, `size: 0.2` and `sound: fuze`, so it sparks all the time and hisses like a burning fuze. Parent it to the fuze so it flies off with it
 
 ## Map (windowsxpmap)
 

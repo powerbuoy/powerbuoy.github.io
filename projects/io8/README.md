@@ -55,6 +55,7 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `emit`        | an empty (map, prop or io8) | `smoke`, `sparks` or both (`smoke, sparks`) come from here. Parent it to the part it should move with. Without a `rate` it shows how hurt io8 is (only on io8, any number of them, a random one each time): smoke as his health drops, crackles of sparks once he's hurt and a burst of sparks on every hit |
 | `rate`        | an `emit` empty    | emits all the time instead, at random moments this many times a second on average: high for a steady stream (a fuze: `rate: 25`, `size: 0.2`), low for the odd crackle (an electric box: `rate: 0.3`, `size: 1.5`) |
 | `size`        | an `emit` empty with a `rate` | how big each puff or spark burst is: 1 (default) is a normal one, like io8's when he's hurt |
+| `sound`       | an `emit` empty    | what its sparks sound like: `crackle` (default, electric) or `fuze` (a burning fuze, playing all the time from the empty instead of with each burst). The sounds are listed in `Emitters` |
 
 Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
 

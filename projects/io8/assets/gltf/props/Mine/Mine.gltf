@@ -45,7 +45,8 @@
 			"extras": {
 				"emit": "sparks",
 				"rate": 25,
-				"size": 0.2
+				"size": 0.2,
+				"sound": "fuze"
 			}
 		}
 	],
