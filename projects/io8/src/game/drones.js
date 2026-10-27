@@ -200,7 +200,7 @@ class Drone extends SleekEntity {
 		const h = this.time - enter.time;
 		const material = this.eye.material;
 
-		// Bursts of `shots` every `every` seconds while it hovers, the first one `every` in
+		// Bursts of `shots` while it hovers, the first `first` seconds in, then every `every`
 		if (canShoot && h > 0 && h < hover.time) {
 			while (this.shots < Drone.shotsDue(h, attack)) {
 				this.fire(lasers);
@@ -221,7 +221,7 @@ class Drone extends SleekEntity {
 		}
 		else {
 			// Charging up before each burst
-			const nextBurst = (Math.floor(Math.max(0, h) / attack.every) + 1) * attack.every;
+			const nextBurst = Drone.nextBurst(h, attack);
 			const charge = canShoot && nextBurst < hover.time ? Math.max(0, 1 - (nextBurst - h) / attack.charge) : 0;
 
 			material.emissiveIntensity = this.eyeGlow * THREE.MathUtils.lerp(1, eye.bright, charge);
@@ -236,10 +236,21 @@ class Drone extends SleekEntity {
 	}
 
 	// How many shots should have gone by `h` seconds into hovering
-	static shotsDue (h, {every, shots, spacing}) {
-		const burst = Math.floor(h / every);
+	static shotsDue (h, {first, every, shots, spacing}) {
+		if (h < first) {
+			return 0;
+		}
 
-		return burst < 1 ? 0 : (burst - 1) * shots + Math.min(shots, Math.floor((h - burst * every) / spacing) + 1);
+		// Which burst it's on (0 is the first) and how long since it started
+		const burst = Math.floor((h - first) / every);
+		const since = h - first - burst * every;
+
+		return burst * shots + Math.min(shots, Math.floor(since / spacing) + 1);
+	}
+
+	// When (s into hovering) the next burst starts
+	static nextBurst (h, {first, every}) {
+		return h < first ? first : first + (Math.floor((h - first) / every) + 1) * every;
 	}
 }
 
@@ -284,9 +295,10 @@ export default class Drones {
 			// the two), getting most of the way there in about 1 / `speed` s
 			dart: {every: [0.8, 2.5], size: {x: 1, y: 0.8}, speed: 6},
 
-			// Bursts of `shots` bolts `spacing` s apart every `every` s while it hovers, its eye charging up for
-			// `charge` s before each one
-			attack: {every: 2.2, charge: 0.6, shots: 3, spacing: 0.18},
+			// Bursts of `shots` bolts `spacing` s apart while it hovers, the first `first` s after it's settled and then
+			// every `every` s, its eye charging up for `charge` s before each one (the first one charges as it
+			// swoops in)
+			attack: {first: 0, every: 2.2, charge: 0.6, shots: 3, spacing: 0.18},
 
 			// Warning before the dive: `time` s of blinking `blink` times a second (speeding up from the first to the
 			// second) and shaking up to `shake` m
