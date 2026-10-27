@@ -90,7 +90,7 @@ export default class App extends SleekScene {
 		this.spawner.setPickups(this.pickups);
 		this.blasts = new Blasts(this.scene, this.camera, this.audio);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
-		this.emitters = new Emitters(this.scene, this.blasts, this.audio);
+		this.emitters = new Emitters(this.blasts, this.audio);
 		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 
 		this.explosives = new Explosives(this.scene, this.physics, this.impacts, this.blasts);

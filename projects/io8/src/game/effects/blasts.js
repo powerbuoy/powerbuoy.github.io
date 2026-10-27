@@ -4,12 +4,13 @@ import {randomItem} from '../../sleek/utils.js';
 
 import Fireball from './fireball.js';
 import Sparks from './sparks.js';
+import Smoke from './smoke.js';
 
 const offset = new THREE.Vector3();
 
 /*
-	What an explosion looks and sounds like: a fireball and sparks, a flash of light, a kick of the camera and a
-	bang. Only that, the physics (debris, shockwave) is Explosion's job. spawn(position, size) anywhere,
+	What an explosion looks and sounds like: a fireball and sparks, the cloud of smoke it leaves, a flash of light,
+	a kick of the camera and a bang. Only that, the physics (debris, shockwave) is Explosion's job. spawn(position, size) anywhere,
 	size 1 is io8 blowing up, smaller for a laser hit. Every layer is one pool drawn in one go, so any number
 	of blasts costs the same few draw calls
 */
@@ -40,9 +41,10 @@ export default class Blasts {
 			}
 		}, conf);
 
-		// Sparks are also used on their own (see Emitters)
+		// Sparks and smoke are also used on their own (see Emitters)
 		this.fireball = new Fireball(scene);
 		this.sparks = new Sparks(scene);
+		this.smoke = new Smoke(scene);
 		this.layers = [this.fireball, this.sparks];
 
 		// One light, always there and normally off: adding and removing lights makes three.js recompile shaders
@@ -62,6 +64,7 @@ export default class Blasts {
 		const {light, shake, sounds} = this.config;
 
 		this.layers.forEach(layer => layer.spawn(position, size));
+		this.smoke.cloud(position, size);
 
 		// Silent until init() has loaded the sounds
 		for (const key in this.sounds) {
@@ -90,6 +93,9 @@ export default class Blasts {
 
 		this.time += deltaTime;
 		this.layers.forEach(layer => layer.step(deltaTime));
+
+		// Puffs already in the air finish even after what made them is gone
+		this.smoke.step(deltaTime);
 
 		this.lightLevel = Math.max(0, this.lightLevel - deltaTime / light.duration);
 		this.light.intensity = light.intensity * this.lightLevel ** 2;

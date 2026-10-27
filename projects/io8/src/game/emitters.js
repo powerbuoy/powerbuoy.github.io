@@ -2,8 +2,6 @@ import * as THREE from 'three';
 
 import {randomItem} from '../sleek/utils.js';
 
-import Smoke from './effects/smoke.js';
-
 const KINDS = ['smoke', 'sparks'];
 
 const step = new THREE.Vector3();
@@ -23,10 +21,12 @@ export default class Emitters {
 	// Seconds of game time, for when a crackle ends
 	time = 0;
 
-	constructor (scene, blasts, audio, conf = {}) {
+	constructor (blasts, audio, conf = {}) {
 		this.blasts = blasts;
 		this.audio = audio;
-		this.smoke = new Smoke(scene);
+
+		// One smoke for everything, shared with the explosions' clouds
+		this.smoke = blasts.smoke;
 		this.config = Object.assign({
 			// Health smoke starts below `below` health (0-1) and is `rate` puffs a second at 0
 			smoke: {below: 0.7, rate: 14},
@@ -93,8 +93,6 @@ export default class Emitters {
 	}
 
 	step (deltaTime) {
-		// Puffs already in the air finish even after what made them is gone
-		this.smoke.step(deltaTime);
 		this.time += deltaTime;
 
 		this.groups.forEach((group, object3d) => {

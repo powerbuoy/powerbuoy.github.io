@@ -5,6 +5,8 @@ import Particles from './particles.js';
 
 const spin = new THREE.Quaternion();
 const euler = new THREE.Euler();
+const offset = new THREE.Vector3();
+const point = new THREE.Vector3();
 
 /*
 	Puffs that drift up, swell and shrink away. Lit like everything else (so they're grey at noon, dark at night
@@ -13,7 +15,8 @@ const euler = new THREE.Euler();
 	Which puff that is isn't sorted (one instanced mesh), which doesn't show as they're all much the same colour.
 	Lit mostly as if facing straight up (`flat`), so the puffs don't each have a light and a dark side and
 	the plume reads as one thing rather than a pile of balls.
-	Spawned in the world, not on whatever's smoking, so they trail behind it
+	Spawned in the world, not on whatever's smoking, so they trail behind it. One pool for all of it: smoking
+	emitters (see Emitters) and the clouds explosions leave (see cloud())
 */
 export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
@@ -30,9 +33,9 @@ export default class Smoke extends Particles {
 			stencilZPass: THREE.ReplaceStencilOp
 		});
 
-		// 320 triangles, round enough to sit with the Blender models. 96 puffs is still only ~30k triangles in one
-		// draw call
-		super(scene, Smoke.lumpy(new THREE.IcosahedronGeometry(0.5, 2)), material, 96);
+		// 320 triangles, round enough to sit with the Blender models. 160 puffs (room for a big blast's cloud while
+		// io8 is smoking) is still only ~50k triangles in one draw call
+		super(scene, Smoke.lumpy(new THREE.IcosahedronGeometry(0.5, 2)), material, 160);
 
 		this.config = Object.assign({
 			// How big a puff gets (m), how long it lasts (s), how fast it rises (m/s), how far from the emitter it
@@ -44,10 +47,15 @@ export default class Smoke extends Particles {
 			inherit: 0.3,
 
 			// How much it's lit as if facing straight up rather than by its own shape (0-1)
-			flat: 0.95
+			flat: 0.95,
+
+			// An explosion's cloud at size 1 (see cloud()): `count` puffs (size² as many for other sizes, so a bolt's
+			// is a wisp) `puff` times as big as normal, spread over `spread` m, pushed outwards (and up) at `push` m/s,
+			// lasting `life` times as long as normal, `darkness` 0-1
+			cloud: {count: 18, puff: 3, spread: 0.6, push: 1.5, life: 1.8, darkness: 0.85}
 		}, conf);
 
-		// Copied from config.flat every frame, so it can be tweaked live (app.emitters.smoke.config.flat)
+		// Copied from config.flat every frame, so it can be tweaked live (app.blasts.smoke.config.flat)
 		this.flat = {value: this.config.flat};
 
 		material.onBeforeCompile = shader => {
@@ -92,6 +100,25 @@ export default class Smoke extends Particles {
 		// Darker smoke is thicker too
 		particle.maxScale = THREE.MathUtils.randFloat(...scale) * (1 + darkness * 0.5) * size;
 		particle.life = THREE.MathUtils.randFloat(...life);
+
+		return particle;
+	}
+
+	// The cloud an explosion leaves where it was (see Blasts), size 1 is io8 blowing up. Pushed out sideways and up,
+	// never down: only sideways speed dies away (see update()), so a puff pushed down would sink into the ground
+	cloud (position, size) {
+		const {count, puff, spread, push, life, darkness} = this.config.cloud;
+
+		for (let i = Math.max(1, Math.round(count * size ** 2)); i > 0; i--) {
+			Particles.randomInBall(spread * size, offset);
+			point.copy(position).add(offset);
+			offset.y = Math.abs(offset.y);
+
+			const particle = this.spawn(point, darkness, null, puff * size);
+
+			particle.velocity.addScaledVector(offset.normalize(), push * size);
+			particle.life *= life;
+		}
 	}
 
 	step (deltaTime) {
