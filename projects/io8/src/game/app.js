@@ -123,6 +123,7 @@ export default class App extends SleekScene {
 		this.scene.add(this.map.object3d);
 		this.ground = new Ground(this.map);
 		this.drones.setGround(this.ground);
+		this.drones.setEmitters(this.emitters);
 		this.sunlight = new Sunlight(this.map.object3d, this.scene);
 		this.water = new Water(this.map.object3d);
 

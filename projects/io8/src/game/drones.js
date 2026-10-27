@@ -53,6 +53,9 @@ class Drone extends SleekEntity {
 	blink = 0;
 	hasWarned = false;
 
+	// Called with how much health a blast took (see Drones.blast())
+	onHit = null;
+
 	// Set when the dive starts: which way it flies, how fast it's going now and how far it's gone
 	diveDirection = null;
 	diveSpeed = 0;
@@ -75,6 +78,7 @@ class Drone extends SleekEntity {
 
 		this.phase = Math.random() * Math.PI * 2;
 		this.angle = Math.PI;
+		this.health = this.config.health;
 
 		// Better now than on the first shot
 		if (!this.muzzleObject) {
@@ -83,6 +87,18 @@ class Drone extends SleekEntity {
 
 		// Work out the debris shapes now, so being shot doesn't hitch
 		Explosion.prepare(object3d);
+	}
+
+	// 0-1, what its hurt emitters show (see Emitters)
+	get healthLevel () {
+		return this.health / this.config.health;
+	}
+
+	damage (amount) {
+		const lost = Math.min(this.health, amount);
+
+		this.health -= lost;
+		this.onHit?.(lost);
 	}
 
 	get diveTime () {
@@ -272,6 +288,10 @@ export default class Drones {
 			// How fast it turns to face io8 (higher is snappier)
 			turn: 8,
 
+			// How much a blast has to take off to shoot it down, see blast(). io8's bolts do up to 40 (so a direct hit
+			// still does it), a mine 100
+			health: 30,
+
 			// The eye's glow, times its brightness in the model: charged up or blinking on (`bright`) and off (`dim`)
 			eye: {bright: 5, dim: 0.2},
 
@@ -305,6 +325,11 @@ export default class Drones {
 	// Call once the map exists, they hover above it
 	setGround (ground) {
 		this.ground = ground;
+	}
+
+	// Their hurt emitters (smoke and sparks as they lose health, like io8's)
+	setEmitters (emitters) {
+		this.emitters = emitters;
 	}
 
 	async init () {
@@ -372,6 +397,8 @@ export default class Drones {
 
 		this.scene.add(drone.object3d);
 		this.drones.add(drone);
+		this.emitters?.add(drone.object3d, drone);
+		drone.onHit = lost => this.emitters?.hit(drone.object3d, lost);
 	}
 
 	// How high a drone at `x` hovers, or `fallback` where there's no ground under it (past the end of the map)
@@ -381,9 +408,20 @@ export default class Drones {
 		return ground === null ? fallback : ground + this.config.hover.y;
 	}
 
-	// Something blew up at `point` (see App.blast()): any drone within its `reach` (m) is shot down
-	blast (point, {reach}) {
-		this.drones.forEach(drone => drone.distanceTo(point) < reach && this.explode(drone));
+	// Something blew up at `point` (see App.blast()): drones within its reach lose health (see
+	// Explosion.damageTo()), and one that's out of it is shot down
+	blast (point, blast) {
+		this.drones.forEach(drone => {
+			const amount = Explosion.damageTo(drone, point, blast);
+
+			if (amount > 0) {
+				drone.damage(amount);
+
+				if (drone.health <= 0) {
+					this.explode(drone);
+				}
+			}
+		});
 	}
 
 	// Falls apart where it is, and if it `crashed` on its dive blows up properly where it hit
@@ -396,6 +434,7 @@ export default class Drones {
 		explosion.shatter(drone.object3d, () => velocity);
 		this.debris.add(explosion, 'robot');
 
+		this.emitters?.remove(drone.object3d);
 		drone.destroy();
 		this.drones.delete(drone);
 

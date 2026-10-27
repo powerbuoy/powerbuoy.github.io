@@ -90,6 +90,13 @@ export default class Explosion {
 		});
 	}
 
+	// How much of a blast at `point` reaches `entity` (see App.blast()): all of its `damage` right on it, less the
+	// further away, none from `reach` (m) away. Measured to the nearest bit of it, so one at its feet hurts as much
+	// as one at its head
+	static damageTo (entity, point, {damage, reach}) {
+		return damage * Math.max(0, 1 - entity.distanceTo(point) / reach);
+	}
+
 	// Roughly how much of a body faces a blast (m²): a cube's side for its volume. Masses set in Blender (or by the
 	// weight power-up) don't change it, so they decide how much it moves
 	static areaOf (body) {

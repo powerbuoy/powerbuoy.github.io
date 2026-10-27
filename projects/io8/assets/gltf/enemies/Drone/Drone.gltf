@@ -24,7 +24,8 @@
 			"children": [
 				1,
 				2,
-				3
+				3,
+				4
 			]
 		},
 		{
@@ -48,6 +49,17 @@
 				0,
 				0
 			]
+		},
+		{
+			"name": "Drone_Hurt",
+			"translation": [
+				0,
+				0.21,
+				0
+			],
+			"extras": {
+				"emit": "smoke, sparks"
+			}
 		}
 	],
 	"materials": [

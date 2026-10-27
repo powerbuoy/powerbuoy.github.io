@@ -685,18 +685,16 @@ export default class IO8 extends SleekEntity {
 		this.onHit?.(lost);
 	}
 
-	// A blast at `point` (a laser bolt, a drone, a mine, see App.blast()): up to `damage` health within `reach` (m),
-	// less the further away it is. Measured to the nearest bit of him, so one at his feet hurts as much as one at his
-	// head
-	blast (point, {damage, reach}) {
+	// A blast at `point` (a laser bolt, a drone, a mine, see App.blast() and Explosion.damageTo())
+	blast (point, blast) {
 		if (this.isExploded) {
 			return;
 		}
 
-		const distance = this.distanceTo(point);
+		const amount = Explosion.damageTo(this, point, blast);
 
-		if (distance < reach) {
-			this.damage(damage * (1 - distance / reach));
+		if (amount > 0) {
+			this.damage(amount);
 		}
 	}
 
