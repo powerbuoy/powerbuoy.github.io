@@ -55,7 +55,8 @@ export default class Explosion {
 			depth: 0.4,
 			separate: 0.4,
 
-			// kg/m³, so bigger pieces weigh more (wood is ~600)
+			// kg/m³, so bigger pieces weigh more (wood is ~600). A piece with a "mass" custom property in Blender
+			// weighs that instead (kg), for hollow things a solid block of wood would make far too heavy
 			density: 600
 		}, conf);
 	}
@@ -188,7 +189,10 @@ export default class Explosion {
 			.setRotation(quat)
 			.setCcdEnabled(true));
 
-		this.physics.world.createCollider(Explosion.colliderFor(Explosion.shapeOf(piece, scale)).setDensity(density).setCollisionGroups(DEBRIS_GROUPS), body);
+		const collider = Explosion.colliderFor(Explosion.shapeOf(piece, scale)).setCollisionGroups(DEBRIS_GROUPS);
+		const mass = Number(piece.userData.mass ?? 0);
+
+		this.physics.world.createCollider(mass > 0 ? collider.setMass(mass) : collider.setDensity(density), body);
 
 		// Away from the blast, plus whatever speed the part already had
 		dir.copy(pos).sub(this.center);

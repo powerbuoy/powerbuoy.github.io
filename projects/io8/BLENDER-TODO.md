@@ -15,7 +15,7 @@ Custom properties go on the Object tab. After each export, the code side follows
 The current `assets/gltf/enemies/Drone/Drone.gltf` is a hand-written stand-in (a cube with an eye), exporting over it replaces it. It flies on io8's plane facing him with its **-X side**, so model its front that way. Keep these names, the code looks them up:
 
 - **`Drone_RigidBody`** with `kinematic: 1` (the code flies it, nothing pushes it) and `collider: cuboid` (or `sphere`), at a scale of 1. Children:
-- **`Drone_Mesh`**: the body, what it collides with (or add a `Drone_Shape` for a simpler collision shape)
+- **`Drone_Mesh`**: the body, what it collides with (or add a `Drone_Shape` for a simpler collision shape). `mass: 2.5`, what it weighs as debris (without it, it's weighed as solid wood: 38 kg for the 40 cm stand-in). Any part can have its own `mass`
 - **`Drone_Eye`**: a separate object with one emissive material (one, or it arrives as several meshes and the code can't find its material). The code makes it glow brighter as it charges up a burst, and blink before it dives, times its emission strength in Blender
 - **`Muzzle`**: an empty where its bolts leave from, at the front of the eye or on a gun
 - **`Drone_Hurt`**: an empty with `emit: smoke, sparks` and no `rate`, where it smokes and sparks as it's hurt (like io8's)

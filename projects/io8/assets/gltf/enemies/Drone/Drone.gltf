@@ -30,7 +30,10 @@
 		},
 		{
 			"name": "Drone_Mesh",
-			"mesh": 0
+			"mesh": 0,
+			"extras": {
+				"mass": 2.5
+			}
 		},
 		{
 			"name": "Drone_Eye",
