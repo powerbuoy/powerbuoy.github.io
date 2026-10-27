@@ -3,6 +3,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 
 const worldPos = new THREE.Vector3();
 const worldQuat = new THREE.Quaternion();
+const nearest = new THREE.Vector3();
 
 /*
 	Builds rigid bodies from a GLTF scene using the naming convention from Blender:
@@ -123,6 +124,17 @@ export default class SleekEntity {
 	// prop every frame), copy it to keep it
 	get position () {
 		return this.mainBody?.translation(this.bodyPosition) ?? this.object3d.position;
+	}
+
+	// How far (m) `point` is from the nearest bit of it (any of its colliders), 0 if it's inside it
+	distanceTo (point) {
+		let distance = Infinity;
+
+		this.colliders.forEach(collider => {
+			distance = Math.min(distance, nearest.copy(collider.projectPoint(point, true).point).distanceTo(point));
+		});
+
+		return distance;
 	}
 
 	// Called every rendered frame

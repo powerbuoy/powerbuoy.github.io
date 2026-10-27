@@ -26,8 +26,8 @@ export default class Lasers {
 	sounds = {};
 	sinceFired = 0;
 
-	// Called with (collider, point) whenever a bolt hits something
-	onHit = null;
+	// Called with (point, blast config) whenever a bolt blows up, so everything nearby can react (see App.blast())
+	onBlast = null;
 
 	constructor (scene, physics, audio, impacts, blasts, conf = {}) {
 		this.scene = scene;
@@ -115,7 +115,7 @@ export default class Lasers {
 			this.ammo = refill(this.ammo, this.sinceFired, this.config.ammo, deltaTime);
 		}
 
-		this.bolts.forEach(bolt => this.move(bolt, deltaTime, player));
+		this.bolts.forEach(bolt => this.move(bolt, deltaTime));
 	}
 
 	fire (position, dir) {
@@ -128,7 +128,7 @@ export default class Lasers {
 		this.playSound('fire', position);
 	}
 
-	move (bolt, deltaTime, player) {
+	move (bolt, deltaTime) {
 		const {speed, range, blast, volume, length, groups} = this.config;
 		const {mesh} = bolt;
 		const distance = speed * deltaTime;
@@ -142,13 +142,13 @@ export default class Lasers {
 
 		if (hit) {
 			const point = mesh.position.clone().addScaledVector(bolt.direction, hit.time_of_impact);
+			// The sound first: the blast may blow up what it hit (a drone, a mine), and its collider with it.
 			// Hits io8 too if he's close, so don't shoot point blank
-			new Explosion(this.scene, this.physics, point, blast).shockwave();
-			player.blast(point, blast);
-			this.blasts.spawn(point, blast.size);
 			this.impacts.hit(hit.collider, point, volume.hit);
 			this.remove(bolt);
-			this.onHit?.(hit.collider, point);
+			new Explosion(this.scene, this.physics, point, blast).shockwave();
+			this.blasts.spawn(point, blast.size);
+			this.onBlast?.(point, blast);
 
 			return;
 		}

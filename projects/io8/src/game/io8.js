@@ -91,7 +91,6 @@ const headRotation = new THREE.Quaternion();
 const headVelocity = new THREE.Vector3();
 const headSpin = new THREE.Vector3();
 const headCom = new THREE.Vector3();
-const nearest = new THREE.Vector3();
 
 // Damage from a speed change (see IO8.updateHealth())
 function hurt (speed, safe, damage) {
@@ -686,19 +685,9 @@ export default class IO8 extends SleekEntity {
 		this.onHit?.(lost);
 	}
 
-	// How far (m) `point` is from the nearest bit of him (any of his colliders), 0 if it's inside him
-	distanceTo (point) {
-		let distance = Infinity;
-
-		this.colliders.forEach(collider => {
-			distance = Math.min(distance, nearest.copy(collider.projectPoint(point, true).point).distanceTo(point));
-		});
-
-		return distance;
-	}
-
-	// A blast at `point` (a laser bolt, a drone): up to `damage` health within `reach` (m), less the further away
-	// it is. Measured to the nearest bit of him, so one at his feet hurts as much as one at his head
+	// A blast at `point` (a laser bolt, a drone, a mine, see App.blast()): up to `damage` health within `reach` (m),
+	// less the further away it is. Measured to the nearest bit of him, so one at his feet hurts as much as one at his
+	// head
 	blast (point, {damage, reach}) {
 		if (this.isExploded) {
 			return;

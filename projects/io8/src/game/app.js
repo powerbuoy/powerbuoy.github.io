@@ -18,6 +18,7 @@ import Pickups from './pickups.js';
 import Hud from './hud.js';
 import Lasers from './lasers.js';
 import Drones from './drones.js';
+import Explosives from './explosives.js';
 import Sunlight from './sunlight.js';
 import Sky from './sky.js';
 import Water from './water.js';
@@ -92,8 +93,12 @@ export default class App extends SleekScene {
 		this.emitters = new Emitters(this.scene, this.blasts, this.audio);
 		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 
-		// One hit and a drone is down
-		this.lasers.onHit = collider => this.drones.shot(collider);
+		this.explosives = new Explosives(this.scene, this.physics, this.impacts, this.blasts);
+		this.explosives.setSpawner(this.spawner);
+		this.spawner.setExplosives(this.explosives);
+
+		// Anything blowing up reaches everything near it, see blast()
+		this.lasers.onBlast = this.drones.onBlast = this.explosives.onBlast = (point, blast) => this.blast(point, blast);
 
 		const [robot, map, sky, views, engineSound, thrusterSound] = await Promise.all([
 			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
@@ -209,7 +214,7 @@ export default class App extends SleekScene {
 	// compiled, so the shadow versions are made too
 	warmUp () {
 		const hidden = [];
-		const standIns = [new THREE.Mesh(this.lasers.geometry, this.lasers.material), ...this.drones.standIns(), ...this.pickups.models.map(model => this.pickups.create(model))];
+		const standIns = [new THREE.Mesh(this.lasers.geometry, this.lasers.material), ...this.drones.standIns(), ...this.spawner.standIns(), ...this.pickups.models.map(model => this.pickups.create(model))];
 
 		this.scene.traverse(obj => {
 			if (!obj.visible) {
@@ -247,6 +252,15 @@ export default class App extends SleekScene {
 		this.onExplode?.();
 	}
 
+	// Something blew up at `point` (a laser bolt, a drone crashing, a mine). Within the blast's `reach` io8 is hurt,
+	// drones are shot down and mines go off, which blow up in turn. The shove is each explosion's own (see
+	// Explosion.shockwave()), this is what it does to the things that can be blown up
+	blast (point, blast) {
+		this.player.blast(point, blast);
+		this.drones.blast(point, blast);
+		this.explosives.blast(point, blast);
+	}
+
 	step (deltaTime) {
 		this.physics.step(deltaTime);
 		this.shapes?.update();
@@ -271,6 +285,7 @@ export default class App extends SleekScene {
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
 		this.fire = false;
 		this.drones.step(deltaTime, this.player, focus);
+		this.explosives.step(deltaTime, this.player, focus.x);
 		// Keep stuff to crash into ahead of io8
 		this.spawner.update(focus.x);
 		this.stats?.update();

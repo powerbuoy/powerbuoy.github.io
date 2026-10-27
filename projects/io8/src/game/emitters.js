@@ -14,10 +14,14 @@ const step = new THREE.Vector3();
 	second, at random moments, `size` times as big as normal. Without one it shows how hurt its owner is: smoke
 	that thickens and darkens as health drops, crackles of sparks once hurt and a burst of sparks on
 	every hit (see hit()), so healing clears it up again by itself. Every burst of sparks from an emitter crackles:
-	a short random slice of a long recording, faded in and out
+	a short random slice of a long recording, faded in and out. One with a rate crackles one slice at a time (a
+	fuze sparks many times a second, and overlapping slices would take every sound there is)
 */
 export default class Emitters {
 	groups = new Map();
+
+	// Seconds of game time, for when a crackle ends
+	time = 0;
 
 	constructor (scene, blasts, audio, conf = {}) {
 		this.blasts = blasts;
@@ -65,7 +69,7 @@ export default class Emitters {
 			const rate = Number(obj.userData.rate ?? 0);
 
 			if (rate > 0) {
-				Object.assign(emitter, {rate, size: Number(obj.userData.size ?? 1)});
+				Object.assign(emitter, {rate, size: Number(obj.userData.size ?? 1), crackleEnds: 0});
 				emitter.due = Emitters.interval(rate);
 				group.timed.push(emitter);
 			}
@@ -91,6 +95,7 @@ export default class Emitters {
 	step (deltaTime) {
 		// Puffs already in the air finish even after what made them is gone
 		this.smoke.step(deltaTime);
+		this.time += deltaTime;
 
 		this.groups.forEach((group, object3d) => {
 			if (group.owner?.isExploded) {
@@ -160,15 +165,25 @@ export default class Emitters {
 			this.smoke.spawn(emitter.position, darkness, emitter.velocity, size);
 		}
 		else {
-			this.sparks(emitter.position, this.config.crackle.size * size);
+			this.sparks(emitter.position, this.config.crackle.size * size, emitter);
 		}
 	}
 
-	sparks (position, size) {
+	// `emitter` (optional) is one with a rate: it only starts a new crackle once its last one has finished
+	sparks (position, size, emitter = null) {
 		const {volume, length, fadeIn, fadeOut} = this.config.sound;
 		const duration = THREE.MathUtils.randFloat(length[0], length[1]);
 
 		this.blasts.sparks.spawn(position, size);
+
+		if (emitter?.rate) {
+			if (this.time < emitter.crackleEnds) {
+				return;
+			}
+
+			emitter.crackleEnds = this.time + duration;
+		}
+
 		this.audio.playAt(this.sound, position, {volume, duration, fadeIn, fadeOut, offset: Math.random() * (this.sound.duration - duration)});
 	}
 

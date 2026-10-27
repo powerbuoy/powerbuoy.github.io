@@ -6,7 +6,7 @@ import {randomItem} from '../sleek/utils.js';
 
 import Explosion from './explosion.js';
 import Lasers from './lasers.js';
-import {DESPAWN} from './spawner.js';
+import Debris from './debris.js';
 
 const MODEL = './assets/gltf/enemies/Drone/Drone.gltf';
 
@@ -222,20 +222,21 @@ class Drone extends SleekEntity {
 }
 
 /*
-	Enemy drones (see Drone). One at a time for now: the next one comes a while after the last one's gone. Shot
-	down they fall apart, diving they blow up and hurt io8 if he's close. They fire bolts like his (their own Lasers,
-	slower so they can be dodged)
+	Enemy drones (see Drone). One at a time for now: the next one comes a while after the last one's gone. Any blast
+	that reaches one (io8's bolts, a mine) shoots it down and it falls apart, diving it blows up itself. They fire
+	bolts like his (their own Lasers, slower so they can be dodged)
 */
 export default class Drones {
 	drones = new Set();
-	byCollider = new Map();
-	explosions = [];
+
+	// Called with (point, blast config) whenever a drone crashes or one of their bolts blows up, so everything
+	// nearby can react (see App.blast())
+	onBlast = null;
 
 	constructor (scene, physics, audio, impacts, blasts, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
 		this.audio = audio;
-		this.impacts = impacts;
 		this.blasts = blasts;
 		this.config = Object.assign({
 			// The first one comes `delay` seconds in, each next one a random `interval` (s) after the last one's gone,
@@ -295,6 +296,9 @@ export default class Drones {
 			pitch: {fire: 0.8}
 		});
 
+		this.lasers.onBlast = (point, blast) => this.onBlast?.(point, blast);
+
+		this.debris = new Debris(impacts);
 		this.untilNext = this.config.spawn.delay;
 	}
 
@@ -337,7 +341,7 @@ export default class Drones {
 
 		this.drones.forEach(drone => {
 			if (drone.crashedAt) {
-				this.explode(drone, drone.crashedAt, player);
+				this.explode(drone, true);
 
 				return;
 			}
@@ -352,22 +356,7 @@ export default class Drones {
 		});
 
 		this.lasers.step(deltaTime, player);
-
-		// Debris left far behind (or ahead) goes, like the spawner's props
-		this.explosions = this.explosions.filter(explosion => {
-			const dx = explosion.center.x - focus.x;
-
-			if (dx > -DESPAWN.behind && dx < DESPAWN.ahead) {
-				explosion.step(deltaTime);
-
-				return true;
-			}
-
-			this.impacts.unregister(explosion.pieces.map(piece => piece.body.collider(0)));
-			explosion.destroy();
-
-			return false;
-		});
+		this.debris.step(deltaTime, focus.x);
 	}
 
 	spawn (focus, speed) {
@@ -383,7 +372,6 @@ export default class Drones {
 
 		this.scene.add(drone.object3d);
 		this.drones.add(drone);
-		drone.colliders.forEach(collider => this.byCollider.set(collider.handle, drone));
 	}
 
 	// How high a drone at `x` hovers, or `fallback` where there's no ground under it (past the end of the map)
@@ -393,33 +381,28 @@ export default class Drones {
 		return ground === null ? fallback : ground + this.config.hover.y;
 	}
 
-	// When io8's lasers hit something (see Lasers.onHit): one hit and a drone is down
-	shot (collider) {
-		const drone = this.byCollider.get(collider.handle);
-
-		if (drone) {
-			this.explode(drone, drone.position.clone());
-		}
+	// Something blew up at `point` (see App.blast()): any drone within its `reach` (m) is shot down
+	blast (point, {reach}) {
+		this.drones.forEach(drone => drone.distanceTo(point) < reach && this.explode(drone));
 	}
 
-	// Falls apart where it is, and if it crashed on its dive (`player` given) blows up properly
-	explode (drone, center, player = null) {
+	// Falls apart where it is, and if it `crashed` on its dive blows up properly where it hit
+	explode (drone, crashed = false) {
 		const {crash, shotDown} = this.config;
+		const center = crashed ? drone.crashedAt : drone.position.clone();
 		const velocity = new THREE.Vector3().copy(drone.body.linvel());
 		const explosion = new Explosion(this.scene, this.physics, center, crash);
 
 		explosion.shatter(drone.object3d, () => velocity);
-		this.impacts.register(explosion.pieces.map(piece => piece.body.collider(0)), 'robot');
-		this.explosions.push(explosion);
+		this.debris.add(explosion, 'robot');
 
-		drone.colliders.forEach(collider => this.byCollider.delete(collider.handle));
 		drone.destroy();
 		this.drones.delete(drone);
 
-		if (player) {
+		if (crashed) {
 			explosion.shockwave();
 			this.blasts.spawn(center, crash.size);
-			player.blast(center, crash);
+			this.onBlast?.(center, crash);
 		}
 		else {
 			this.blasts.spawn(center, shotDown.size);

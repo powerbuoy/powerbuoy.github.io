@@ -8,11 +8,12 @@ import {randomItem, pickWeighted} from '../sleek/utils.js';
 const GAP = 0.005;
 
 const MODELS = {
-	cardboard: './assets/gltf/props/Cardboard/Cardboard.gltf'
+	cardboard: './assets/gltf/props/Cardboard/Cardboard.gltf',
+	mine: './assets/gltf/props/Mine/Mine.gltf'
 };
 
 // What each prop sounds like when it hits something (see impacts.js)
-const IMPACT = {cardboard: 'cardboard'};
+const IMPACT = {cardboard: 'cardboard', mine: 'robot'};
 
 // How far behind and ahead of io8 (m) the road is filled in. Ahead has to reach past what the camera can see
 // (view 3 looks a long way down the road), or things visibly pop in
@@ -51,7 +52,10 @@ const OBSTACLES = [
 
 	// Heavy enough that you need to fly over it, or the weight pickup to plough through (3 rows of cardboard, io8
 	// can still push through on his own)
-	[2, (s, x) => s.fullPyramid('cardboard', x, 0, 4 + s.int(2))]
+	[2, (s, x) => s.fullPyramid('cardboard', x, 0, 4 + s.int(2))],
+
+	// Goes off if io8 touches it (see Explosives): jump it, fly over it, or knock it away with something else
+	[2, (s, x) => s.spawn('mine', x, 0, 0)]
 ];
 
 // Background clutter, just for looks (until something knocks it over)
@@ -81,6 +85,10 @@ export default class Spawner {
 		this.pickups = pickups;
 	}
 
+	setExplosives (explosives) {
+		this.explosives = explosives;
+	}
+
 	// Call once the map exists, everything is placed on top of it from then on
 	setGround (ground, startX = 0) {
 		this.ground = ground;
@@ -91,11 +99,18 @@ export default class Spawner {
 		// Load each model once, every prop is a clone
 		await Promise.all(Object.entries(MODELS).map(async ([name, src]) => {
 			const object3d = await SleekLoader.loadObject(src);
-			const shape = object3d.getObjectByName(object3d.children[0].name.replace(/_RigidBody$/, '_Shape'));
+			const body = object3d.children[0];
+			// What it collides with, like SleekEntity: the _Shape, or the _Mesh without one, or the body itself
+			const shape = body.getObjectByName(body.name.replace(/_RigidBody$/, '_Shape')) ?? body.getObjectByName(body.name.replace(/_RigidBody$/, '_Mesh')) ?? body;
 			const box = new THREE.Box3().setFromObject(shape);
 
 			this.models[name] = {object3d, size: box.getSize(new THREE.Vector3()), bottom: box.min.y};
 		}));
+	}
+
+	// For App.warmUp(): one of each prop, so a kind that isn't on the road yet (a mine) doesn't hitch the first time
+	standIns () {
+		return Object.values(this.models).map(({object3d}) => object3d.clone());
 	}
 
 	// Call every frame with io8's x
@@ -136,12 +151,18 @@ export default class Spawner {
 
 			// Anything that fell off the world goes too
 			if (dx < -behind || dx > ahead || propY < -10) {
-				this.impacts?.unregister(prop.colliders);
-				this.emitters?.remove(prop.object3d);
-				prop.destroy();
-				this.props.delete(prop);
+				this.remove(prop);
 			}
 		});
+	}
+
+	// Only call between frames, not during a physics step
+	remove (prop) {
+		this.impacts?.unregister(prop.colliders);
+		this.emitters?.remove(prop.object3d);
+		this.explosives?.remove(prop);
+		prop.destroy();
+		this.props.delete(prop);
 	}
 
 	createChunk (index) {
@@ -205,6 +226,7 @@ export default class Spawner {
 		this.scene.add(entity.object3d);
 		this.props.add(entity);
 		this.emitters?.add(entity.object3d);
+		this.explosives?.add(entity);
 
 		if (IMPACT[name]) {
 			this.impacts?.register(entity.colliders, IMPACT[name]);
