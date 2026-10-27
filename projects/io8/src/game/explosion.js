@@ -210,9 +210,7 @@ export default class Explosion {
 				return true;
 			}
 
-			this.physics.unlink(piece.body);
-			this.physics.world.removeRigidBody(piece.body);
-			piece.object3d.removeFromParent();
+			this.removePiece(piece);
 
 			return false;
 		});
@@ -222,6 +220,18 @@ export default class Explosion {
 			this.separated = true;
 			this.pieces.forEach(({body}) => body.collider(0).setCollisionGroups(0xFFFFFFFF));
 		}
+	}
+
+	// Remove all the debris (once it's been left far behind). Only call between frames, not during a physics step
+	destroy () {
+		this.pieces.forEach(piece => this.removePiece(piece));
+		this.pieces = [];
+	}
+
+	removePiece ({body, object3d}) {
+		this.physics.unlink(body);
+		this.physics.world.removeRigidBody(body);
+		object3d.removeFromParent();
 	}
 
 	// Collision shape from the mesh itself (scale baked in, since bodies can't be scaled).

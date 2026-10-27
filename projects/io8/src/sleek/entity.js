@@ -7,14 +7,15 @@ const worldQuat = new THREE.Quaternion();
 /*
 	Builds rigid bodies from a GLTF scene using the naming convention from Blender:
 
-	Thing_RigidBody      <- direct child of the scene, becomes a rigid body. Custom props: mass, friction, restitution, collider
+	Thing_RigidBody      <- direct child of the scene, becomes a rigid body. Custom props: mass, kinematic, friction, restitution, collider
 		Thing_Mesh       <- what you see
 		Thing_Shape      <- hidden, every mesh inside becomes a collider on the same body
 
 	_Shape is optional: without one the _Mesh itself is the collision shape (handy for a road or terrain where
 	the collision should match what you see exactly). _Mesh is optional too, Thing_RigidBody can be the mesh
-	itself, then every mesh in it collides. mass 0 (or missing) means a fixed body. Colliders default to a convex hull for
-	dynamic bodies and a triangle mesh for fixed ones; set "collider" to override.
+	itself, then every mesh in it collides. mass 0 (or missing) means a fixed body, kinematic 1 one the code moves (it pushes
+	things out of its way, nothing pushes it). Colliders default to a convex hull for dynamic and kinematic bodies and a
+	triangle mesh for fixed ones; set "collider" to override.
 */
 export default class SleekEntity {
 	bodies = {};
@@ -55,11 +56,12 @@ export default class SleekEntity {
 			const shape = obj.children.find(child => child.name.endsWith('_Shape'));
 			const shapes = shape ?? obj.children.find(child => child.name.endsWith('_Mesh')) ?? obj;
 			const mass = Number(obj.userData.mass ?? 0);
+			const kinematic = Number(obj.userData.kinematic ?? 0) > 0;
 
 			obj.getWorldPosition(worldPos);
 			obj.getWorldQuaternion(worldQuat);
 
-			const bodyDesc = (mass > 0 ? RAPIER.RigidBodyDesc.dynamic() : RAPIER.RigidBodyDesc.fixed())
+			const bodyDesc = (kinematic ? RAPIER.RigidBodyDesc.kinematicPositionBased() : mass > 0 ? RAPIER.RigidBodyDesc.dynamic() : RAPIER.RigidBodyDesc.fixed())
 				.setTranslation(worldPos.x, worldPos.y, worldPos.z)
 				.setRotation(worldQuat);
 
@@ -76,7 +78,7 @@ export default class SleekEntity {
 				}
 
 				meshes.forEach(mesh => {
-					const colliderDesc = SleekEntity.createColliderDesc(mesh, obj, mesh.userData.collider ?? obj.userData.collider ?? (mass > 0 ? 'hull' : 'trimesh'));
+					const colliderDesc = SleekEntity.createColliderDesc(mesh, obj, mesh.userData.collider ?? obj.userData.collider ?? (mass > 0 || kinematic ? 'hull' : 'trimesh'));
 
 					// Spread the Blender mass over all colliders so the body ends up with exactly that
 					if (mass > 0) {

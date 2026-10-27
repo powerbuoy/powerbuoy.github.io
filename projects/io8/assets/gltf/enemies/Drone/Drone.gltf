@@ -1,0 +1,221 @@
+{
+	"asset": {
+		"version": "2.0",
+		"generator": "io8 temporary drone (a cube with an eye, until the real one is modelled in Blender)"
+	},
+	"extensionsUsed": [
+		"KHR_materials_emissive_strength"
+	],
+	"scene": 0,
+	"scenes": [
+		{
+			"nodes": [
+				0
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "Drone_RigidBody",
+			"extras": {
+				"kinematic": 1,
+				"collider": "cuboid"
+			},
+			"children": [
+				1,
+				2,
+				3
+			]
+		},
+		{
+			"name": "Drone_Mesh",
+			"mesh": 0
+		},
+		{
+			"name": "Drone_Eye",
+			"mesh": 1
+		},
+		{
+			"name": "Muzzle",
+			"translation": [
+				-0.23,
+				0,
+				0
+			],
+			"rotation": [
+				0,
+				1,
+				0,
+				0
+			]
+		}
+	],
+	"materials": [
+		{
+			"name": "Drone_Metal",
+			"pbrMetallicRoughness": {
+				"baseColorFactor": [
+					0.18,
+					0.19,
+					0.21,
+					1
+				],
+				"metallicFactor": 0.6,
+				"roughnessFactor": 0.45
+			}
+		},
+		{
+			"name": "Drone_Eye",
+			"pbrMetallicRoughness": {
+				"baseColorFactor": [
+					1,
+					0.1,
+					0.1,
+					1
+				],
+				"metallicFactor": 0,
+				"roughnessFactor": 0.4
+			},
+			"emissiveFactor": [
+				1,
+				0.1,
+				0.1
+			],
+			"extensions": {
+				"KHR_materials_emissive_strength": {
+					"emissiveStrength": 3
+				}
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "Drone_Body",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 0,
+						"NORMAL": 1
+					},
+					"indices": 2,
+					"material": 0
+				}
+			]
+		},
+		{
+			"name": "Drone_Eye",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 3,
+						"NORMAL": 4
+					},
+					"indices": 5,
+					"material": 1
+				}
+			]
+		}
+	],
+	"buffers": [
+		{
+			"byteLength": 1296,
+			"uri": "data:application/octet-stream;base64,zcxMPs3MTL7NzEy+zcxMPs3MTD7NzEy+zcxMPs3MTD7NzEw+zcxMPs3MTL7NzEw+zcxMvs3MTL7NzEw+zcxMvs3MTD7NzEw+zcxMvs3MTD7NzEy+zcxMvs3MTL7NzEy+zcxMvs3MTD7NzEy+zcxMvs3MTD7NzEw+zcxMPs3MTD7NzEw+zcxMPs3MTD7NzEy+zcxMvs3MTL7NzEw+zcxMvs3MTL7NzEy+zcxMPs3MTL7NzEy+zcxMPs3MTL7NzEw+zcxMvs3MTL7NzEw+zcxMPs3MTL7NzEw+zcxMPs3MTD7NzEw+zcxMvs3MTD7NzEw+zcxMPs3MTL7NzEy+zcxMvs3MTL7NzEy+zcxMvs3MTD7NzEy+zcxMPs3MTD7NzEy+AACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAABAAIAAAACAAMABAAFAAYABAAGAAcACAAJAAoACAAKAAsADAANAA4ADAAOAA8AEAARABIAEAASABMAFAAVABYAFAAWABcAFK5Hvs3MTL0K16O9FK5Hvs3MTD0K16O9FK5Hvs3MTD0K16M9FK5Hvs3MTL0K16M9ZmZmvs3MTL0K16M9ZmZmvs3MTD0K16M9ZmZmvs3MTD0K16O9ZmZmvs3MTL0K16O9ZmZmvs3MTD0K16O9ZmZmvs3MTD0K16M9FK5Hvs3MTD0K16M9FK5Hvs3MTD0K16O9ZmZmvs3MTL0K16M9ZmZmvs3MTL0K16O9FK5Hvs3MTL0K16O9FK5Hvs3MTL0K16M9ZmZmvs3MTL0K16M9FK5Hvs3MTL0K16M9FK5Hvs3MTD0K16M9ZmZmvs3MTD0K16M9FK5Hvs3MTL0K16O9ZmZmvs3MTL0K16O9ZmZmvs3MTD0K16O9FK5Hvs3MTD0K16O9AACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAABAAIAAAACAAMABAAFAAYABAAGAAcACAAJAAoACAAKAAsADAANAA4ADAAOAA8AEAARABIAEAASABMAFAAVABYAFAAWABcA"
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteOffset": 0,
+			"byteLength": 288,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteOffset": 288,
+			"byteLength": 288,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteOffset": 576,
+			"byteLength": 72,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteOffset": 648,
+			"byteLength": 288,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteOffset": 936,
+			"byteLength": 288,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteOffset": 1224,
+			"byteLength": 72,
+			"target": 34963
+		}
+	],
+	"accessors": [
+		{
+			"bufferView": 0,
+			"componentType": 5126,
+			"count": 24,
+			"type": "VEC3",
+			"min": [
+				-0.2,
+				-0.2,
+				-0.2
+			],
+			"max": [
+				0.2,
+				0.2,
+				0.2
+			]
+		},
+		{
+			"bufferView": 1,
+			"componentType": 5126,
+			"count": 24,
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 2,
+			"componentType": 5123,
+			"count": 36,
+			"type": "SCALAR"
+		},
+		{
+			"bufferView": 3,
+			"componentType": 5126,
+			"count": 24,
+			"type": "VEC3",
+			"min": [
+				-0.22499999999999998,
+				-0.05,
+				-0.08
+			],
+			"max": [
+				-0.195,
+				0.05,
+				0.08
+			]
+		},
+		{
+			"bufferView": 4,
+			"componentType": 5126,
+			"count": 24,
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 5,
+			"componentType": 5123,
+			"count": 36,
+			"type": "SCALAR"
+		}
+	]
+}

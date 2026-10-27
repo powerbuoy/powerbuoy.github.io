@@ -13,7 +13,6 @@ const Y = new THREE.Vector3(0, 1, 0);
 const origin = new THREE.Vector3();
 const direction = new THREE.Vector3();
 const center = new THREE.Vector3();
-const nearest = new THREE.Vector3();
 
 /*
 	Laser bolts. They fly (not an instant beam), but they're far too fast for a physics body: they'd pass
@@ -27,6 +26,9 @@ export default class Lasers {
 	sounds = {};
 	sinceFired = 0;
 
+	// Called with (collider, point) whenever a bolt hits something
+	onHit = null;
+
 	constructor (scene, physics, audio, impacts, blasts, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
@@ -38,6 +40,9 @@ export default class Lasers {
 			length: 0.3,
 			radius: 0.012,
 			speed: 50,
+
+			// Collision groups of whoever fires them, whose own parts they fly through (see castShape())
+			groups: ROBOT_GROUPS,
 
 			// Colour, and how far past white it's pushed so bloom makes it glow
 			color: 0xff1a1a,
@@ -52,8 +57,7 @@ export default class Lasers {
 
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
 			// a cardboard box off at 15 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
-			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), less the further away
-			// he is (measured to the nearest bit of him, so a shot at his feet hurts as much as one at his head)
+			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), see IO8.blast()
 			blast: {radius: 3, impulse: 167, size: 0.5, damage: 40, reach: 1.5},
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
@@ -125,25 +129,26 @@ export default class Lasers {
 	}
 
 	move (bolt, deltaTime, player) {
-		const {speed, range, blast, volume, length} = this.config;
+		const {speed, range, blast, volume, length, groups} = this.config;
 		const {mesh} = bolt;
 		const distance = speed * deltaTime;
 
 		// The position is the tip, the capsule's centre is half a bolt behind it. The sweep's "velocity" is
 		// the unit direction, so its time of impact is how far (m) the bolt gets before it touches something.
-		// Skips io8's own parts (same collision groups as them), so he can't shoot himself
+		// Skips the parts of whoever fired it (same collision groups as them), so nothing shoots itself
 		center.copy(mesh.position).addScaledVector(bolt.direction, -length / 2);
 
-		const hit = this.physics.world.castShape(center, mesh.quaternion, bolt.direction, this.shape, 0, distance, true, undefined, ROBOT_GROUPS);
+		const hit = this.physics.world.castShape(center, mesh.quaternion, bolt.direction, this.shape, 0, distance, true, undefined, groups);
 
 		if (hit) {
 			const point = mesh.position.clone().addScaledVector(bolt.direction, hit.time_of_impact);
 			// Hits io8 too if he's close, so don't shoot point blank
 			new Explosion(this.scene, this.physics, point, blast).shockwave();
-			this.hurt(player, point);
+			player.blast(point, blast);
 			this.blasts.spawn(point, blast.size);
 			this.impacts.hit(hit.collider, point, volume.hit);
 			this.remove(bolt);
+			this.onHit?.(hit.collider, point);
 
 			return;
 		}
@@ -153,27 +158,6 @@ export default class Lasers {
 
 		if (bolt.travelled > range) {
 			this.remove(bolt);
-		}
-	}
-
-	// Damage io8 if the blast at `point` is close enough to him (see config.blast)
-	hurt (player, point) {
-		const {damage, reach} = this.config.blast;
-
-		if (player.isExploded) {
-			return;
-		}
-
-		let distance = Infinity;
-
-		player.colliders.forEach(collider => {
-			const projection = collider.projectPoint(point, true);
-
-			distance = Math.min(distance, nearest.copy(projection.point).distanceTo(point));
-		});
-
-		if (distance < reach) {
-			player.damage(damage * (1 - distance / reach));
 		}
 	}
 
