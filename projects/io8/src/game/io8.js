@@ -154,7 +154,7 @@ export default class IO8 extends SleekEntity {
 	constructor (object3d, physics, conf = {}) {
 		super(object3d, physics, Object.assign({
 			name: 'Robot',
-			maxSpeed: 7.5,
+			maxSpeed: 10,
 
 			// The wheel motor drives him up to maxSpeed, see physicsStep(). Acceleration based, so roughly "how many g's",
 			// whatever he weighs
@@ -168,17 +168,17 @@ export default class IO8 extends SleekEntity {
 
 			// Thrust as an acceleration (m/s², gravity is 9.81) of io8's normal weight, so changing his masses in
 			// Blender doesn't need retuning. The weight power-up doesn't count, so it can't lift him any more
-			thrust: 15.7,
+			thrust: 22,
 
 			// Thruster fuel: seconds of thrust in a full tank. Starts refilling `refillDelay` seconds after you let
 			// go of the thrusters (anywhere, in the air too), empty to full in `refillTime` seconds.
 			// Below `low` (0-1) the flames sputter
-			fuel: {capacity: 2, refillDelay: 1, refillTime: 1.5, low: 0.25},
+			fuel: {capacity: 1.2, refillDelay: 1, refillTime: 1.5, low: 0.25},
 
 			// Hold to charge, let go to jump: a tap jumps height[0] m, `charge` seconds or more height[1] m. Charging
 			// squashes the leg springs down to `squash` of their travel. Like thrust, the push is worked out from his
 			// normal weight, so the weight power-up keeps him (almost) on the ground
-			jump: {height: [0.1, 1], charge: 0.6, squash: 0.8},
+			jump: {height: [0.8, 2], charge: 0.6, squash: 0.8},
 
 			// Hitting things hard hurts: how much his speed changes within `window` seconds (a fall stopping, a wall,
 			// a blast) past `safe` m/s does damage * excess² (like crash energy). A 1.5 m drop lands at ~5 m/s,
@@ -200,7 +200,7 @@ export default class IO8 extends SleekEntity {
 
 			// The head bobs on the leg springs (parts tagged "suspension" in Blender). Acceleration based like the neck,
 			// travel is how far (m) it can squash down and stretch up before hitting the end stops
-			suspension: {stiffness: 120, damping: 5, travel: [-0.12, 0.08]}
+			suspension: {stiffness: 400, damping: 25, travel: [-0.12, 0.08]}
 		}, conf));
 
 		this.findParts();

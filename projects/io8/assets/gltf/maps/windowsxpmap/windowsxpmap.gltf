@@ -54,7 +54,8 @@
 	"nodes":[
 		{
 			"extras":{
-				"shadow":"receive"
+				"shadow":"receive",
+				"friction":1
 			},
 			"mesh":0,
 			"name":"Road_RigidBody",
@@ -150,6 +151,9 @@
 			]
 		},
 		{
+			"extras":{
+				"friction":1
+			},
 			"mesh":3,
 			"name":"Terrain_RigidBody",
 			"translation":[

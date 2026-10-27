@@ -304,7 +304,7 @@
 				57
 			],
 			"extras":{
-				"mass":1,
+				"mass":2,
 				"debris":"whole"
 			},
 			"name":"RobotHead_RigidBody",
@@ -609,7 +609,7 @@
 				48
 			],
 			"extras":{
-				"mass":1
+				"mass":3
 			},
 			"name":"RobotLegs_RigidBody",
 			"translation":[
@@ -668,9 +668,9 @@
 				55
 			],
 			"extras":{
-				"friction":1.2000000476837158,
+				"friction":1.5,
 				"collider":"sphere",
-				"mass":5
+				"mass":2
 			},
 			"name":"RobotWheel_RigidBody"
 		},
