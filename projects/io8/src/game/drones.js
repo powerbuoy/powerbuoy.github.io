@@ -326,7 +326,7 @@ export default class Drones {
 			warnSound: {name: 'forceField', volume: 0.6, pitch: 1.4}
 		}, conf);
 
-		// Slower and weaker than io8's, so they can be dodged and a hit doesn't take a third of his health
+		// Slower and weaker than io8's, so they can be dodged and a hit doesn't hurt him as much as his own
 		this.lasers = new Lasers(scene, physics, audio, impacts, blasts, {
 			groups: DRONE_GROUPS,
 			speed: 15,

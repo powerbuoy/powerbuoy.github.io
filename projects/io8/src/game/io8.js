@@ -185,7 +185,7 @@ export default class IO8 extends SleekEntity {
 			// 5 m at ~10, 10 m at ~14. Health comes back `refillDelay` seconds after the last hit, empty to full in
 			// `refillTime` seconds (null for no healing, health pickups only). With his head under water it all
 			// drains in `drown` seconds. At 0 he blows up
-			health: {capacity: 100, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null, drown: 0.3},
+			health: {capacity: 200, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null, drown: 0.3},
 
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},

@@ -7,7 +7,7 @@ const velocity = new THREE.Vector3();
 
 /*
 	Props with an "explosive" custom property (on their _RigidBody) go off when anything that moves touches them
-	(io8, and then it's fatal, but also a box he pushes, debris, a drone), or when a blast reaches them (a bolt, a
+	(io8, a box he pushes, debris, a drone), or when a blast reaches them (a bolt, a
 	drone crashing, another one going off). The spawner add()s every prop it places, the ones that aren't explosive
 	are ignored. Touching is a real contact between their colliders (not just being close), read from the physics
 	after each step
@@ -15,8 +15,7 @@ const velocity = new THREE.Vector3();
 export default class Explosives {
 	explosives = new Set();
 
-	// io8's colliders, and what's near an explosive (see toucher())
-	robot = null;
+	// What's near an explosive (see toucher())
 	near = [];
 
 	// Called with (point, blast config) whenever one goes off, so everything nearby can react (see App.blast())
@@ -28,13 +27,13 @@ export default class Explosives {
 		this.blasts = blasts;
 		this.debris = new Debris(impacts);
 		this.config = Object.assign({
-			// Closest (m) io8 has to get to count as touching (contacts are reported a little before things meet)
+			// Closest (m) anything has to get to count as touching (contacts are reported a little before things meet)
 			touch: 0.01,
 
 			// The blast: things within `radius` (m) get up to `impulse` N·s per m² facing it (see
 			// Explosion.shockwave()), and how big it looks and sounds (see Blasts, 1 = io8 blowing up). Within
-			// `reach` (m) io8 loses up to `damage` health, less the further away he is (see IO8.blast()), so
-			// shooting one point blank is as fatal as touching it, and drones and other explosives go too
+			// `reach` (m) io8 loses up to `damage` health, less the further away he is (see IO8.blast()), the same
+			// whether he touched it or shot it, and drones and other explosives go too
 			blast: {radius: 4, impulse: 250, size: 1, damage: 100, reach: 2.5}
 		}, conf);
 	}
@@ -60,24 +59,10 @@ export default class Explosives {
 		this.explosives.forEach(entity => entity.distanceTo(point) < reach && this.explode(entity));
 	}
 
-	// Every frame, after the physics. `x` is where io8 is (or blew up)
-	step (deltaTime, player, x) {
-		this.robot ??= new Set(player.colliders.map(collider => collider.handle));
-
-		this.explosives.forEach(entity => {
-			const toucher = this.toucher(entity);
-
-			if (!toucher) {
-				return;
-			}
-
-			this.explode(entity);
-
-			// Touching one is fatal. He's blown up by the app on the next frame, like running out of health any other way
-			if (this.robot.has(toucher.handle) && !player.isExploded) {
-				player.damage(player.health);
-			}
-		});
+	// Every frame, after the physics. `x` is where io8 is (or blew up). Touching one does no damage itself, its
+	// blast does (see App.blast())
+	step (deltaTime, x) {
+		this.explosives.forEach(entity => this.toucher(entity) && this.explode(entity));
 
 		this.debris.step(deltaTime, x);
 	}

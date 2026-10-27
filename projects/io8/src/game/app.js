@@ -286,7 +286,7 @@ export default class App extends SleekScene {
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
 		this.fire = false;
 		this.drones.step(deltaTime, this.player, focus);
-		this.explosives.step(deltaTime, this.player, focus.x);
+		this.explosives.step(deltaTime, focus.x);
 		// Keep stuff to crash into ahead of io8
 		this.spawner.update(focus.x);
 		this.stats?.update();
