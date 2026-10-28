@@ -28,12 +28,13 @@ const CONFIG = {
 	// Nothing spawns closer than this to either end of the map
 	edge: 2,
 
-	// An obstacle slot every spacing m (offset from the map's x = 0), each one used by chance
-	obstacles: {spacing: 15, offset: 2, chance: 0.7},
+	// An obstacle slot every spacing m (offset from the map's x = 0), each one used by chance and nudged up to
+	// `jitter` m forward so they don't come at an even beat
+	obstacles: {spacing: 15, offset: 2, chance: 0.7, jitter: 8},
 
-	// A pickup slot every spacing m like the obstacles, nudged up to `jitter` m forward so they don't line up,
-	// and how high above the ground (m). io8 is about 1.15 m tall with his antenna up, so they're all out of
-	// reach without flying. Which pickup it is depends on their `frequency` (see Pickups)
+	// A pickup slot every spacing m like the obstacles, and how high above the ground (m). io8 is about 1.15 m
+	// tall with his antenna up, so they're all out of reach without flying. Which pickup it is depends on their
+	// `frequency` (see Pickups)
 	pickups: {spacing: 25, offset: 9, jitter: 5, chance: 0.8, height: [1.5, 2.5]},
 
 	// Keep the spot io8 starts on clear (distance from its start)
@@ -167,12 +168,11 @@ export default class Spawner {
 		const size = CHUNK;
 		const start = index * size;
 
-		this.slots(start, size, CONFIG.obstacles, slot => pickWeighted(OBSTACLES, ([weight]) => weight)[1](this, slot + Math.random() * 1.5));
+		this.slots(start, size, CONFIG.obstacles, x => pickWeighted(OBSTACLES, ([weight]) => weight)[1](this, x));
 
 		// Pickups up in the air
 		if (this.pickups) {
-			this.slots(start, size, CONFIG.pickups, slot => {
-				const x = slot + Math.random() * CONFIG.pickups.jitter;
+			this.slots(start, size, CONFIG.pickups, x => {
 				const ground = this.ground.heightAt(x);
 
 				if (ground !== null && this.ground.contains(x, CONFIG.edge)) {
@@ -189,11 +189,13 @@ export default class Spawner {
 
 	// Helpers
 	// Every `spacing` m from `offset` (in map x) that falls inside this chunk (none in some, when the spacing is
-	// bigger than a chunk), each used by `chance`, never right where io8 starts
-	slots (start, size, {spacing, offset, chance}, callback) {
+	// bigger than a chunk), each used by `chance` and nudged up to `jitter` m forward, never right where io8 starts
+	slots (start, size, {spacing, offset, chance, jitter}, callback) {
 		for (let slot = Math.ceil((start - offset) / spacing) * spacing + offset; slot < start + size; slot += spacing) {
-			if (Math.abs(slot - this.startX) > CONFIG.safeZone && Math.random() < chance) {
-				callback(slot);
+			const x = slot + Math.random() * jitter;
+
+			if (Math.abs(x - this.startX) > CONFIG.safeZone && Math.random() < chance) {
+				callback(x);
 			}
 		}
 	}
