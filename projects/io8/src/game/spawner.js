@@ -12,9 +12,6 @@ const MODELS = {
 	mine: './assets/gltf/props/Mine/Mine.gltf'
 };
 
-// What each prop sounds like when it hits something (see impacts.js)
-const IMPACT = {cardboard: 'cardboard', mine: 'robot'};
-
 // How far behind and ahead of io8 (m) the road is filled in. Ahead has to reach past what the camera can see
 // (view 3 looks a long way down the road), or things visibly pop in
 const RANGE = {behind: 6, ahead: 80};
@@ -227,10 +224,7 @@ export default class Spawner {
 		this.props.add(entity);
 		this.emitters?.add(entity.object3d);
 		this.explosives?.add(entity);
-
-		if (IMPACT[name]) {
-			this.impacts?.register(entity.colliders, IMPACT[name]);
-		}
+		this.impacts?.add(entity);
 
 		return entity;
 	}

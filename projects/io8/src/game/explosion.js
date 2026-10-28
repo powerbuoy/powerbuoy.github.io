@@ -118,15 +118,28 @@ export default class Explosion {
 		Lights and other non-mesh children just come along with their piece
 	*/
 	shatter (object3d, velocityOf = () => null) {
-		Explosion.findPieces(object3d).forEach(root => {
-			const velocity = velocityOf(root);
+		// All worked out before any of them leave the model: a piece can be inside another one (a rim in a tyre),
+		// and once that one has gone it's no longer under the part it came from
+		const roots = [...Explosion.findPieces(object3d)].map(root => ({root, velocity: velocityOf(root), impact: Explosion.inherited(root, 'impact')}));
 
+		roots.forEach(({root, velocity, impact}) => {
 			// Keeps its world position, and everything under it (lights, parts of a "whole" piece) comes along
 			this.scene.attach(root);
-			this.pieces.push(this.createPiece(root, velocity));
+			this.pieces.push(this.createPiece(root, velocity, impact));
 		});
 
 		return this.pieces;
+	}
+
+	// A custom property from obj or the nearest thing it's in that has it (a mesh gets its _RigidBody's)
+	static inherited (obj, key) {
+		for (; obj; obj = obj.parent) {
+			if (obj.userData[key] !== undefined) {
+				return obj.userData[key];
+			}
+		}
+
+		return undefined;
 	}
 
 	// Work out the debris shapes when the model loads rather than at the moment of the blast
@@ -179,7 +192,8 @@ export default class Explosion {
 		return piece.isMesh ? [piece] : piece.children.filter(child => child.isMesh && Explosion.isPrimitive(child));
 	}
 
-	createPiece (piece, velocity) {
+	// `impact` is what it sounds like when it lands (see Impacts), from the part it was
+	createPiece (piece, velocity, impact) {
 		const {speed, spin, lift, depth, density} = this.config;
 
 		piece.matrixWorld.decompose(pos, quat, scale);
@@ -209,7 +223,7 @@ export default class Explosion {
 
 		this.physics.link(piece, body);
 
-		return {object3d: piece, body};
+		return {object3d: piece, body, impact};
 	}
 
 	step (deltaTime) {

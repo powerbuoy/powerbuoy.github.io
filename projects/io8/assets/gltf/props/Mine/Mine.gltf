@@ -17,7 +17,8 @@
 			"extras": {
 				"mass": 3,
 				"collider": "cuboid",
-				"explosive": 1
+				"explosive": 1,
+				"impact": "metal"
 			},
 			"children": [
 				1,

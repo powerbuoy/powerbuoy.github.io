@@ -1,7 +1,7 @@
 import {DESPAWN} from './spawner.js';
 
 /*
-	Explosions whose debris is left lying about (a drone shot down, a mine gone off). Their pieces make impact sounds,
+	Explosions whose debris is left lying about (a drone shot down, a mine gone off, io8). Their pieces make impact sounds,
 	and once io8 has left them far behind (or they're far ahead) they're removed, like the spawner's props
 */
 export default class Debris {
@@ -11,9 +11,9 @@ export default class Debris {
 		this.impacts = impacts;
 	}
 
-	// After explosion.shatter(), `material` is what the pieces sound like when they land (see Impacts)
-	add (explosion, material) {
-		this.impacts.register(explosion.pieces.map(piece => piece.body.collider(0)), material);
+	// After explosion.shatter(). The pieces sound like the parts they came from when they land (see Impacts)
+	add (explosion) {
+		this.impacts.addPieces(explosion);
 		this.explosions.push(explosion);
 	}
 

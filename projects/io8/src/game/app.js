@@ -13,6 +13,7 @@ import IO8 from './io8.js';
 import Spawner from './spawner.js';
 import Ground from './ground.js';
 import Explosion from './explosion.js';
+import Debris from './debris.js';
 import Impacts from './impacts.js';
 import Pickups from './pickups.js';
 import Hud from './hud.js';
@@ -96,6 +97,9 @@ export default class App extends SleekScene {
 		this.explosives = new Explosives(this.scene, this.physics, this.impacts, this.blasts);
 		this.explosives.setSpawner(this.spawner);
 		this.spawner.setExplosives(this.explosives);
+
+		// What's left of io8 once he's blown up (the drones and mines have their own)
+		this.debris = new Debris(this.impacts);
 
 		// Anything blowing up reaches everything near it, see blast()
 		this.lasers.onBlast = this.drones.onBlast = this.explosives.onBlast = (point, blast) => this.blast(point, blast);
@@ -245,15 +249,18 @@ export default class App extends SleekScene {
 			return;
 		}
 
-		this.explosion = new Explosion(this.scene, this.physics, this.player.legs.translation());
-		this.blasts.spawn(this.explosion.center, 1);
+		const {blast} = this.player.config;
+
+		this.explosion = new Explosion(this.scene, this.physics, this.player.legs.translation(), blast);
 		this.player.explode(this.explosion);
 		this.explosion.shockwave();
-		this.impacts.register(this.explosion.pieces.map(piece => piece.body.collider(0)), 'robot');
+		this.debris.add(this.explosion);
+		this.blasts.spawn(this.explosion.center, blast.size);
+		this.blast(this.explosion.center, blast);
 		this.onExplode?.();
 	}
 
-	// Something blew up at `point` (a laser bolt, a drone crashing, a mine). Within the blast's `reach` io8 is hurt,
+	// Something blew up at `point` (a laser bolt, a drone crashing, a mine, io8). Within the blast's `reach` io8 is hurt,
 	// drones are shot down and mines go off, which blow up in turn. The shove is each explosion's own (see
 	// Explosion.shockwave()), this is what it does to the things that can be blown up
 	blast (point, blast) {
@@ -280,7 +287,7 @@ export default class App extends SleekScene {
 
 		this.pickups.step(deltaTime, this.player, focus.x);
 		this.player.step(deltaTime);
-		this.explosion?.step(deltaTime);
+		this.debris.step(deltaTime, focus.x);
 		this.blasts.step(deltaTime);
 		this.emitters.step(deltaTime);
 		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);

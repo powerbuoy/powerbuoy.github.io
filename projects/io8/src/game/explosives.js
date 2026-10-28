@@ -99,7 +99,7 @@ export default class Explosives {
 		this.spawner.remove(entity);
 		explosion.shockwave();
 		this.blasts.spawn(explosion.center, blast.size);
-		this.debris.add(explosion, 'robot');
+		this.debris.add(explosion);
 		this.onBlast?.(explosion.center, blast);
 	}
 }

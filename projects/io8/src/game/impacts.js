@@ -4,10 +4,11 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {randomItem} from '../sleek/utils.js';
 
 // Which sound each material makes (Kenney's impact pack has 5 variations of each, _000 to _004), and optionally
-// a pitch to play it at (lower = bigger and hollower, 1 = as recorded)
+// a pitch to play it at (lower = bigger and hollower, 1 = as recorded). A model's material is its "impact" custom
+// property, on each _RigidBody
 const SOUNDS = {
 	cardboard: 'impactPunch_medium',
-	robot: 'impactPlate_heavy',
+	metal: 'impactPlate_heavy',
 	tyre: 'impactSoft_heavy'
 };
 
@@ -57,9 +58,31 @@ export default class Impacts {
 		}));
 	}
 
+	// Every body of an entity whose _RigidBody has an "impact" custom property, see register()
+	add (entity, weight = null) {
+		entity.object3d.children.forEach(obj => {
+			const body = obj.userData.impact && entity.bodies[obj.name.replace(/_RigidBody$/, '')];
+
+			if (body) {
+				this.register(Array.from({length: body.numColliders()}, (v, i) => body.collider(i)), obj.userData.impact, weight);
+			}
+		});
+	}
+
+	// After explosion.shatter(), each piece that came from a part with a material
+	addPieces (explosion) {
+		explosion.pieces.forEach(piece => piece.impact && this.register([piece.body.collider(0)], piece.impact));
+	}
+
 	// weight (optional) returns the mass (kg) to judge hits by, for colliders that are part of something bigger:
 	// io8 is several bodies jointed together, a bump on his 1 kg legs should count against all of him
 	register (colliders, material, weight = null) {
+		if (!this.sounds[material]) {
+			console.warn(`Impacts: no sound for "${material}", only ${Object.keys(SOUNDS).join(', ')} exist`);
+
+			return;
+		}
+
 		colliders.forEach(collider => {
 			collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
 

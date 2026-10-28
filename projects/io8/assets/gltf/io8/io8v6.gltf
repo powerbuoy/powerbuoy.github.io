@@ -305,7 +305,8 @@
 			],
 			"extras":{
 				"mass":2,
-				"debris":"whole"
+				"debris":"whole",
+				"impact":"metal"
 			},
 			"name":"RobotHead_RigidBody",
 			"translation":[
@@ -609,7 +610,8 @@
 				48
 			],
 			"extras":{
-				"mass":3
+				"mass":3,
+				"impact":"metal"
 			},
 			"name":"RobotLegs_RigidBody",
 			"translation":[
@@ -670,7 +672,8 @@
 			"extras":{
 				"friction":1.5,
 				"collider":"sphere",
-				"mass":2
+				"mass":2,
+				"impact":"tyre"
 			},
 			"name":"RobotWheel_RigidBody"
 		},

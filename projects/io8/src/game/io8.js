@@ -187,6 +187,11 @@ export default class IO8 extends SleekEntity {
 			// drains in `drown` seconds. At 0 he blows up
 			health: {capacity: 200, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null, drown: 0.3},
 
+			// Blowing up: things within `radius` (m) get up to `impulse` N·s per m² facing it (see
+			// Explosion.shockwave()), and `size` is how big it looks and sounds (see Blasts). Within `reach` (m)
+			// drones lose up to `damage` health and mines go off, like any other blast (see App.blast())
+			blast: {radius: 3, impulse: 67, size: 1, damage: 100, reach: 2.5},
+
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},
 
@@ -775,12 +780,9 @@ export default class IO8 extends SleekEntity {
 
 	// Give io8 his sounds (buffers loaded by the app), they play from where he is. Blowing up is Blasts' sound
 	initSounds (audio, {engine, thruster, impacts}) {
-		// Bumps and crashes: the tyre thuds, everything else clanks. Judged by io8's whole weight (not just the
-		// part that got hit), so bumping a light box sounds like the box, not like io8
-		const weight = () => this.currentMass;
-
-		impacts.register(this.wheelColliders, 'tyre', weight);
-		impacts.register(this.colliders.filter(collider => collider.parent().handle !== this.wheel.handle), 'robot', weight);
+		// Bumps and crashes, each part sounding like its "impact" (the tyre thuds, everything else clanks). Judged by
+		// io8's whole weight (not just the part that got hit), so bumping a light box sounds like the box, not like io8
+		impacts.add(this, () => this.currentMass);
 
 		// Always playing, just silent until the flames are on, so starting and stopping is a quick fade, not a click
 		this.thrusterSound = audio.positional(thruster, {loop: true, volume: 0});

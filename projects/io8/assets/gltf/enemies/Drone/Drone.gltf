@@ -19,7 +19,8 @@
 			"name": "Drone_RigidBody",
 			"extras": {
 				"kinematic": 1,
-				"collider": "cuboid"
+				"collider": "cuboid",
+				"impact": "metal"
 			},
 			"children": [
 				1,

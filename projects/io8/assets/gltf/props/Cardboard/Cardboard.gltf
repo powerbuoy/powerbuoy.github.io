@@ -39,7 +39,8 @@
 				3
 			],
 			"extras":{
-				"mass":1
+				"mass":1,
+				"impact":"cardboard"
 			},
 			"name":"CardboardBox_RigidBody"
 		}

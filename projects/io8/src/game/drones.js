@@ -463,7 +463,7 @@ export default class Drones {
 		const explosion = new Explosion(this.scene, this.physics, center, crash);
 
 		explosion.shatter(drone.object3d, () => velocity);
-		this.debris.add(explosion, 'robot');
+		this.debris.add(explosion);
 
 		this.emitters?.remove(drone.object3d);
 		drone.destroy();
