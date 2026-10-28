@@ -16,7 +16,7 @@ const point = new THREE.Vector3();
 	Lit mostly as if facing straight up (`flat`), so the puffs don't each have a light and a dark side and
 	the plume reads as one thing rather than a pile of balls.
 	Spawned in the world, not on whatever's smoking, so they trail behind it. One pool for all of it: smoking
-	emitters (see Emitters) and the clouds explosions leave (see cloud())
+	emitters (see Emitters) and the clouds explosions leave (see burst())
 */
 export default class Smoke extends Particles {
 	constructor (scene, conf = {}) {
@@ -49,7 +49,7 @@ export default class Smoke extends Particles {
 			// How much it's lit as if facing straight up rather than by its own shape (0-1)
 			flat: 0.95,
 
-			// An explosion's cloud at size 1 (see cloud()): `count` puffs (size² as many for other sizes, so a bolt's
+			// An explosion's cloud at size 1 (see burst()): `count` puffs (size² as many for other sizes, so a bolt's
 			// is a wisp) `puff` times as big as normal, spread over `spread` m, pushed outwards (and up) at `push` m/s,
 			// lasting `life` times as long as normal, `darkness` 0-1
 			cloud: {count: 18, puff: 3, spread: 0.6, push: 1.5, life: 1.8, darkness: 0.85}
@@ -106,7 +106,7 @@ export default class Smoke extends Particles {
 
 	// The cloud an explosion leaves where it was (see Blasts), size 1 is io8 blowing up. Pushed out sideways and up,
 	// never down: only sideways speed dies away (see update()), so a puff pushed down would sink into the ground
-	cloud (position, size) {
+	burst (position, size) {
 		const {count, puff, spread, push, life, darkness} = this.config.cloud;
 
 		for (let i = Math.max(1, Math.round(count * size ** 2)); i > 0; i--) {

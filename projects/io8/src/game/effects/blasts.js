@@ -45,7 +45,7 @@ export default class Blasts {
 		this.fireball = new Fireball(scene);
 		this.sparks = new Sparks(scene);
 		this.smoke = new Smoke(scene);
-		this.layers = [this.fireball, this.sparks];
+		this.layers = [this.fireball, this.sparks, this.smoke];
 
 		// One light, always there and normally off: adding and removing lights makes three.js recompile shaders
 		this.light = new THREE.PointLight(this.config.light.color, 0, this.config.light.distance);
@@ -63,8 +63,7 @@ export default class Blasts {
 	spawn (position, size = 1) {
 		const {light, shake, sounds} = this.config;
 
-		this.layers.forEach(layer => layer.spawn(position, size));
-		this.smoke.cloud(position, size);
+		this.layers.forEach(layer => layer.burst(position, size));
 
 		// Silent until init() has loaded the sounds
 		for (const key in this.sounds) {
@@ -93,9 +92,6 @@ export default class Blasts {
 
 		this.time += deltaTime;
 		this.layers.forEach(layer => layer.step(deltaTime));
-
-		// Puffs already in the air finish even after what made them is gone
-		this.smoke.step(deltaTime);
 
 		this.lightLevel = Math.max(0, this.lightLevel - deltaTime / light.duration);
 		this.light.intensity = light.intensity * this.lightLevel ** 2;

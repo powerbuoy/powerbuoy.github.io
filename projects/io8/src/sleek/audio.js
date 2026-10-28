@@ -18,7 +18,12 @@ export default class SleekAudio {
 	buffers = new Map();
 
 	constructor (camera, scene, conf = {}) {
-		this.config = Object.assign({poolSize: 16}, conf);
+		this.config = Object.assign({
+			poolSize: 16,
+
+			// Sounds are full volume up to this far (m) from the camera, then quieter further away
+			distance: 8
+		}, conf);
 		this.listener = new THREE.AudioListener();
 		this.loader = new THREE.AudioLoader(SleekLoader.manager);
 
@@ -27,7 +32,7 @@ export default class SleekAudio {
 		for (let i = 0; i < this.config.poolSize; i++) {
 			const sound = new THREE.PositionalAudio(this.listener);
 
-			sound.setRefDistance(8);
+			sound.setRefDistance(this.config.distance);
 			scene.add(sound);
 			this.pool.push(sound);
 		}
@@ -116,14 +121,13 @@ export default class SleekAudio {
 	}
 
 	// A sound that comes from an object in the scene (louder the closer the camera, panned left/right)
-	positional (buffer, {loop = false, volume = 1, distance = 8} = {}) {
+	positional (buffer, {loop = false, volume = 1, distance = this.config.distance} = {}) {
 		const sound = new THREE.PositionalAudio(this.listener);
 
 		sound.setBuffer(buffer);
 		sound.setLoop(loop);
 		sound.setVolume(volume);
 
-		// Full volume up to this distance, then quieter further away
 		sound.setRefDistance(distance);
 
 		return sound;

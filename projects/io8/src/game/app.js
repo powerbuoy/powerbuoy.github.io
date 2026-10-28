@@ -219,7 +219,7 @@ export default class App extends SleekScene {
 	// compiled, so the shadow versions are made too
 	warmUp () {
 		const hidden = [];
-		const standIns = [new THREE.Mesh(this.lasers.geometry, this.lasers.material), ...this.drones.standIns(), ...this.spawner.standIns(), ...this.pickups.models.map(model => this.pickups.create(model))];
+		const standIns = [this.lasers, this.drones, this.spawner, this.pickups].flatMap(system => system.standIns());
 
 		this.scene.traverse(obj => {
 			if (!obj.visible) {

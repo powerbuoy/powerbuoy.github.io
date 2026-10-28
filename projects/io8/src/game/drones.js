@@ -368,7 +368,7 @@ export default class Drones {
 
 	// For App.warmUp(): a drone and one of its bolts, so their shaders are compiled before the first one shows up
 	standIns () {
-		return [this.model.clone(), new THREE.Mesh(this.lasers.geometry, this.lasers.material)];
+		return [this.model.clone(), ...this.lasers.standIns()];
 	}
 
 	// Every frame, after io8's lasers (they may have shot one down). `focus` is where io8 is (or blew up)

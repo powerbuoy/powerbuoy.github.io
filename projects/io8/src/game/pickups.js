@@ -120,6 +120,11 @@ export default class Pickups {
 		this.pickups.add({model, object3d, baseY: y, phase: Math.random() * Math.PI * 2, popping: 0});
 	}
 
+	// For App.warmUp(): one of each, so their shaders are compiled before the first one shows up
+	standIns () {
+		return this.models.map(model => this.create(model));
+	}
+
 	// A pickup in its bubble, not placed anywhere yet
 	create (model) {
 		const object3d = model.object3d.clone();

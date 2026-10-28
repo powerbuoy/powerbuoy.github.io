@@ -83,6 +83,11 @@ export default class Lasers {
 		this.audio.playAt(randomItem(this.sounds[name]), position, {volume: this.config.volume[name], rate: this.config.pitch[name] ?? 1});
 	}
 
+	// For App.warmUp(): a bolt, so its shader is compiled before the first shot
+	standIns () {
+		return [new THREE.Mesh(this.geometry, this.material)];
+	}
+
 	step (deltaTime) {
 		this.bolts.forEach(bolt => this.move(bolt, deltaTime));
 	}

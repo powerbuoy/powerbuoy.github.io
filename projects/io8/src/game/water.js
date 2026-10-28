@@ -27,13 +27,17 @@ export default class Water {
 			]
 		}, conf);
 
+		// Water meshes can share a material, which is only patched once
+		const patched = new Set();
+
 		map.updateWorldMatrix(true, true);
 		map.traverse(obj => {
 			if (obj.isMesh && obj.name.replace(/\.\d+$/, '') === 'Water') {
 				this.surfaces.push(new THREE.Box3().setFromObject(obj));
 
 				// No layers, no drift
-				if (obj.material.normalMap && this.config.layers.length) {
+				if (obj.material.normalMap && this.config.layers.length && !patched.has(obj.material)) {
+					patched.add(obj.material);
 					this.patch(obj.material);
 				}
 			}

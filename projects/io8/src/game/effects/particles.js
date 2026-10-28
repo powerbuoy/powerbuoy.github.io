@@ -64,6 +64,12 @@ export default class Particles {
 		return particle;
 	}
 
+	// What a blast at `position` leaves of this layer (see Blasts), size 1 is io8 blowing up. One spawn() by
+	// default, a layer whose spawn() is a single particle (smoke) makes a whole burst of them instead
+	burst (position, size) {
+		this.spawn(position, size);
+	}
+
 	step (deltaTime) {
 		// Nothing going on (most of the time), nothing to do
 		if (!this.count) {
