@@ -48,6 +48,23 @@
 		},
 		{
 			"name": "Muzzle",
+			"extras": {
+				"bolt_speed": 15,
+				"bolt_length": 0.25,
+				"bolt_radius": 0.012,
+				"bolt_color": "#ff6a1a",
+				"bolt_brightness": 6,
+				"range": 40,
+				"blast_radius": 1.5,
+				"blast_impulse": 80,
+				"blast_size": 0.3,
+				"blast_damage": 10,
+				"blast_reach": 1,
+				"sound_fire": "laserSmall",
+				"volume_fire": 0.3,
+				"volume_hit": 0.4,
+				"pitch_fire": 0.8
+			},
 			"translation": [
 				-0.23,
 				0,

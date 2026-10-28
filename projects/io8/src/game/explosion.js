@@ -93,10 +93,13 @@ export default class Explosion {
 		});
 	}
 
-	// The blast `entity` makes blowing up: the blast_radius, blast_impulse, blast_size, blast_damage and blast_reach
-	// custom properties on its _RigidBody, BLAST for any it doesn't have. Read it before the entity is destroyed
-	static blastOf (entity) {
-		return Object.fromEntries(Object.entries(BLAST).map(([key, value]) => [key, Number(entity.property(`blast_${key}`) ?? value)]));
+	// A blast from the blast_radius, blast_impulse, blast_size, blast_damage and blast_reach custom properties of
+	// an entity's _RigidBody (how it blows up, read it before it's destroyed) or of any object (a gun's Muzzle: what
+	// its bolts do), `fallback` for any it doesn't have
+	static blastOf (source, fallback = BLAST) {
+		const property = key => source.isObject3D ? source.userData[key] : source.property(key);
+
+		return Object.fromEntries(Object.entries(fallback).map(([key, value]) => [key, Number(property(`blast_${key}`) ?? value)]));
 	}
 
 	// How much of a blast at `point` reaches `entity` (see App.blast()): all of its `damage` right on it, less the

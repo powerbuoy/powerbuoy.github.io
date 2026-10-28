@@ -90,7 +90,6 @@ export default class App extends SleekScene {
 
 		// What's left of anything blown up (io8, drones, mines)
 		this.debris = new Debris(this.impacts);
-		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 		this.emitters = new Emitters(this.blasts, this.audio);
 		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts, this.debris);
 
@@ -108,7 +107,6 @@ export default class App extends SleekScene {
 			this.blasts.init(),
 			this.impacts.init(),
 			this.pickups.init(),
-			this.lasers.init(),
 			this.drones.init(),
 			this.emitters.init()
 		]);
@@ -139,6 +137,10 @@ export default class App extends SleekScene {
 		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
 		this.player.setSurroundings({scene: this.scene, debris: this.debris, blasts: this.blasts, water: this.water});
 		this.scene.add(this.player.object3d);
+
+		// His gun is his model's, set on its Muzzle (see Lasers)
+		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts, this.player.muzzleObject);
+		await this.lasers.init();
 
 		// Anything blowing up reaches everything near it, see blast()
 		this.lasers.onBlast = this.drones.onBlast = this.explosives.onBlast = this.player.onBlast = (point, blast) => this.blast(point, blast);

@@ -115,12 +115,10 @@ export default class Pickups {
 		this.bubbleGeometry = new THREE.SphereGeometry(this.config.reach, 32, 16);
 	}
 
-	// Tinted with the root object's color property, white without one. A Blender colour property (Linear Color)
-	// exports as an array of linear values, so it's used as is; a string is a CSS colour like '#ff3344' (sRGB)
+	// Tinted with the root object's color property (see SleekLoader.colorOf()), white without one
 	createBubbleMaterial (object3d) {
 		const {strength, power, fill} = this.config.bubble;
-		const {color: value = '#ffffff'} = object3d.children[0].userData;
-		const color = Array.isArray(value) ? new THREE.Color().setRGB(...value.slice(0, 3), THREE.LinearSRGBColorSpace) : new THREE.Color(value);
+		const color = SleekLoader.colorOf(object3d.children[0].userData.color ?? '#ffffff');
 
 		return new THREE.ShaderMaterial({
 			...bubbleShader,

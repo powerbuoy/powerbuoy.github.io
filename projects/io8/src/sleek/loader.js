@@ -84,6 +84,12 @@ export default class SleekLoader {
 		return gltf.scene;
 	}
 
+	// A colour custom property as a THREE.Color. A Blender colour property (Linear Color) exports as an array of
+	// linear values, so it's used as is; a string is a CSS colour like '#ff3344' (sRGB)
+	static colorOf (value) {
+		return Array.isArray(value) ? new THREE.Color().setRGB(...value.slice(0, 3), THREE.LinearSRGBColorSpace) : new THREE.Color(value);
+	}
+
 	// A custom property from the object or the closest thing above it that has it
 	static inherited (object, name) {
 		for (let obj = object; obj; obj = obj.parent) {

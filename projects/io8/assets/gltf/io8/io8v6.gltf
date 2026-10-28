@@ -683,6 +683,24 @@
 			"name":"RobotWheel_RigidBody"
 		},
 		{
+			"extras":{
+				"bolt_speed":50,
+				"bolt_length":0.3,
+				"bolt_radius":0.012,
+				"bolt_color":"#ff1a1a",
+				"bolt_brightness":6,
+				"range":40,
+				"blast_radius":3,
+				"blast_impulse":167,
+				"blast_size":0.5,
+				"blast_damage":40,
+				"blast_reach":1.5,
+				"sound_fire":"laserRetro",
+				"sound_empty":"impact-sounds/impactGeneric_light",
+				"volume_fire":0.18,
+				"volume_hit":0.6,
+				"volume_empty":0.5
+			},
 			"name":"Muzzle"
 		}
 	],

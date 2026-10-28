@@ -325,20 +325,6 @@ export default class Drones {
 			warnSound: {name: 'forceField', volume: 0.6, pitch: 1.4}
 		}, conf);
 
-		// Slower and weaker than io8's, so they can be dodged and a hit doesn't hurt him as much as his own
-		this.lasers = new Lasers(scene, physics, audio, impacts, blasts, {
-			groups: DRONE_GROUPS,
-			speed: 15,
-			length: 0.25,
-			color: 0xff6a1a,
-			blast: {radius: 1.5, impulse: 80, size: 0.3, damage: 10, reach: 1},
-			sounds: {fire: 'laserSmall'},
-			volume: {fire: 0.3, hit: 0.4},
-			pitch: {fire: 0.8}
-		});
-
-		this.lasers.onBlast = (point, blast) => this.onBlast?.(point, blast);
-
 		this.debris = debris;
 		this.untilNext = this.config.spawn.delay;
 	}
@@ -356,11 +342,17 @@ export default class Drones {
 	async init () {
 		const [model, warnSound] = await Promise.all([
 			SleekLoader.loadObject(MODEL),
-			this.audio.loadVariations(`./assets/audio/kenney_sci-fi-sounds/Audio/${this.config.warnSound.name}`),
-			this.lasers.init()
+			this.audio.loadVariations(`./assets/audio/kenney_sci-fi-sounds/Audio/${this.config.warnSound.name}`)
 		]);
 
 		this.model = model;
+
+		// One gun for all of them, the model's, set on its Muzzle (see Lasers). Slower and weaker than io8's, so
+		// their bolts can be dodged and a hit doesn't hurt him as much as his own
+		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts, model.getObjectByName('Muzzle'), {groups: DRONE_GROUPS});
+		this.lasers.onBlast = (point, blast) => this.onBlast?.(point, blast);
+		await this.lasers.init();
+
 		this.warnSounds = warnSound;
 		this.warn = at => this.audio.playAt(randomItem(this.warnSounds), at, {volume: this.config.warnSound.volume, rate: this.config.warnSound.pitch});
 	}

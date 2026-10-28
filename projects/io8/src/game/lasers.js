@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
+import SleekLoader from '../sleek/loader.js';
 import {randomItem} from '../sleek/utils.js';
 
 import Explosion from './explosion.js';
@@ -19,6 +20,10 @@ const center = new THREE.Vector3();
 	if it hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
 	from bloom, no real lights (changing the number of lights makes three.js recompile its shaders). Whoever
 	fires them aims them and keeps track of their own ammo (see IO8.shoot())
+
+	The gun itself (how its bolts look, fly, hit and sound) is the model's: custom properties on its Muzzle empty,
+	see gun() and the README. One Lasers for each kind of shooter (io8, the drones), so a new one with a Muzzle
+	just works
 */
 export default class Lasers {
 	bolts = new Set();
@@ -27,23 +32,24 @@ export default class Lasers {
 	// Called with (point, blast config) whenever a bolt blows up, so everything nearby can react (see App.blast())
 	onBlast = null;
 
-	constructor (scene, physics, audio, impacts, blasts, conf = {}) {
+	constructor (scene, physics, audio, impacts, blasts, muzzle, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
 		this.audio = audio;
 		this.impacts = impacts;
 		this.blasts = blasts;
 		this.config = Object.assign({
+			// Collision groups of whoever fires them, whose own parts they fly through (see castShape())
+			groups: ROBOT_GROUPS,
+
+			// The rest is for whatever the Muzzle doesn't say (see gun()).
 			// Bolt size (m) and speed (m/s). It should be longer than it moves in a frame, or it looks like dots
 			length: 0.3,
 			radius: 0.012,
 			speed: 50,
 
-			// Collision groups of whoever fires them, whose own parts they fly through (see castShape())
-			groups: ROBOT_GROUPS,
-
 			// Colour, and how far past white it's pushed so bloom makes it glow
-			color: 0xff1a1a,
+			color: '#ff1a1a',
 			brightness: 6,
 
 			// How far (m) they go before disappearing
@@ -57,19 +63,43 @@ export default class Lasers {
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
 			// another Kenney pack (e.g. "impact-sounds/impactGeneric_light"). And their volumes (0-1)
-			// (`empty` is the dry click when whoever holds it fires with no charge left), and optionally their pitch (1 = as recorded)
+			// (`empty` is the dry click when whoever holds it fires with no charge left), and their pitch (1 = as recorded)
 			sounds: {fire: 'laserRetro', empty: 'impact-sounds/impactGeneric_light'},
 			volume: {fire: 0.18, hit: 0.6, empty: 0.5},
-			pitch: {}
+			pitch: {fire: 1, empty: 1}
 		}, conf);
+
+		Object.assign(this.config, Lasers.gun(muzzle, this.config));
 
 		const {length, radius, color, brightness} = this.config;
 
 		// Along Y with the tip at the origin, so a bolt's position is its front end (where the ray starts from)
 		this.geometry = new THREE.CapsuleGeometry(radius, length - radius * 2, 4, 8).translate(0, -length / 2, 0);
-		this.material = new THREE.MeshBasicMaterial({color: new THREE.Color(color).multiplyScalar(brightness)});
+		this.material = new THREE.MeshBasicMaterial({color: SleekLoader.colorOf(color).multiplyScalar(brightness)});
 		// The same capsule for the physics, swept along each frame (along Y, centred on its position)
 		this.shape = new RAPIER.Capsule((length - radius * 2) / 2, radius);
+	}
+
+	// The gun from the custom properties on its Muzzle empty, `defaults` for any it doesn't have: bolt_speed,
+	// bolt_length, bolt_radius, bolt_color, bolt_brightness and range, the blast_* of a hit (see Explosion.blastOf()), sound_fire and
+	// sound_empty, and volume_fire, volume_hit, volume_empty, pitch_fire and pitch_empty
+	static gun (muzzle, defaults) {
+		const {userData} = muzzle;
+		const number = (key, fallback) => Number(userData[key] ?? fallback);
+		const {sounds, volume, pitch} = defaults;
+
+		return {
+			speed: number('bolt_speed', defaults.speed),
+			length: number('bolt_length', defaults.length),
+			radius: number('bolt_radius', defaults.radius),
+			color: userData.bolt_color ?? defaults.color,
+			brightness: number('bolt_brightness', defaults.brightness),
+			range: number('range', defaults.range),
+			blast: Explosion.blastOf(muzzle, defaults.blast),
+			sounds: {fire: userData.sound_fire ?? sounds.fire, empty: userData.sound_empty ?? sounds.empty},
+			volume: {fire: number('volume_fire', volume.fire), hit: number('volume_hit', volume.hit), empty: number('volume_empty', volume.empty)},
+			pitch: {fire: number('pitch_fire', pitch.fire), empty: number('pitch_empty', pitch.empty)}
+		};
 	}
 
 	async init () {
@@ -81,7 +111,7 @@ export default class Lasers {
 	}
 
 	playSound (name, position) {
-		this.audio.playAt(randomItem(this.sounds[name]), position, {volume: this.config.volume[name], rate: this.config.pitch[name] ?? 1});
+		this.audio.playAt(randomItem(this.sounds[name]), position, {volume: this.config.volume[name], rate: this.config.pitch[name]});
 	}
 
 	// For App.warmUp(): a bolt, so its shader is compiled before the first shot
