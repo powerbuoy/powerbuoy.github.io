@@ -202,7 +202,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				10,
@@ -256,7 +256,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				15,
@@ -310,7 +310,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				20,
@@ -364,7 +364,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				25,
@@ -418,7 +418,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				30,
@@ -472,7 +472,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				35,
@@ -526,7 +526,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				40,
@@ -580,7 +580,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				45,
@@ -634,7 +634,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				50,
@@ -688,7 +688,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				55,
@@ -742,7 +742,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				60,
@@ -796,7 +796,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				65,
@@ -850,7 +850,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				70,
@@ -904,7 +904,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				75,
@@ -958,7 +958,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				80,
@@ -1012,7 +1012,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				85,
@@ -1066,7 +1066,7 @@
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":2.5
+				"blast_reach":4.5
 			},
 			"children":[
 				90,
