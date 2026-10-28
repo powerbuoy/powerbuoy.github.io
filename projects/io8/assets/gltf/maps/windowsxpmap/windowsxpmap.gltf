@@ -197,7 +197,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				10,
@@ -246,7 +251,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				15,
@@ -295,7 +305,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				20,
@@ -344,7 +359,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				25,
@@ -393,7 +413,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				30,
@@ -442,7 +467,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				35,
@@ -491,7 +521,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				40,
@@ -540,7 +575,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				45,
@@ -589,7 +629,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				50,
@@ -638,7 +683,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				55,
@@ -687,7 +737,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				60,
@@ -736,7 +791,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				65,
@@ -785,7 +845,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				70,
@@ -834,7 +899,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				75,
@@ -883,7 +953,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				80,
@@ -932,7 +1007,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				85,
@@ -981,7 +1061,12 @@
 				"mass":3,
 				"collider":"cuboid",
 				"explosive":1,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":4,
+				"blast_impulse":250,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"children":[
 				90,

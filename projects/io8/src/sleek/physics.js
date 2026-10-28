@@ -49,6 +49,11 @@ export default class SleekPhysics {
 		this.events = new RAPIER.EventQueue(true);
 	}
 
+	// How hard gravity pulls down (m/s²)
+	get gravity () {
+		return -this.config.gravity.y;
+	}
+
 	// Keep an Object3D in sync with a rigid body. Fixed bodies never move, so they're left where they are.
 	// Rigid bodies don't scale either, so the object's scale is remembered once
 	link (object3d, body) {

@@ -317,10 +317,9 @@ export default class Drones {
 			// The eye's glow, times its brightness in the model: charged up or blinking on (`bright`) and off (`dim`)
 			eye: {bright: 5, dim: 0.2},
 
-			// Blowing up on its dive: like a laser blast but bigger (see Lasers), io8 loses up to `damage` health
-			// within `reach` m. Shot down it only falls apart, `size` is how big that looks
-			crash: {radius: 3, impulse: 167, size: 0.8, damage: 35, reach: 2},
-			shotDown: {size: 0.6},
+			// Shot down it only falls apart, how big that looks is its "wreck_size" custom property (this when it
+			// hasn't got one). Blowing up on its dive is its blast, also set in Blender (see Explosion.blastOf())
+			wreckSize: 0.6,
 
 			// The warning sound (Kenney's sci-fi pack), its volume and pitch
 			warnSound: {name: 'forceField', volume: 0.6, pitch: 1.4}
@@ -413,7 +412,7 @@ export default class Drones {
 		const drone = new Drone(this.model.clone(), this.physics, {...this.config, pos: start});
 
 		drone.hoverX = hoverX;
-		drone.anchor.set(focus.x + hoverX, this.hoverHeight(focus.x + hoverX, focus.y + this.config.hover.y), 0);
+		drone.anchor.set(focus.x + hoverX, this.hoverHeight(focus.x + hoverX, focus.y + hover.y), 0);
 		drone.anchorSpeed = speed;
 		drone.offset = start.clone().sub(drone.anchor);
 
@@ -457,10 +456,10 @@ export default class Drones {
 
 	// Falls apart where it is, and if it `crashed` on its dive blows up properly where it hit
 	explode (drone, crashed = false) {
-		const {crash, shotDown} = this.config;
+		const blast = Explosion.blastOf(drone);
 		const center = crashed ? drone.crashedAt : drone.position.clone();
 		const velocity = new THREE.Vector3().copy(drone.body.linvel());
-		const explosion = new Explosion(this.scene, this.physics, center, crash);
+		const explosion = new Explosion(this.scene, this.physics, center, blast);
 
 		explosion.shatter(drone.object3d, () => velocity);
 		this.debris.add(explosion);
@@ -472,11 +471,11 @@ export default class Drones {
 
 		if (crashed) {
 			explosion.shockwave();
-			this.blasts.spawn(center, crash.size);
-			this.onBlast?.(center, crash);
+			this.blasts.spawn(center, blast.size);
+			this.onBlast?.(center, blast);
 		}
 		else {
-			this.blasts.spawn(center, shotDown.size);
+			this.blasts.spawn(center, Number(drone.property('wreck_size') ?? this.config.wreckSize));
 		}
 	}
 }

@@ -611,7 +611,12 @@
 			],
 			"extras":{
 				"mass":3,
-				"impact":"metal"
+				"impact":"metal",
+				"blast_radius":3,
+				"blast_impulse":67,
+				"blast_size":1,
+				"blast_damage":100,
+				"blast_reach":2.5
 			},
 			"name":"RobotLegs_RigidBody",
 			"translation":[

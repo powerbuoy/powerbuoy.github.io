@@ -86,7 +86,7 @@ export default class SleekEntity {
 				}
 
 				meshes.forEach(mesh => {
-					const colliderDesc = SleekEntity.createColliderDesc(mesh, obj, mesh.userData.collider ?? obj.userData.collider ?? (mass > 0 || kinematic ? 'hull' : 'trimesh'));
+					const colliderDesc = SleekEntity.createColliderDesc(mesh, obj, mesh.userData.collider ?? obj.userData.collider ?? (SleekEntity.moves(obj) ? 'hull' : 'trimesh'));
 
 					// Spread the Blender mass over all colliders so the body ends up with exactly that
 					if (mass > 0) {
@@ -147,6 +147,18 @@ export default class SleekEntity {
 	}
 
 	// Called every rendered frame
+	// A custom property from the first of its _RigidBodies that has it, undefined if none does. Read it before
+	// the entity is destroyed
+	property (key) {
+		for (const obj of this.bodyObjects.values()) {
+			if (obj.userData[key] !== undefined) {
+				return obj.userData[key];
+			}
+		}
+
+		return undefined;
+	}
+
 	step (deltaTime) {}
 
 	// Called every fixed physics step, before the world steps
@@ -155,6 +167,11 @@ export default class SleekEntity {
 	// Whether obj is a Thing_<part> (RigidBody, Mesh or Shape), copy endings and all
 	static is (obj, part) {
 		return new RegExp(`_${part}[\\d_]*$`).test(obj.name);
+	}
+
+	// Whether a _RigidBody moves: it has a mass, or is kinematic (the code moves it)
+	static moves (obj) {
+		return Number(obj.userData.mass ?? 0) > 0 || Number(obj.userData.kinematic ?? 0) > 0;
 	}
 
 	// Whether obj is called `name`, copy endings and all

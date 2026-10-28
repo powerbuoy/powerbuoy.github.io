@@ -27,6 +27,12 @@ const HULL_DIRECTIONS = Array.from({length: 48}, (v, i) => {
 const shapes = new WeakMap();
 const DEBRIS_GROUPS = (DEBRIS_GROUP << 16) | (0xFFFF & ~DEBRIS_GROUP);
 
+// The blast a model makes blowing up when it doesn't say (see blastOf()). Things within `radius` (m) get up to
+// `impulse` N·s per m² of them facing it (see shockwave(): a 35 cm, 3 kg mine faces it with 0.12 m², so 67 sends it
+// off at 2.7 m/s), `size` is how big it looks and sounds (see Blasts, 1 is the biggest), and within `reach` (m)
+// things lose up to `damage` health (see damageTo())
+const BLAST = {radius: 3, impulse: 67, size: 1, damage: 100, reach: 2.5};
+
 /*
 	The physics of a blast at a point: shatter() to turn a model into flying debris, and shockwave() to
 	shove everything else nearby. Doesn't know about io8, so anything can be blown up with it. What it
@@ -36,16 +42,12 @@ export default class Explosion {
 	age = 0;
 	pieces = [];
 
+	// conf is the blast (see BLAST), and can change how the debris flies
 	constructor (scene, physics, center, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
 		this.center = new THREE.Vector3().copy(center);
 		this.config = Object.assign({
-			// Shockwave: bodies within radius get up to `impulse` (N·s) per m² of them facing the blast, less the
-			// further away they are. A 35 cm, 3 kg mine faces it with 0.12 m², so 67 sends it off at 2.7 m/s
-			radius: 3,
-			impulse: 67,
-
 			// Debris: outward speed range (m/s), max spin (rad/s), extra upward kick, how much it spreads
 			// towards/away from the camera (0-1, more = more pieces fly at the screen), and how long (s)
 			// debris ignores other debris
@@ -89,6 +91,12 @@ export default class Explosion {
 
 			body.applyImpulse(dir, true);
 		});
+	}
+
+	// The blast `entity` makes blowing up: the blast_radius, blast_impulse, blast_size, blast_damage and blast_reach
+	// custom properties on its _RigidBody, BLAST for any it doesn't have. Read it before the entity is destroyed
+	static blastOf (entity) {
+		return Object.fromEntries(Object.entries(BLAST).map(([key, value]) => [key, Number(entity.property(`blast_${key}`) ?? value)]));
 	}
 
 	// How much of a blast at `point` reaches `entity` (see App.blast()): all of its `damage` right on it, less the

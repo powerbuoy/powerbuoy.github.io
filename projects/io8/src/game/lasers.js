@@ -51,7 +51,8 @@ export default class Lasers {
 
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
 			// a mine off at 7 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
-			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), see IO8.blast()
+			// 1 = io8 or a mine blowing up). Within `reach` (m) io8 and drones lose up to `damage` health and mines go
+			// off, see App.blast() and Explosion.damageTo()
 			blast: {radius: 3, impulse: 167, size: 0.5, damage: 40, reach: 1.5},
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for

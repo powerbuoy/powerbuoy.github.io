@@ -8,7 +8,7 @@ const step = new THREE.Vector3();
 
 /*
 	Smoke and sparks from empties tagged with an "emit" custom property (`smoke`, `sparks` or a list like
-	`smoke, sparks`), in any model add()ed: the map, props, io8. With a `rate` an empty emits that many times a
+	`smoke, sparks`), in any model add()ed: the map, props, io8, drones. With a `rate` an empty emits that many times a
 	second, at random moments, `size` times as big as normal. Without one it shows how hurt its owner is: smoke
 	that thickens and darkens as health drops, crackles of sparks once hurt and a burst of sparks on
 	every hit (see hit()), so healing clears it up again by itself. Every burst of sparks from an emitter crackles:

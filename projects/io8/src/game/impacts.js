@@ -34,7 +34,7 @@ export default class Impacts {
 			maxG: 40,
 
 			// Seconds before the same object can make another sound (so a tumbling pile doesn't machine-gun),
-			// and how long something is quiet after it's registered (props settling when they spawn)
+			// and how long something is quiet after it's registered (props settling as the map loads)
 			cooldown: 0.15,
 			settle: 0.5,
 

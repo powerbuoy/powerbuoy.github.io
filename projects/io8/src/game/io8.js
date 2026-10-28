@@ -128,7 +128,7 @@ export default class IO8 extends SleekEntity {
 	ammo = 0;
 	sinceFired = 0;
 
-	// Called with how much health a hit took (a crash or a laser blast, not drowning). Crashes call it from inside
+	// Called with how much health a hit took (a crash or a blast, not drowning). Crashes call it from inside
 	// a physics step
 	onHit = null;
 
@@ -198,11 +198,6 @@ export default class IO8 extends SleekEntity {
 			// `refillTime` seconds (null for no healing, health pickups only). With his head under water it all
 			// drains in `drown` seconds. At 0 he blows up
 			health: {capacity: 200, safe: 6, damage: 1, window: 0.025, refillDelay: 3, refillTime: null, drown: 0.3},
-
-			// Blowing up: things within `radius` (m) get up to `impulse` N·s per m² facing it (see
-			// Explosion.shockwave()), and `size` is how big it looks and sounds (see Blasts). Within `reach` (m)
-			// drones lose up to `damage` health and mines go off, like any other blast (see App.blast())
-			blast: {radius: 3, impulse: 67, size: 1, damage: 100, reach: 2.5},
 
 			balance: {stiffness: 1500, damping: 70, lean: 0.12},
 			neck: {stiffness: 200, damping: 12},
@@ -276,7 +271,6 @@ export default class IO8 extends SleekEntity {
 		});
 
 		this.springOffset = 0;
-
 
 		// Antenna
 		this.antennaUp = 0.05;
@@ -453,7 +447,8 @@ export default class IO8 extends SleekEntity {
 			return;
 		}
 
-		const {blast} = this.config;
+		// His blast is set in Blender, like any model's (see Explosion.blastOf())
+		const blast = Explosion.blastOf(this);
 		const explosion = new Explosion(this.scene, this.physics, this.legs.translation(), blast);
 
 		// Which body each mesh was riding on, so its debris keeps that body's speed
@@ -528,7 +523,7 @@ export default class IO8 extends SleekEntity {
 			const friction = this.isBraking ? brake : roll;
 
 			this.wheelJoint.configureMotorVelocity(0, AXLE_HOLD);
-			this.wheelJoint.setMotorMaxForce(friction * this.mass * this.massScale * 9.81 * this.wheelRadius);
+			this.wheelJoint.setMotorMaxForce(friction * this.mass * this.massScale * this.physics.gravity * this.wheelRadius);
 		}
 
 		// Springs are set every step so you can tweak app.player.config live in the console.
@@ -626,7 +621,7 @@ export default class IO8 extends SleekEntity {
 			return;
 		}
 
-		const speed = Math.sqrt(2 * 9.81 * height);
+		const speed = Math.sqrt(2 * this.physics.gravity * height);
 
 		up.set(0, 1, 0).applyQuaternion(legsRotation).multiplyScalar(speed * this.mass / this.currentMass);
 		[this.wheel, this.legs, this.head].forEach(body => body.applyImpulse(jumpImpulse.copy(up).multiplyScalar(body.mass()), true));
@@ -774,7 +769,7 @@ export default class IO8 extends SleekEntity {
 		// The head's weight pulls it round the neck (the head's origin) unless it's balanced on it. A spring only
 		// pushes back once it's off target, so it would settle a few degrees low, and shots with it. So the neck
 		// holds the weight up like a servo would, and the spring only has to do the aiming
-		const hold = (headCom.x - headPosition.x) * this.head.mass() * 9.81;
+		const hold = (headCom.x - headPosition.x) * this.head.mass() * this.physics.gravity;
 		const impulse = (this.neckInertia * this.massScale * (stiffness * error - damping * relativeSpin) + hold) * timestep;
 
 		torque.z = impulse;
@@ -806,7 +801,7 @@ export default class IO8 extends SleekEntity {
 
 		// Much stiffer past the end of the travel, like hitting the end stop
 		const beyond = offset < travel[0] ? offset - travel[0] : offset > travel[1] ? offset - travel[1] : 0;
-		const spring = -stiffness * (offset - rest) + 9.81 * legsUp.y;
+		const spring = -stiffness * (offset - rest) + this.physics.gravity * legsUp.y;
 		const endStop = -stiffness * 60 * beyond;
 
 		// The spring is a real spring: its strength is set for the head's normal weight, not whatever it weighs
@@ -825,7 +820,7 @@ export default class IO8 extends SleekEntity {
 	// Give io8 his sounds (buffers loaded by the app), they play from where he is. Blowing up is Blasts' sound
 	initSounds (audio, {engine, thruster, impacts}) {
 		// Bumps and crashes, each part sounding like its "impact" (the tyre thuds, everything else clanks). Judged by
-		// io8's whole weight (not just the part that got hit), so bumping a light box sounds like the box, not like io8
+		// io8's whole weight (not just the part that got hit), so bumping a light piece of debris sounds like the debris, not like io8
 		impacts.add(this, () => this.currentMass);
 
 		// Always playing, just silent until the flames are on, so starting and stopping is a quick fade, not a click

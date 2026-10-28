@@ -32,7 +32,7 @@ export default class Props {
 	fromMap (map) {
 		map.updateWorldMatrix(true, true);
 
-		SleekEntity.findRigidBodies(map).filter(obj => Number(obj.userData.mass ?? 0) > 0 || Number(obj.userData.kinematic ?? 0) > 0).forEach(obj => {
+		SleekEntity.findRigidBodies(map).filter(SleekEntity.moves).forEach(obj => {
 			// Out of whatever it was in (a collection instance), keeping where it is
 			const object3d = new THREE.Group();
 
@@ -41,9 +41,9 @@ export default class Props {
 		});
 	}
 
-	// object3d holds the _RigidBody, `conf` places it like any entity (see SleekEntity)
-	add (object3d, conf = {}) {
-		const entity = new SleekEntity(object3d, this.physics, conf);
+	// object3d holds the _RigidBody
+	add (object3d) {
+		const entity = new SleekEntity(object3d, this.physics);
 
 		this.scene.add(entity.object3d);
 		this.props.add(entity);

@@ -11,7 +11,7 @@ const offset = new THREE.Vector3();
 /*
 	What an explosion looks and sounds like: a fireball and sparks, the cloud of smoke it leaves, a flash of light,
 	a kick of the camera and a bang. Only that, the physics (debris, shockwave) is Explosion's job. spawn(position, size) anywhere,
-	size 1 is io8 blowing up, smaller for a laser hit. Every layer is one pool drawn in one go, so any number
+	size 1 is the biggest (io8 or a mine blowing up), smaller for a laser hit. Every layer is one pool drawn in one go, so any number
 	of blasts costs the same few draw calls
 */
 export default class Blasts {
@@ -32,7 +32,7 @@ export default class Blasts {
 			shake: {amount: 1, reach: 30, decay: 1.1, move: 0.25, turn: 4},
 
 			// Sounds in Kenney's sci-fi pack, `variations` of each (_000, _001...), a random one plays: the crunch on
-			// every blast, the deep boom only from size `from` up (io8 blowing up, not a laser hit). Pitch (1 = as
+			// every blast, the deep boom only from size `from` up (io8 or a mine blowing up, not a laser hit). Pitch (1 = as
 			// recorded) goes from pitch[0] at size 0 to pitch[1] at size 1 (and stays there past it), so bigger
 			// blasts sound deeper
 			sounds: {

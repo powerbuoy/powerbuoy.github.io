@@ -20,7 +20,13 @@
 			"extras": {
 				"kinematic": 1,
 				"collider": "cuboid",
-				"impact": "metal"
+				"impact": "metal",
+				"blast_radius": 3,
+				"blast_impulse": 167,
+				"blast_size": 0.8,
+				"blast_damage": 35,
+				"blast_reach": 2,
+				"wreck_size": 0.6
 			},
 			"children": [
 				1,

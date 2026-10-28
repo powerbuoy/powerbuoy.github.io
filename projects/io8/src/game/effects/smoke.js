@@ -104,7 +104,7 @@ export default class Smoke extends Particles {
 		return particle;
 	}
 
-	// The cloud an explosion leaves where it was (see Blasts), size 1 is io8 blowing up. Pushed out sideways and up,
+	// The cloud an explosion leaves where it was (see Blasts), size 1 is the biggest. Pushed out sideways and up,
 	// never down: only sideways speed dies away (see update()), so a puff pushed down would sink into the ground
 	burst (position, size) {
 		const {count, puff, spread, push, life, darkness} = this.config.cloud;

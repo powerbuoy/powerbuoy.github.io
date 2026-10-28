@@ -26,13 +26,7 @@ export default class Explosives {
 		this.debris = debris;
 		this.config = Object.assign({
 			// Closest (m) anything has to get to count as touching (contacts are reported a little before things meet)
-			touch: 0.01,
-
-			// The blast: things within `radius` (m) get up to `impulse` N·s per m² facing it (see
-			// Explosion.shockwave()), and how big it looks and sounds (see Blasts, 1 = io8 blowing up). Within
-			// `reach` (m) io8 loses up to `damage` health, less the further away he is (see IO8.blast()), the same
-			// whether he touched it or shot it, and drones and other explosives go too
-			blast: {radius: 4, impulse: 250, size: 1, damage: 100, reach: 2.5}
+			touch: 0.01
 		}, conf);
 	}
 
@@ -42,7 +36,7 @@ export default class Explosives {
 	}
 
 	add (entity) {
-		if ([...entity.bodyObjects.values()].some(obj => obj.userData.explosive)) {
+		if (entity.property('explosive')) {
 			this.explosives.add(entity);
 		}
 	}
@@ -85,8 +79,9 @@ export default class Explosives {
 		return found;
 	}
 
+	// Its blast is its own (see Explosion.blastOf()), the same whether it was touched or shot
 	explode (entity) {
-		const {blast} = this.config;
+		const blast = Explosion.blastOf(entity);
 		const explosion = new Explosion(this.scene, this.physics, entity.position, blast);
 
 		velocity.copy(entity.mainBody.linvel());
