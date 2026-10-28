@@ -12,9 +12,6 @@ import {DESPAWN} from './spawner.js';
 // color (of its bubble, white by default)
 const MODELS = ['Speed', 'Weight', 'Health'];
 
-// Where io8's wheel, legs and head are, see step()
-const parts = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
-
 // A bubble that glows at its edges and is clear in the middle (a fresnel effect): the more the surface faces
 // away from the camera, the brighter. Additive, so it only ever adds light. Can't come from Blender, glTF
 // only has standard materials
@@ -50,7 +47,7 @@ const bubbleShader = {
 
 /*
 	Floating power-ups in a glowing bubble. They spin and bob, and when io8 touches one it starts that effect on him, plays a sound
-	and the pickup pops away. No physics, it's just a distance check against io8's parts
+	and the pickup pops away. No physics, it's just a distance check against io8 (see SleekEntity.distanceTo())
 */
 export default class Pickups {
 	models = [];
@@ -66,10 +63,10 @@ export default class Pickups {
 			// Played where it was picked up, at the pitch the pickup's model asks for
 			sound: {src: './assets/audio/kenney_sci-fi-sounds/Audio/forceField_000.ogg', volume: 0.8},
 
-			// How close (m) any part of io8 has to get to pick one up
+			// How close (m) any bit of io8 has to get to pick one up
 			reach: 0.65,
 
-			// The glowing bubble around each pickup, the size of `reach` so it shows how close you need to get.
+			// The glowing bubble around each pickup, the size of `reach`: touching it picks it up.
 			// strength = how bright the edge glows, power = how thin the glowing edge is, fill = glow in the middle
 			bubble: {strength: 2, power: 2.5, fill: 0.04},
 
@@ -143,12 +140,6 @@ export default class Pickups {
 
 		this.time += deltaTime;
 
-		if (canReach) {
-			player.wheel.translation(parts[0]);
-			player.legs.translation(parts[1]);
-			player.head.translation(parts[2]);
-		}
-
 		this.pickups.forEach(pickup => {
 			const {object3d, model} = pickup;
 
@@ -167,7 +158,7 @@ export default class Pickups {
 			object3d.rotation.y += spin * deltaTime;
 			object3d.position.y = pickup.baseY + Math.sin(this.time * bob.speed * Math.PI * 2 + pickup.phase) * bob.height;
 
-			if (canReach && parts.some(part => part.distanceTo(object3d.position) < reach)) {
+			if (canReach && player.distanceTo(object3d.position) < reach) {
 				player.addEffect(model.effect, {amount: model.amount, duration: model.duration});
 				pickup.popping = pop;
 
