@@ -28,7 +28,7 @@ Add `?fps` to the address for an FPS counter, `?shapes` to see the collision sha
 `SleekEntity` builds rigid bodies from the GLTF node names:
 
 ```
-Thing_RigidBody      direct child of the scene, becomes a rigid body
+Thing_RigidBody      becomes a rigid body (anywhere, just not inside another one)
 	Thing_Mesh       what you see
 	Thing_Shape      hidden, every mesh inside becomes a collider on the same body
 ```
@@ -59,6 +59,8 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `sound`       | an `emit` empty    | what its sparks sound like: `crackle` (default, electric) or `fuze` (a burning fuze, playing all the time from the empty instead of with each burst). The sounds are listed in `Emitters` |
 
 Rigid body nodes should have a scale of 1, put any scale on the shape meshes instead.
+
+Copies keep working: Blender's `.001` endings, and the repeated names a collection instance brings along (three.js makes them `Mine_RigidBody_1`, `_2`...), still count as `_RigidBody`, `_Mesh` and `_Shape`.
 
 ## Making a map
 

@@ -8,7 +8,7 @@ const nearest = new THREE.Vector3();
 /*
 	Builds rigid bodies from a GLTF scene using the naming convention from Blender:
 
-	Thing_RigidBody      <- direct child of the scene, becomes a rigid body. Custom props: mass, kinematic, friction, restitution, collider
+	Thing_RigidBody      <- becomes a rigid body. Custom props: mass, kinematic, friction, restitution, collider
 		Thing_Mesh       <- what you see
 		Thing_Shape      <- hidden, every mesh inside becomes a collider on the same body
 
@@ -17,10 +17,17 @@ const nearest = new THREE.Vector3();
 	itself, then every mesh in it collides. mass 0 (or missing) means a fixed body, kinematic 1 one the code moves (it pushes
 	things out of its way, nothing pushes it). Colliders default to a convex hull for dynamic and kinematic bodies and a
 	triangle mesh for fixed ones; set "collider" to override.
+
+	A _RigidBody can be anywhere in the scene, just not inside another one (its parts are its own business), so
+	the copies a collection instance brings along work too. So do the endings copies get: Blender's ".001" (three
+	drops the dot) and three's "_1", "_2" for names it has already seen (every instance repeats them)
 */
 export default class SleekEntity {
 	bodies = {};
 	colliders = [];
+
+	// Each body's _RigidBody object, for its custom properties
+	bodyObjects = new Map();
 
 	// The first body, for position
 	mainBody = null;
@@ -52,10 +59,10 @@ export default class SleekEntity {
 	}
 
 	createBodies () {
-		this.object3d.children.filter(obj => obj.name.endsWith('_RigidBody')).forEach(obj => {
-			const name = obj.name.replace(/_RigidBody$/, '');
-			const shape = obj.children.find(child => child.name.endsWith('_Shape'));
-			const shapes = shape ?? obj.children.find(child => child.name.endsWith('_Mesh')) ?? obj;
+		SleekEntity.findRigidBodies(this.object3d).forEach(obj => {
+			const name = SleekEntity.nameOf(obj);
+			const shape = obj.children.find(child => SleekEntity.is(child, 'Shape'));
+			const shapes = shape ?? obj.children.find(child => SleekEntity.is(child, 'Mesh')) ?? obj;
 			const mass = Number(obj.userData.mass ?? 0);
 			const kinematic = Number(obj.userData.kinematic ?? 0) > 0;
 
@@ -97,6 +104,7 @@ export default class SleekEntity {
 			}
 
 			this.bodies[name] = body;
+			this.bodyObjects.set(body, obj);
 			this.mainBody ??= body;
 			this.physics.link(obj, body);
 		});
@@ -115,6 +123,7 @@ export default class SleekEntity {
 
 		this.object3d.removeFromParent();
 		this.bodies = {};
+		this.bodyObjects.clear();
 		this.mainBody = null;
 		this.colliders = [];
 		this.shapeMeshes = [];
@@ -142,6 +151,26 @@ export default class SleekEntity {
 
 	// Called every fixed physics step, before the world steps
 	physicsStep (timestep) {}
+
+	// Whether obj is a Thing_<part> (RigidBody, Mesh or Shape), copy endings and all
+	static is (obj, part) {
+		return new RegExp(`_${part}[\\d_]*$`).test(obj.name);
+	}
+
+	// Thing, from Thing_RigidBody (or a copy of it)
+	static nameOf (obj) {
+		return obj.name.replace(/_RigidBody[\d_]*$/, '');
+	}
+
+	// Every _RigidBody in object3d that isn't inside another one
+	static findRigidBodies (object3d) {
+		const found = [];
+		const visit = obj => obj.children.forEach(child => SleekEntity.is(child, 'RigidBody') ? found.push(child) : visit(child));
+
+		visit(object3d);
+
+		return found;
+	}
 
 	// Vertices have to be relative to the rigid body, and include the shape's own offset, rotation and scale
 	static createColliderDesc (mesh, bodyObj, type) {

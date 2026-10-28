@@ -44,7 +44,7 @@ export default class Explosives {
 	}
 
 	add (entity) {
-		if (entity.object3d.children.some(obj => obj.userData.explosive)) {
+		if ([...entity.bodyObjects.values()].some(obj => obj.userData.explosive)) {
 			this.explosives.add(entity);
 		}
 	}

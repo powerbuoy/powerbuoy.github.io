@@ -59,10 +59,8 @@ export default class Impacts {
 
 	// Every body of an entity whose _RigidBody has an "impact" custom property, see register()
 	add (entity, weight = null) {
-		entity.object3d.children.forEach(obj => {
-			const body = obj.userData.impact && entity.bodies[obj.name.replace(/_RigidBody$/, '')];
-
-			if (body) {
+		entity.bodyObjects.forEach((obj, body) => {
+			if (obj.userData.impact) {
 				this.register(Array.from({length: body.numColliders()}, (v, i) => body.collider(i)), obj.userData.impact, weight);
 			}
 		});
