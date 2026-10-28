@@ -10,15 +10,15 @@ Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thr
 
 - **Sunlight colour keyframes**: the Sun lamp has one fixed colour, so direct light stays white-ish at dusk (the warm tint only comes from the sky's environment light). Give the sun (and moon) a colour per hour in `sky.json`, blended like the gradients, for golden-hour light on clouds, terrain and io8
 - **Obstacles in the air**: things at thruster height (signs, pipes, hanging crates, a low beam across the road), some solid, some breakable, so flying isn't always safe and fuel matters. Solid ones can be part of the map; swinging ones are dynamic bodies on a joint (`JointData.rope` or `spherical`)
-- **A goal**: score by distance, plus a bonus for smashed boxes
+- **A goal**: score by distance
 - **Road gaps / ramps**: pits to thrust over, ramps to launch off
-- **The sea**: the road runs into it at both ends, so keep boxes and pickups off the underwater part (the spawner places them on any ground) and decide what happens when io8 drives in (sinks and shorts out? floats? splash, bubbles)
+- **The sea**: the road runs into it at both ends, so keep mines and pickups off the underwater part (the spawner places them on any ground) and decide what happens when io8 drives in (sinks and shorts out? floats? splash, bubbles)
 - **Sun and moon behind the horizon**: they set into the sea 2.5 km out, in front of its edge. Draw them behind everything like the sky dome (they're infinitely far away), so the scene hides them wherever they are
 
 ## Ideas
 
 - **More pickups**: fuel (refill or a bigger tank for a while), shield (smash through anything), super thrust (no fuel drain), slow-mo (lower `physics.config.speed`), points
-- **Hand-placed props**: empties named `Prop_<Model>_<Layout>` (e.g. `Prop_Cardboard_Pyramid`) that build a layout on the ground under them, with optional `rows`/`count`/`width`/`height`, built and removed by distance like the random ones. Would replace the random obstacles in `spawner.js` for hand-built levels
+- **Hand-placed props**: empties named `Prop_<Model>` (e.g. `Prop_Mine`) that place that model on the ground under them, built and removed by distance like the random ones. Would replace the random obstacles in `spawner.js` for hand-built levels
 - **An accurate sky** (the goal: sun, moon and stars all as they really are): the moon on its own orbit, a lap every 24 h 50 min on its own pivot with its light following it (the stars a lap every 23 h 56 min, the sun 24 h), so it drifts across the stars and rises later each day like the real one. Phases after that, as it's no longer always opposite the sun
 - **Lasers**: a faint laser sight, recoil (a small kick on the head, the neck spring makes it look nice), a stiffer neck while firing if aim feels sloppy
 - **Grappling hook** on right click

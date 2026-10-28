@@ -2,13 +2,12 @@ import * as THREE from 'three';
 
 import SleekLoader from '../sleek/loader.js';
 import SleekEntity from '../sleek/entity.js';
-import {randomItem, pickWeighted} from '../sleek/utils.js';
+import {pickWeighted} from '../sleek/utils.js';
 
-// Tiny gap so stacked things start apart and settle, instead of starting inside each other
+// Tiny gap so things start just clear of the ground and settle onto it, instead of starting inside it
 const GAP = 0.005;
 
 const MODELS = {
-	cardboard: './assets/gltf/props/Cardboard/Cardboard.gltf',
 	mine: './assets/gltf/props/Mine/Mine.gltf'
 };
 
@@ -16,7 +15,7 @@ const MODELS = {
 // (view 3 looks a long way down the road), or things visibly pop in
 const RANGE = {behind: 6, ahead: 80};
 
-// The road is built in chunks of this many metres, each with a couple of obstacles and some background clutter
+// The road is built in chunks of this many metres, each with its share of obstacles and pickups
 const CHUNK = 10;
 
 // Anything that ends up this far from io8 (debris and pickups included) is removed, a chunk past the range so
@@ -34,8 +33,8 @@ const CONFIG = {
 
 	// A pickup slot every spacing m like the obstacles, and how high above the ground (m). io8 is about 1.15 m
 	// tall with his antenna up, so they're all out of reach without flying. Which pickup it is depends on their
-	// `frequency` (see Pickups)
-	pickups: {spacing: 25, offset: 9, jitter: 5, chance: 0.8, height: [1.5, 2.5]},
+	// `frequency` (see Pickups). Off for now (was 0.8), only drones and mines on the road
+	pickups: {spacing: 25, offset: 9, jitter: 5, chance: 0, height: [1.5, 2.5]},
 
 	// Keep the spot io8 starts on clear (distance from its start)
 	safeZone: 3
@@ -43,23 +42,9 @@ const CONFIG = {
 
 // Obstacles on io8's path, weighted by how often they show up
 const OBSTACLES = [
-	[3, (s, x) => s.pyramid('cardboard', x, 0, 3 + s.int(2))],
-	[2, (s, x) => s.tower('cardboard', x, 0, 3 + s.int(4))],
-	[2, (s, x) => s.wall('cardboard', x, 0, 3, 1 + s.int(2))],
-	[1, (s, x) => s.stairs('cardboard', x, 0, 3 + s.int(3))],
-
-	// Heavy enough that you need to fly over it, or the weight pickup to plough through (3 rows of cardboard, io8
-	// can still push through on his own)
-	[2, (s, x) => s.fullPyramid('cardboard', x, 0, 4 + s.int(2))],
-
 	// Goes off when anything that moves touches it, io8 or a laser bolt or a drone (see Explosives): jump it, fly
 	// over it, or set it off from a distance
-	[2, (s, x) => s.spawn('mine', x, 0, 0)]
-];
-
-// Background clutter, just for looks (until something knocks it over)
-const DECORATIONS = [
-	(s, x, z) => s.tower('cardboard', x, z, 1 + s.int(3))
+	[1, (s, x) => s.spawn('mine', x)]
 ];
 
 export default class Spawner {
@@ -180,11 +165,6 @@ export default class Spawner {
 				}
 			});
 		}
-
-		// Some clutter along the back
-		for (let i = this.int(3); i > 0; i--) {
-			randomItem(DECORATIONS)(this, start + Math.random() * size, -1 - Math.random() * 0.8);
-		}
 	}
 
 	// Helpers
@@ -200,27 +180,22 @@ export default class Spawner {
 		}
 	}
 
-	int (max) {
-		return Math.floor(Math.random() * max);
-	}
-
-	// y is the height above the ground (for stacking). Returns null when there's no ground to put it on
-	spawn (name, x, y, z, rotY = 0) {
+	// On the ground on io8's path (z = 0). Returns null when there's no ground to put it on
+	spawn (name, x) {
 		const model = this.models[name];
 
 		if (!this.ground.contains(x, CONFIG.edge)) {
 			return null;
 		}
 
-		const groundY = this.ground.heightUnder(x, z, Math.max(model.size.x, model.size.z));
+		const groundY = this.ground.heightUnder(x, 0, Math.max(model.size.x, model.size.z));
 
 		if (groundY === null) {
 			return null;
 		}
 
 		const entity = new SleekEntity(model.object3d.clone(), this.physics, {
-			pos: {x, y: groundY - model.bottom + y + GAP, z},
-			rot: {y: rotY}
+			pos: {x, y: groundY - model.bottom + GAP, z: 0}
 		});
 
 		this.scene.add(entity.object3d);
@@ -230,66 +205,5 @@ export default class Spawner {
 		this.impacts?.add(entity);
 
 		return entity;
-	}
-
-	// Shapes
-	// Built along Z so io8 hits it head on, pieces turned 90° so it's wide but thin and easy to punch through
-	pyramid (name, x, z, rows) {
-		const {size} = this.models[name];
-
-		for (let row = 0; row < rows; row++) {
-			const count = rows - row;
-
-			for (let i = 0; i < count; i++) {
-				this.spawn(name, x, row * (size.y + GAP), z + (i - (count - 1) / 2) * (size.x + GAP), Math.PI / 2);
-			}
-		}
-	}
-
-	// A pyramid in both directions: rows x rows at the bottom, one smaller each way per layer, every piece
-	// resting on the four below it. 3 rows is 14 pieces, 4 is 30, 5 is 55
-	fullPyramid (name, x, z, rows) {
-		const {size} = this.models[name];
-
-		for (let layer = 0; layer < rows; layer++) {
-			const count = rows - layer;
-
-			for (let i = 0; i < count; i++) {
-				for (let j = 0; j < count; j++) {
-					this.spawn(name, x + (i - (count - 1) / 2) * (size.x + GAP), layer * (size.y + GAP), z + (j - (count - 1) / 2) * (size.z + GAP));
-				}
-			}
-		}
-	}
-
-	// A flat wall across the road, same orientation as the pyramids
-	wall (name, x, z, width, height) {
-		const {size} = this.models[name];
-
-		for (let row = 0; row < height; row++) {
-			for (let i = 0; i < width; i++) {
-				this.spawn(name, x, row * (size.y + GAP), z + (i - (width - 1) / 2) * (size.x + GAP), Math.PI / 2);
-			}
-		}
-	}
-
-	// Slightly twisted so it looks hand stacked (and topples more interestingly)
-	tower (name, x, z, count) {
-		const {size} = this.models[name];
-
-		for (let i = 0; i < count; i++) {
-			this.spawn(name, x, i * (size.y + GAP), z, (Math.random() - 0.5) * 0.4);
-		}
-	}
-
-	// Steps going up in io8's direction, a thrust-over or a smash-through
-	stairs (name, x, z, steps) {
-		const {size} = this.models[name];
-
-		for (let step = 0; step < steps; step++) {
-			for (let i = 0; i <= step; i++) {
-				this.spawn(name, x + step * (size.x + GAP), i * (size.y + GAP), z);
-			}
-		}
 	}
 }

@@ -14,9 +14,9 @@ const center = new THREE.Vector3();
 
 /*
 	Laser bolts. They fly (not an instant beam), but they're far too fast for a physics body: they'd pass
-	through a box between two steps. So each frame the bolt's own shape (a capsule, so it can't slip through a
-	gap thinner than itself, like the seams between stacked boxes) is swept over the stretch it covers, and if
-	it hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
+	through a mine between two steps. So each frame the bolt's own shape (a capsule, so it can't slip through a
+	gap thinner than itself, like the seam between two pieces of debris) is swept over the stretch it covers, and
+	if it hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
 	from bloom, no real lights (changing the number of lights makes three.js recompile its shaders). Whoever
 	fires them aims them and keeps track of their own ammo (see IO8.shoot())
 */
@@ -50,7 +50,7 @@ export default class Lasers {
 			range: 40,
 
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
-			// a cardboard box off at 15 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
+			// a mine off at 7 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
 			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), see IO8.blast()
 			blast: {radius: 3, impulse: 167, size: 0.5, damage: 40, reach: 1.5},
 

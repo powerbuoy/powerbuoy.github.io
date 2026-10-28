@@ -7,7 +7,6 @@ import {randomItem} from '../sleek/utils.js';
 // a pitch to play it at (lower = bigger and hollower, 1 = as recorded). A model's material is its "impact" custom
 // property, on each _RigidBody
 const SOUNDS = {
-	cardboard: 'impactPunch_medium',
 	metal: 'impactPlate_heavy',
 	tyre: 'impactSoft_heavy'
 };
@@ -17,8 +16,8 @@ const position = new THREE.Vector3();
 /*
 	Collision sounds. Register colliders with a material, and when they hit something hard enough they play
 	a random variation of that material's sound where they are, louder the harder the hit.
-	"Hard" is measured in g's (the force compared to the object's own weight), so a light box and heavy io8
-	are judged the same way, and resting or rolling (about 1 g) stays quiet
+	"Hard" is measured in g's (the force compared to the object's own weight), so a light piece of debris and
+	heavy io8 are judged the same way, and resting or rolling (about 1 g) stays quiet
 */
 export default class Impacts {
 	sounds = {};

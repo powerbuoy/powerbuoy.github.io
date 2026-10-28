@@ -51,7 +51,7 @@ Custom properties (Object Properties > Custom Properties, exported as GLTF extra
 | `decay`       | light              | how the light falls off with distance: `2` (default) is physical, `1` much more gently, so it reaches further without blinding what's close |
 | `shadowSize`  | light              | shadow map size in pixels. Default 512 for point lights, 2048 for spot, 4096 for sun |
 | `explosive`   | `_RigidBody` of a prop | `1` = it goes off when anything that moves touches it, io8 included, and its blast hurts him (a mine). See `src/game/explosives.js` |
-| `impact`      | `_RigidBody`       | what it sounds like when it hits something: `metal`, `cardboard` or `tyre` (listed in `src/game/impacts.js`). Without one it's silent. Its debris sounds the same when something blows it up |
+| `impact`      | `_RigidBody`       | what it sounds like when it hits something: `metal` or `tyre` (listed in `src/game/impacts.js`). Without one it's silent. Its debris sounds the same when something blows it up |
 | `debris`      | any object on io8  | `whole`: when io8 explodes, this object and everything under it fly as one piece (e.g. on `RobotHead_RigidBody` to keep the head intact). Default: every mesh is its own piece |
 | `emit`        | an empty (map, prop or io8) | `smoke`, `sparks` or both (`smoke, sparks`) come from here. Parent it to the part it should move with. Without a `rate` it shows how hurt io8 is (only on io8, any number of them, a random one each time): smoke as his health drops, crackles of sparks once he's hurt and a burst of sparks on every hit |
 | `rate`        | an `emit` empty    | emits all the time instead, at random moments this many times a second on average: high for a steady stream (a fuze: `rate: 25`, `size: 0.2`), low for the odd crackle (an electric box: `rate: 0.3`, `size: 1.5`) |
@@ -67,7 +67,7 @@ The map is loaded from `MAP` in `src/game/app.js`.
 - Export as GLTF into `assets/gltf/maps/<name>/`
 - Same conventions as everything else: a `Something_RigidBody` with no `mass` (fixed), a `_Mesh` child for looks and optionally a `_Shape` child for collisions (otherwise the mesh collides as it is). Several rigid bodies are fine (road pieces, ramps, walls)
 - The shape becomes a triangle mesh, so hills, dips and overhangs all work. It can be the same mesh as the visible one, or a simpler copy
-- io8 drives along **+X at z = 0**. Keep the ground at least 3 m deep on the negative Z side (clutter stands at z = -1 to -1.8) and 1 m on the positive side (pyramids stick out ~0.75 m)
+- io8 drives along **+X at z = 0**. Keep the ground at least 1 m deep on both sides (mines lie on it at z = 0)
 - The map's X extent is its length. Nothing spawns within 2 m of either end, and io8 will drive off the edge unless there's a wall there
 - Add an empty called **`Spawn`** where io8 should start (its origin is the middle of the wheel, so put it ~0.5 m above the ground). Without one, io8 starts on the ground at x = 0
 - Slopes up to about 20° are fine to drive up. Much steeper and io8 will need its thrusters

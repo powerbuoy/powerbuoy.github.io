@@ -32,7 +32,7 @@ function wave (t, slow, quick, phase) {
 	One drone. Where it is in its life is just how long it's been around (see physicsStep()): it swoops in from the
 	top right, hovers ahead of and above io8 shooting at him, warns, then dives at where he was and blows up on
 	whatever it hits, so it has to be shot down before then. A kinematic body: it flies where the code says,
-	pushing boxes out of its way
+	pushing whatever's in its way
 */
 class Drone extends SleekEntity {
 	// Seconds since it appeared (game time, it stops while paused)

@@ -42,7 +42,7 @@ export default class Explosion {
 		this.center = new THREE.Vector3().copy(center);
 		this.config = Object.assign({
 			// Shockwave: bodies within radius get up to `impulse` (N·s) per m² of them facing the blast, less the
-			// further away they are. A 30 cm, 1 kg cardboard box faces it with 0.09 m², so 67 sends it off at 6 m/s
+			// further away they are. A 35 cm, 3 kg mine faces it with 0.12 m², so 67 sends it off at 2.7 m/s
 			radius: 3,
 			impulse: 67,
 
@@ -62,7 +62,7 @@ export default class Explosion {
 	}
 
 	// Shove every dynamic body nearby away from the center. Like a real blast it hits everything with the same
-	// pressure, so what moves is what's big and light: cardboard flies, something heavy and compact (io8, or
+	// pressure, so what moves is what's big and light: light debris flies, something heavy and compact (io8, or
 	// anything with the weight power-up) barely budges. Call after shatter(), debris already has its own outward
 	// speed so it's skipped
 	shockwave () {

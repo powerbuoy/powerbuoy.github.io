@@ -638,9 +638,8 @@ export default class IO8 extends SleekEntity {
 	}
 
 	// Damage from sudden speed changes of the whole of io8 (centre of mass, so the head bobbing on its springs
-	// doesn't count). Driving, thrust and gravity change it far too slowly to matter, a cardboard box gives
-	// way so it barely does either. One crash takes a few steps to play out, so it's charged by its peak:
-	// as the speed change grows, only the extra damage is taken
+	// doesn't count). Driving, thrust and gravity change it far too slowly to matter. One crash takes a few steps
+	// to play out, so it's charged by its peak: as the speed change grows, only the extra damage is taken
 	updateHealth (timestep) {
 		const {safe, damage, window} = this.config.health;
 		const steps = Math.max(1, Math.round(window / timestep));
