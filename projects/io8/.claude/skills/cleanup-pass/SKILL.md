@@ -27,6 +27,7 @@ These are the patterns found so far. Each came with a general route that was cle
 - **A list with an exception.** Blasts kept smoke outside its `layers` list only because Smoke's burst method had a different name.
 - **The same magic number in two places.**
 - **Game knowledge in `src/sleek/`.** That's the reusable engine, and nothing in it should know about io8.
+- **A comment that no longer matches the code.** Behavior moves on and comments get left behind. The spawner said a mine "goes off if io8 touches it" long after Explosives was changed to set it off on anything that moves. Check every comment that describes behavior against the code it describes, and look for comments that name things which have since been removed or switched off.
 
 These are **not** findings:
 
@@ -37,7 +38,7 @@ These are **not** findings:
 
 ## The steps
 
-1. **Review in parallel.** Start three read-only fork subagents with the checklist above, each on one slice. Have each one read its files in full, report file:line, the general route and a rough size, rank by complexity removed, and stay under 400 words.
+1. **Review in parallel.** Start three read-only fork subagents with the checklist above, each on one slice. Have each one read its files in full, check the comments against the code, report file:line, the general route and a rough size, rank by complexity removed, and stay under 400 words.
    - io8 and the app: `io8.js`, `app.js`, `main.js`, `hud.js`, `touch-device.js`, `camera.js`
    - Enemies and props: `drones.js`, `lasers.js`, `explosion.js`, `explosives.js`, `spawner.js`, `pickups.js`, `impacts.js`, `debris.js`, `emitters.js`
    - World and engine: `sky.js`, `stars.js`, `sunlight.js`, `water.js`, `ground.js`, `effects/*`, `src/sleek/*`

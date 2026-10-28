@@ -51,7 +51,8 @@ const OBSTACLES = [
 	// can still push through on his own)
 	[2, (s, x) => s.fullPyramid('cardboard', x, 0, 4 + s.int(2))],
 
-	// Goes off if io8 touches it (see Explosives): jump it, fly over it, or knock it away with something else
+	// Goes off when anything that moves touches it, io8 or a laser bolt or a drone (see Explosives): jump it, fly
+	// over it, or set it off from a distance
 	[2, (s, x) => s.spawn('mine', x, 0, 0)]
 ];
 
