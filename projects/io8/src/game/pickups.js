@@ -3,8 +3,6 @@ import * as THREE from 'three';
 import SleekLoader from '../sleek/loader.js';
 import {pickWeighted} from '../sleek/utils.js';
 
-import {DESPAWN} from './spawner.js';
-
 // Pickup models, in assets/gltf/pickups/<Name>/<Name>.gltf. What each one does comes from the custom properties
 // on its root object in Blender: effect (see EFFECTS in io8.js), amount, duration (leave it out for an instant
 // one, like health), and optionally pitch (of the pickup sound, 1 = as recorded, the default) and frequency (how
@@ -46,12 +44,16 @@ const bubbleShader = {
 };
 
 /*
-	Floating power-ups in a glowing bubble. They spin and bob, and when io8 touches one it starts that effect on him, plays a sound
-	and the pickup pops away. No physics, it's just a distance check against io8 (see SleekEntity.distanceTo())
+	Floating power-ups in a glowing bubble, placed at random along the road ahead of io8 (see fill()). They spin
+	and bob, and when io8 touches one it starts that effect on him, plays a sound and the pickup pops away. No
+	physics, it's just a distance check against io8 (see SleekEntity.distanceTo())
 */
 export default class Pickups {
 	models = [];
 	pickups = new Set();
+
+	// The slots (see fill()) that have been decided on, a pickup or not
+	decided = new Set();
 
 	// Seconds of game time (it stops while paused), for the bobbing
 	time = 0;
@@ -77,9 +79,28 @@ export default class Pickups {
 			// Seconds to shrink away when picked up
 			pop: 0.15,
 
-			// Removed once this far behind or ahead of io8, the same as the props (the spawner places them)
-			despawn: DESPAWN
+			// A slot every `spacing` m along the map (from `offset`, in map x), each one used by `chance` and nudged
+			// up to `jitter` m forward so they don't line up, `height` m above the ground. io8 is about 1.15 m tall
+			// with his antenna up, so they're all out of reach without flying. Which pickup it is depends on their
+			// `frequency`. Off for now (was 0.8)
+			slots: {spacing: 25, offset: 9, jitter: 5, chance: 0, height: [1.5, 2.5]},
+
+			// How far behind and ahead of io8 (m) the slots are filled in (ahead past what the camera can see, view 3
+			// looks a long way down the road, or they visibly pop in), and how far until they're removed again, a
+			// little further, so what was just placed doesn't go straight away
+			range: {behind: 6, ahead: 80},
+			despawn: {behind: 8, ahead: 90},
+
+			// None closer (m) than `edge` to either end of the map, or than `safeZone` to where io8 starts
+			edge: 2,
+			safeZone: 3
 		}, conf);
+	}
+
+	// Call once the map exists, they're placed above it from then on
+	setGround (ground, startX = 0) {
+		this.ground = ground;
+		this.startX = startX;
 	}
 
 	async init () {
@@ -110,7 +131,40 @@ export default class Pickups {
 		});
 	}
 
-	// A random pickup at x, y (the spawner picks the height)
+	// Every slot around io8 is decided on once, a pickup or not, and forgotten again once it's well past where they
+	// go, so it's decided anew when he drives back
+	fill (x) {
+		const {slots: {spacing, offset, jitter, chance, height}, range, despawn, edge, safeZone} = this.config;
+		const last = Math.floor((x + range.ahead - offset) / spacing);
+
+		for (let slot = Math.ceil((x - range.behind - offset) / spacing); slot <= last; slot++) {
+			if (this.decided.has(slot)) {
+				continue;
+			}
+
+			this.decided.add(slot);
+
+			const slotX = slot * spacing + offset + Math.random() * jitter;
+
+			if (Math.random() < chance && this.ground.contains(slotX, edge) && Math.abs(slotX - this.startX) > safeZone) {
+				const ground = this.ground.heightAt(slotX);
+
+				if (ground !== null) {
+					this.spawn(slotX, ground + THREE.MathUtils.randFloat(...height));
+				}
+			}
+		}
+
+		this.decided.forEach(slot => {
+			const dx = slot * spacing + offset - x;
+
+			if (dx < -(despawn.behind + spacing) || dx > despawn.ahead + spacing) {
+				this.decided.delete(slot);
+			}
+		});
+	}
+
+	// A random pickup at x, y
 	spawn (x, y) {
 		const model = pickWeighted(this.models, ({frequency}) => frequency);
 		const object3d = this.create(model);
@@ -134,8 +188,10 @@ export default class Pickups {
 		return object3d;
 	}
 
-	// Call every frame with io8 (for the pickup check) and the x the game centres on (for despawning)
+	// Call every frame with io8 (for the pickup check) and the x the game centres on (for placing and removing them)
 	step (deltaTime, player, focusX) {
+		this.fill(focusX);
+
 		if (!this.pickups.size) {
 			return;
 		}

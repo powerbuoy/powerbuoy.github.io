@@ -19,7 +19,7 @@ Add `?fps` to the address for an FPS counter, `?shapes` to see the collision sha
 ## Structure
 
 - `src/sleek/` - reusable engine bits (scene/renderer, physics, GLTF loader, entity builder, audio)
-- `src/game/` - the actual game: `io8.js` (the robot), `spawner.js` (obstacles along the map, tweak `CONFIG`, `OBSTACLES` and `DECORATIONS` there), `ground.js` (ground height anywhere on the map)
+- `src/game/` - the actual game: `io8.js` (the robot), `props.js` (everything in the map that physics moves), `pickups.js` and `drones.js` (the only things placed from code), `ground.js` (ground height anywhere on the map)
 - `assets/` - models, textures and audio
 - `lib/` - three.js and Rapier, copied in as-is. The import map in `index.html` maps `three`, `three/addons/` and `@dimforge/rapier3d-compat` to them. Only the three.js add-ons in use (and what they import) are there; to add one, copy it (and its imports) from the three.js repo's `examples/jsm/` into the same place under `lib/three/examples/jsm/`. To upgrade, replace the files with the same ones from a newer version
 
@@ -69,8 +69,9 @@ The map is loaded from `MAP` in `src/game/app.js`.
 - Export as GLTF into `assets/gltf/maps/<name>/`
 - Same conventions as everything else: a `Something_RigidBody` with no `mass` (fixed), a `_Mesh` child for looks and optionally a `_Shape` child for collisions (otherwise the mesh collides as it is). Several rigid bodies are fine (road pieces, ramps, walls)
 - The shape becomes a triangle mesh, so hills, dips and overhangs all work. It can be the same mesh as the visible one, or a simpler copy
-- io8 drives along **+X at z = 0**. Keep the ground at least 1 m deep on both sides (mines lie on it at z = 0)
-- The map's X extent is its length. Nothing spawns within 2 m of either end, and io8 will drive off the edge unless there's a wall there
+- io8 drives along **+X at z = 0**. Keep the ground at least 1 m deep on both sides
+- The map's X extent is its length. No pickups are placed within 2 m of either end, and io8 will drive off the edge unless there's a wall there
+- **Props** (mines, anything physics should move): any `_RigidBody` with a `mass` (or `kinematic`) in the map is taken out of it and becomes a thing of its own, with all its custom properties (`explosive`, `impact`, `emit`...). Place them as **collection instances** (Add > Collection Instance) of one collection holding the prop, so editing the collection edits every copy. Linked duplicates (Alt+D) share only the mesh: custom properties are on the objects, so each copy keeps its own and they drift apart. Don't scale an instance (rigid bodies don't scale). Export with **Include > Custom Properties** on, and keep the collection itself out of the export (exclude it from the view layer and tick **Include > Visible Objects**), or it's a prop too wherever it stands
 - Add an empty called **`Spawn`** where io8 should start (its origin is the middle of the wheel, so put it ~0.5 m above the ground). Without one, io8 starts on the ground at x = 0
 - Slopes up to about 20° are fine to drive up. Much steeper and io8 will need its thrusters
 - Optional **`sky.json`** next to the map's `.gltf` gives it a gradient sky (without one the sky is black). `sky` holds a gradient per hour of the day (`"0"` to `"24"`), each 2-8 colours from the horizon up, blended between hours. `time` is the hour it starts at, `cycle` how many seconds a whole day takes (leave it out for a still sky), `date` (`"MM-DD"`) the time of year for the stars, and `environment` how strongly the sky lights the scene (default 1). See `src/game/sky.js`
@@ -79,7 +80,7 @@ The map is loaded from `MAP` in `src/game/app.js`.
 
 ## Making a pickup
 
-Pickups float in a glowing bubble along the road, placed at random by the spawner. See `src/game/pickups.js`.
+Pickups float in a glowing bubble along the road, placed at random ahead of io8 (`slots` in its config, off for now). See `src/game/pickups.js`.
 
 - Export as GLTF to `assets/gltf/pickups/<Name>/<Name>.gltf` and add `<Name>` to `MODELS` in `pickups.js`
 - One root object (the first object in the scene) with everything else under it. The custom properties below go on it

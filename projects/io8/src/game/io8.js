@@ -418,7 +418,7 @@ export default class IO8 extends SleekEntity {
 		return this.isDown('brake');
 	}
 
-	// Where the camera, spawner and sunlight centre on: his legs, or where he blew up
+	// Where the camera, pickups and sunlight centre on: his legs, or where he blew up
 	getFocusPosition (target) {
 		return this.isExploded ? target.copy(this.wreck) : this.legsObject.getWorldPosition(target);
 	}

@@ -6,9 +6,9 @@ import RAPIER from '@dimforge/rapier3d-compat';
 	by casting a ray down onto the map's colliders, the same ones physics uses.
 
 	Rapier rather than three.js: its triangle meshes are sorted into a search tree, so a ray only tests the
-	few triangles it passes (three.js tests every one, ~6 ms a ray on a 100k triangle map, and the spawner
-	casts several per prop). Each collider is asked directly rather than the world, which only knows where
-	things are after the first physics step, and the first props are placed before that.
+	few triangles it passes (three.js tests every one, ~6 ms a ray on a 100k triangle map, and the camera and
+	drones cast several every frame). Each collider is asked directly rather than the world, which only knows
+	where things are after the first physics step, and io8 is placed on the ground before that.
 */
 export default class Ground {
 	constructor (entity) {

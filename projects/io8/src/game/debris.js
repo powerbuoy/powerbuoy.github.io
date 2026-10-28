@@ -1,8 +1,10 @@
-import {DESPAWN} from './spawner.js';
+import * as THREE from 'three';
+
+const position = new THREE.Vector3();
 
 /*
-	Explosions whose debris is left lying about (a drone shot down, a mine gone off, io8). Their pieces make impact sounds,
-	and once io8 has left them far behind (or they're far ahead) they're removed, like the spawner's props
+	Explosions whose debris is left lying about (a drone shot down, a mine gone off, io8). Their pieces make impact
+	sounds, and stay where they land: the map is all there is, nothing is rebuilt that they'd pile up under
 */
 export default class Debris {
 	explosions = [];
@@ -17,21 +19,21 @@ export default class Debris {
 		this.explosions.push(explosion);
 	}
 
-	// Every frame, `x` is where io8 is (or blew up)
-	step (deltaTime, x) {
-		this.explosions = this.explosions.filter(explosion => {
-			const dx = explosion.center.x - x;
+	// Every frame. Anything that still manages to fall off the world is removed, rather than falling forever.
+	// Asleep it's lying on something, so only the ones still moving are looked at
+	step (deltaTime) {
+		this.explosions.forEach(explosion => {
+			explosion.step(deltaTime);
 
-			if (dx > -DESPAWN.behind && dx < DESPAWN.ahead) {
-				explosion.step(deltaTime);
+			// Backwards, as pieces are taken out of the list
+			for (let i = explosion.pieces.length - 1; i >= 0; i--) {
+				const piece = explosion.pieces[i];
 
-				return true;
+				if (!piece.body.isSleeping() && piece.body.translation(position).y < -50) {
+					this.impacts.unregister([piece.body.collider(0)]);
+					explosion.remove(piece);
+				}
 			}
-
-			this.impacts.unregister(explosion.pieces.map(piece => piece.body.collider(0)));
-			explosion.destroy();
-
-			return false;
 		});
 	}
 }

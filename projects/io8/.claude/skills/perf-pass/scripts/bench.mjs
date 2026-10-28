@@ -5,7 +5,7 @@
 	scenario, CPU time (and the slowest 5%), GPU time (synced with readPixels), draw calls, physics and render
 	time, JS memory allocated per frame and garbage collections. Builds take turns so drift hits both.
 
-	By default props and pickups are removed (--full keeps them): only then do both builds see the same scene,
+	By default pickups are removed (--full keeps them): only then do both builds see the same scene,
 	and io8's path is compared too. It must match to 4 decimals unless physics was meant to change. --nofire
 	leaves out the shots, whose path depends on the muzzle and the aim
 */
@@ -24,7 +24,7 @@ if (!oldUrl || !newUrl) {
 }
 
 async function run (url) {
-	const {browser, page, errors} = await open(url, {props: FULL, pickups: FULL});
+	const {browser, page, errors} = await open(url, {pickups: FULL});
 
 	await page.evaluate(SCENARIOS);
 	await page.evaluate(() => {
@@ -127,7 +127,7 @@ for (let i = 0; i < RUNS; i++) {
 const mean = (list, scenario, key) => list.reduce((sum, result) => sum + result[scenario][key], 0) / list.length;
 const KEYS = [['cpu', 'ms'], ['cpu p95', 'ms'], ['gpu', 'ms'], ['calls', ''], ['physics', 'ms'], ['render', 'ms'], ['alloc KB', ''], ['GCs per 10 s', '']];
 
-console.log(`${FULL ? 'Full game' : 'Bare map (no props or pickups)'}${FIRE ? '' : ', no shots'}, ${RUNS} runs of ${FRAMES} frames each\n`);
+console.log(`${FULL ? 'Full game' : 'No pickups'}${FIRE ? '' : ', no shots'}, ${RUNS} runs of ${FRAMES} frames each\n`);
 
 for (const scenario of ['drive', 'combat', 'death']) {
 	console.log(scenario);

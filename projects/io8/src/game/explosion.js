@@ -229,17 +229,6 @@ export default class Explosion {
 	step (deltaTime) {
 		this.age += deltaTime;
 
-		// Anything that still manages to fall off the world is removed, rather than falling forever
-		this.pieces = this.pieces.filter(piece => {
-			if (piece.body.translation().y > -50) {
-				return true;
-			}
-
-			this.removePiece(piece);
-
-			return false;
-		});
-
 		// Let debris hit other debris again once it's had a moment to spread out
 		if (!this.separated && this.age > this.config.separate) {
 			this.separated = true;
@@ -247,16 +236,12 @@ export default class Explosion {
 		}
 	}
 
-	// Remove all the debris (once it's been left far behind). Only call between frames, not during a physics step
-	destroy () {
-		this.pieces.forEach(piece => this.removePiece(piece));
-		this.pieces = [];
-	}
-
-	removePiece ({body, object3d}) {
-		this.physics.unlink(body);
-		this.physics.world.removeRigidBody(body);
-		object3d.removeFromParent();
+	// Remove one piece of debris. Only call between frames, not during a physics step
+	remove (piece) {
+		this.physics.unlink(piece.body);
+		this.physics.world.removeRigidBody(piece.body);
+		piece.object3d.removeFromParent();
+		this.pieces.splice(this.pieces.indexOf(piece), 1);
 	}
 
 	// Collision shape from the mesh itself (scale baked in, since bodies can't be scaled).

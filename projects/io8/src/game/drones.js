@@ -404,7 +404,7 @@ export default class Drones {
 		});
 
 		this.lasers.step(deltaTime);
-		this.debris.step(deltaTime, focus.x);
+		this.debris.step(deltaTime);
 	}
 
 	spawn (focus, speed) {

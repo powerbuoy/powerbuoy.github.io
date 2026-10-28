@@ -10,7 +10,7 @@ import SleekEntity from '../sleek/entity.js';
 import SleekPhysicsDebug from '../sleek/physics-debug.js';
 
 import IO8 from './io8.js';
-import Spawner from './spawner.js';
+import Props from './props.js';
 import Ground from './ground.js';
 import Explosion from './explosion.js';
 import Debris from './debris.js';
@@ -52,7 +52,7 @@ export default class App extends SleekScene {
 
 		this.physics = new SleekPhysics();
 		this.hud = new Hud();
-		this.spawner = new Spawner(this.scene, this.physics);
+		this.props = new Props(this.scene, this.physics);
 
 		// Mouse position in -1..1 screen coordinates, null until it first moves
 		this.pointer = null;
@@ -86,17 +86,16 @@ export default class App extends SleekScene {
 	async init () {
 		this.audio = new SleekAudio(this.camera, this.scene);
 		this.impacts = new Impacts(this.physics, this.audio);
-		this.spawner.setImpacts(this.impacts);
+		this.props.setImpacts(this.impacts);
 		this.pickups = new Pickups(this.scene, this.audio);
-		this.spawner.setPickups(this.pickups);
 		this.blasts = new Blasts(this.scene, this.camera, this.audio);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 		this.emitters = new Emitters(this.blasts, this.audio);
 		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 
 		this.explosives = new Explosives(this.scene, this.physics, this.impacts, this.blasts);
-		this.explosives.setSpawner(this.spawner);
-		this.spawner.setExplosives(this.explosives);
+		this.explosives.setProps(this.props);
+		this.props.setExplosives(this.explosives);
 
 		// What's left of io8 once he's blown up (the drones and mines have their own)
 		this.debris = new Debris(this.impacts);
@@ -116,12 +115,13 @@ export default class App extends SleekScene {
 			this.pickups.init(),
 			this.lasers.init(),
 			this.drones.init(),
-			this.emitters.init(),
-			this.spawner.init()
+			this.emitters.init()
 		]);
 
-		this.spawner.setEmitters(this.emitters);
+		this.props.setEmitters(this.emitters);
 
+		// What moves in the map (mines...) becomes props of their own, what's left is the ground and walls
+		this.props.fromMap(map);
 		this.map = new SleekEntity(map, this.physics, {name: 'Map'});
 		this.emitters.add(this.map.object3d);
 		this.scene.add(this.map.object3d);
@@ -138,13 +138,11 @@ export default class App extends SleekScene {
 
 		const start = this.spawnPoint();
 
-		this.spawner.setGround(this.ground, start.x);
+		this.pickups.setGround(this.ground, start.x);
 
 		this.player = new IO8(robot, this.physics, {pos: start});
 		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
 		this.scene.add(this.player.object3d);
-
-		this.spawner.update(start.x);
 
 		// His emitters without a rate show how hurt he is, and spark when he crashes
 		this.emitters.add(this.player.object3d, this.player);
@@ -219,7 +217,7 @@ export default class App extends SleekScene {
 	// compiled, so the shadow versions are made too
 	warmUp () {
 		const hidden = [];
-		const standIns = [this.lasers, this.drones, this.spawner, this.pickups].flatMap(system => system.standIns());
+		const standIns = [this.lasers, this.drones, this.pickups].flatMap(system => system.standIns());
 
 		this.scene.traverse(obj => {
 			if (!obj.visible) {
@@ -282,12 +280,12 @@ export default class App extends SleekScene {
 			this.explode();
 		}
 
-		// What the camera, spawner, pickups and sunlight centre on, once he's moved (or blown up)
+		// What the camera, pickups and sunlight centre on, once he's moved (or blown up)
 		this.player.getFocusPosition(focus);
 
 		this.pickups.step(deltaTime, this.player, focus.x);
 		this.player.step(deltaTime);
-		this.debris.step(deltaTime, focus.x);
+		this.debris.step(deltaTime);
 		this.blasts.step(deltaTime);
 		this.emitters.step(deltaTime);
 		// One shot per click (see the pointerdown listener)
@@ -298,9 +296,7 @@ export default class App extends SleekScene {
 		this.fire = false;
 		this.lasers.step(deltaTime);
 		this.drones.step(deltaTime, this.player, focus);
-		this.explosives.step(deltaTime, focus.x);
-		// Keep stuff to crash into ahead of io8
-		this.spawner.update(focus.x);
+		this.explosives.step(deltaTime);
 		this.stats?.update();
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));

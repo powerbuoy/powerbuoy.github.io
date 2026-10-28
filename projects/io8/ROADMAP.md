@@ -4,7 +4,7 @@ Where io8 is heading, from "physics toy" towards a proper game with hand-built l
 
 ## Done
 
-Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thruster fuel, lasers with ammo, explosions (fireball, sparks, flash, camera shake), area-based blast physics, health from crash damage with smoke and sparks, smoke and spark emitters on any empty (`emit`, `rate`), speed/weight/health pickups, gradient sky with a day/night cycle, sun/moon shadows that follow io8, real night sky, start menu with pause, an island in a sea with moving water.
+Hilly map with a `Spawn` empty, random pickups along the road, props placed in the map (collection instances), thruster fuel, lasers with ammo, explosions (fireball, sparks, flash, camera shake), area-based blast physics, health from crash damage with smoke and sparks, smoke and spark emitters on any empty (`emit`, `rate`), speed/weight/health pickups, gradient sky with a day/night cycle, sun/moon shadows that follow io8, real night sky, start menu with pause, an island in a sea with moving water.
 
 ## To do
 
@@ -12,13 +12,13 @@ Hilly map with a `Spawn` empty, random obstacles and pickups along the road, thr
 - **Obstacles in the air**: things at thruster height (signs, pipes, hanging crates, a low beam across the road), some solid, some breakable, so flying isn't always safe and fuel matters. Solid ones can be part of the map; swinging ones are dynamic bodies on a joint (`JointData.rope` or `spherical`)
 - **A goal**: score by distance
 - **Road gaps / ramps**: pits to thrust over, ramps to launch off
-- **The sea**: the road runs into it at both ends, so keep mines and pickups off the underwater part (the spawner places them on any ground) and decide what happens when io8 drives in (sinks and shorts out? floats? splash, bubbles)
+- **The sea**: the road runs into it at both ends, so keep pickups off the underwater part (they're placed over any ground) and decide what happens when io8 drives in (sinks and shorts out? floats? splash, bubbles)
 - **Sun and moon behind the horizon**: they set into the sea 2.5 km out, in front of its edge. Draw them behind everything like the sky dome (they're infinitely far away), so the scene hides them wherever they are
 
 ## Ideas
 
 - **More pickups**: fuel (refill or a bigger tank for a while), shield (smash through anything), super thrust (no fuel drain), slow-mo (lower `physics.config.speed`), points
-- **Hand-placed props**: empties named `Prop_<Model>` (e.g. `Prop_Mine`) that place that model on the ground under them, built and removed by distance like the random ones. Would replace the random obstacles in `spawner.js` for hand-built levels
+- **The new map**: everything but the drones and pickups is placed in Blender (props as collection instances, see the README), starting with the mines
 - **An accurate sky** (the goal: sun, moon and stars all as they really are): the moon on its own orbit, a lap every 24 h 50 min on its own pivot with its light following it (the stars a lap every 23 h 56 min, the sun 24 h), so it drifts across the stars and rises later each day like the real one. Phases after that, as it's no longer always opposite the sun
 - **Lasers**: a faint laser sight, recoil (a small kick on the head, the neck spring makes it look nice), a stiffer neck while firing if aim feels sloppy
 - **Grappling hook** on right click

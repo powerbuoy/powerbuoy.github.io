@@ -7,10 +7,9 @@ const velocity = new THREE.Vector3();
 
 /*
 	Props with an "explosive" custom property (on their _RigidBody) go off when anything that moves touches them
-	(io8, a box he pushes, debris, a drone), or when a blast reaches them (a bolt, a
-	drone crashing, another one going off). The spawner add()s every prop it places, the ones that aren't explosive
-	are ignored. Touching is a real contact between their colliders (not just being close), read from the physics
-	after each step
+	(io8, debris, a drone), or when a blast reaches them (a bolt, a drone crashing, another one going off). Props
+	add()s every prop, the ones that aren't explosive are ignored. Touching is a real contact between their
+	colliders (not just being close), read from the physics after each step
 */
 export default class Explosives {
 	explosives = new Set();
@@ -38,9 +37,9 @@ export default class Explosives {
 		}, conf);
 	}
 
-	// The spawner, which owns the props: a mine that's gone off is removed through it
-	setSpawner (spawner) {
-		this.spawner = spawner;
+	// Props, which owns them: a mine that's gone off is removed through it
+	setProps (props) {
+		this.props = props;
 	}
 
 	add (entity) {
@@ -59,12 +58,11 @@ export default class Explosives {
 		this.explosives.forEach(entity => entity.distanceTo(point) < reach && this.explode(entity));
 	}
 
-	// Every frame, after the physics. `x` is where io8 is (or blew up). Touching one does no damage itself, its
-	// blast does (see App.blast())
-	step (deltaTime, x) {
+	// Every frame, after the physics. Touching one does no damage itself, its blast does (see App.blast())
+	step (deltaTime) {
 		this.explosives.forEach(entity => this.toucher(entity) && this.explode(entity));
 
-		this.debris.step(deltaTime, x);
+		this.debris.step(deltaTime);
 	}
 
 	// Whatever's touching it (a collider), or null. Anything that can move counts, the ground it lies on doesn't
@@ -96,7 +94,7 @@ export default class Explosives {
 
 		velocity.copy(entity.mainBody.linvel());
 		explosion.shatter(entity.object3d, () => velocity);
-		this.spawner.remove(entity);
+		this.props.remove(entity);
 		explosion.shockwave();
 		this.blasts.spawn(explosion.center, blast.size);
 		this.debris.add(explosion);

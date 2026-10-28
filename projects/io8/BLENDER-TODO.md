@@ -22,9 +22,9 @@ The current `assets/gltf/enemies/Drone/Drone.gltf` is a hand-written stand-in (a
 - **`Drone_Hurt`**: an empty with `emit: smoke, sparks` and no `rate`, where it smokes and sparks as it's hurt (like io8's)
 - Every visible mesh flies off as its own piece when it's shot down (or `debris: whole` on a part to keep it in one piece)
 
-## Mine (prop)
+## Mine (in the new map)
 
-The current `assets/gltf/props/Mine/Mine.gltf` is a hand-written stand-in (a red box with a black fuze), exporting over it replaces it. It lies on the road, so keep its origin at the middle and its bottom flat.
+There are no mines until the map has them: the code's random ones and their hand-written stand-in model are gone. Make a `Mine` collection in the map holding the mine, exclude it from the view layer, and add a collection instance of it (Add > Collection Instance) wherever a mine should be, unscaled. Export with Include > Custom Properties and Include > Visible Objects ticked (see "Making a map" in the README). It lies on the road, so keep its origin at the middle and its bottom flat. The stand-in was:
 
 - **`Mine_RigidBody`** with `mass: 3` (blasts and debris knock it about), `explosive: 1` (anything that moves touching it sets it off), `collider: cuboid` and `impact: metal` (what it and its pieces sound like), at a scale of 1. Children:
 - **`Mine_Mesh`**: the body, what it collides with (or a `Mine_Shape`)

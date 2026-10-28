@@ -40,7 +40,7 @@ These are **not** findings:
 
 1. **Review in parallel.** Start three read-only fork subagents with the checklist above, each on one slice. Have each one read its files in full, check the comments against the code, report file:line, the general route and a rough size, rank by complexity removed, and stay under 400 words.
    - io8 and the app: `io8.js`, `app.js`, `main.js`, `hud.js`, `touch-device.js`, `camera.js`
-   - Enemies and props: `drones.js`, `lasers.js`, `explosion.js`, `explosives.js`, `spawner.js`, `pickups.js`, `impacts.js`, `debris.js`, `emitters.js`
+   - Enemies and props: `drones.js`, `lasers.js`, `explosion.js`, `explosives.js`, `props.js`, `pickups.js`, `impacts.js`, `debris.js`, `emitters.js`
    - World and engine: `sky.js`, `stars.js`, `sunlight.js`, `water.js`, `ground.js`, `effects/*`, `src/sleek/*`
 
    Add any new files to whichever slice fits.

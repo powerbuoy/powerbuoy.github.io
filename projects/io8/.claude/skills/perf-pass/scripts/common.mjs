@@ -7,7 +7,7 @@ import {chromium} from 'playwright';
 const SHELL = `${process.env.HOME}/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell`;
 
 // Every option is on by default, the scripts switch off what they measure without
-export async function open (url, {seed = true, props = true, pickups = true, width = 1600, height = 900} = {}) {
+export async function open (url, {seed = true, pickups = true, width = 1600, height = 900} = {}) {
 	const browser = await chromium.launch({
 		executablePath: fs.existsSync(SHELL) ? SHELL : undefined,
 		args: ['--use-angle=metal', '--enable-gpu', '--enable-precise-memory-info']
@@ -18,7 +18,7 @@ export async function open (url, {seed = true, props = true, pickups = true, wid
 	page.on('pageerror', e => errors.push(String(e)));
 	page.on('console', message => message.type() === 'error' && errors.push(message.text()));
 
-	// The same random props, puffs and sparks every run (mulberry32), so builds can be compared
+	// The same random pickups, puffs and sparks every run (mulberry32), so builds can be compared
 	if (seed) {
 		await page.addInitScript(() => {
 			let a = 12345;
@@ -39,26 +39,16 @@ export async function open (url, {seed = true, props = true, pickups = true, wid
 	await page.waitForFunction(() => window.app?.player, null, {timeout: 90000});
 
 	// The game starts paused behind the menu with its first frame drawn. Input and aim are set straight on the app
-	await page.evaluate(({props, pickups}) => {
+	await page.evaluate(({pickups}) => {
 		app.player.hasInput = true;
 		app.pointer = {x: 0.6, y: -0.15};
 
+		// Where they're placed isn't reproducible between builds, without them io8's path is
 		if (!pickups) {
 			app.pickups.step = () => {};
 			app.pickups.spawn = () => {};
 		}
-
-		// The spawner's layout isn't reproducible between builds, without props io8's path is
-		if (!props) {
-			app.spawner.props.forEach(prop => {
-				app.impacts.unregister(prop.colliders);
-				app.emitters.remove(prop.object3d);
-				prop.destroy();
-			});
-			app.spawner.props.clear();
-			app.spawner.update = () => {};
-		}
-	}, {props, pickups});
+	}, {pickups});
 
 	return {browser, page, errors};
 }
