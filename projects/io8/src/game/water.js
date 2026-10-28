@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 
+import SleekEntity from '../sleek/entity.js';
+
 /*
-	Moving water. Any mesh called "Water" in the map (Blender's .001 suffixes are ignored) keeps the material
+	Moving water. Any mesh called "Water" in the map (or a copy of one, see SleekEntity) keeps the material
 	it has in Blender, with its normal map (if it has one) drifting: the map is read once for each of
 	config.layers and they're blended, each its own size and turned its own way. One pattern shows its tiling as
 	a grid from far away, two that never line up don't.
@@ -32,7 +34,7 @@ export default class Water {
 
 		map.updateWorldMatrix(true, true);
 		map.traverse(obj => {
-			if (obj.isMesh && obj.name.replace(/\.\d+$/, '') === 'Water') {
+			if (obj.isMesh && SleekEntity.isNamed(obj, 'Water')) {
 				this.surfaces.push(new THREE.Box3().setFromObject(obj));
 
 				// No layers, no drift

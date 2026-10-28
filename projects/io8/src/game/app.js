@@ -12,7 +12,6 @@ import SleekPhysicsDebug from '../sleek/physics-debug.js';
 import IO8 from './io8.js';
 import Props from './props.js';
 import Ground from './ground.js';
-import Explosion from './explosion.js';
 import Debris from './debris.js';
 import Impacts from './impacts.js';
 import Pickups from './pickups.js';
@@ -33,8 +32,7 @@ const MAP = './assets/gltf/maps/windowsxpmap/windowsxpmap.gltf';
 
 const target = new THREE.Vector3();
 const focus = new THREE.Vector3();
-const legsVelocity = new THREE.Vector3();
-const headPosition = new THREE.Vector3();
+const focusVelocity = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
 const aimPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
@@ -89,19 +87,16 @@ export default class App extends SleekScene {
 		this.props.setImpacts(this.impacts);
 		this.pickups = new Pickups(this.scene, this.audio);
 		this.blasts = new Blasts(this.scene, this.camera, this.audio);
+
+		// What's left of anything blown up (io8, drones, mines)
+		this.debris = new Debris(this.impacts);
 		this.lasers = new Lasers(this.scene, this.physics, this.audio, this.impacts, this.blasts);
 		this.emitters = new Emitters(this.blasts, this.audio);
-		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts);
+		this.drones = new Drones(this.scene, this.physics, this.audio, this.impacts, this.blasts, this.debris);
 
-		this.explosives = new Explosives(this.scene, this.physics, this.impacts, this.blasts);
+		this.explosives = new Explosives(this.scene, this.physics, this.blasts, this.debris);
 		this.explosives.setProps(this.props);
 		this.props.setExplosives(this.explosives);
-
-		// What's left of io8 once he's blown up (the drones and mines have their own)
-		this.debris = new Debris(this.impacts);
-
-		// Anything blowing up reaches everything near it, see blast()
-		this.lasers.onBlast = this.drones.onBlast = this.explosives.onBlast = (point, blast) => this.blast(point, blast);
 
 		const [robot, map, sky, views, engineSound, thrusterSound] = await Promise.all([
 			SleekLoader.loadObject('./assets/gltf/io8/io8v6.gltf'),
@@ -142,7 +137,11 @@ export default class App extends SleekScene {
 
 		this.player = new IO8(robot, this.physics, {pos: start});
 		this.player.initSounds(this.audio, {engine: engineSound, thruster: thrusterSound, impacts: this.impacts});
+		this.player.setSurroundings({scene: this.scene, debris: this.debris, blasts: this.blasts, water: this.water});
 		this.scene.add(this.player.object3d);
+
+		// Anything blowing up reaches everything near it, see blast()
+		this.lasers.onBlast = this.drones.onBlast = this.explosives.onBlast = this.player.onBlast = (point, blast) => this.blast(point, blast);
 
 		// His emitters without a rate show how hurt he is, and spark when he crashes
 		this.emitters.add(this.player.object3d, this.player);
@@ -240,24 +239,6 @@ export default class App extends SleekScene {
 		hidden.forEach(obj => obj.visible = false);
 	}
 
-	// Blow io8 up (when he's out of health), Restart in the menu gets him back. Calls onExplode (if set) once
-	// he's in pieces, the game itself keeps running
-	explode () {
-		if (this.player.isExploded) {
-			return;
-		}
-
-		const {blast} = this.player.config;
-
-		this.explosion = new Explosion(this.scene, this.physics, this.player.legs.translation(), blast);
-		this.player.explode(this.explosion);
-		this.explosion.shockwave();
-		this.debris.add(this.explosion);
-		this.blasts.spawn(this.explosion.center, blast.size);
-		this.blast(this.explosion.center, blast);
-		this.onExplode?.();
-	}
-
 	// Something blew up at `point` (a laser bolt, a drone crashing, a mine, io8). Within the blast's `reach` io8 is hurt,
 	// drones are shot down and mines go off, which blow up in turn. The shove is each explosion's own (see
 	// Explosion.shockwave()), this is what it does to the things that can be blown up
@@ -271,13 +252,11 @@ export default class App extends SleekScene {
 		this.physics.step(deltaTime);
 		this.shapes?.update();
 
-		if (!this.player.isExploded && this.water.isUnder(this.player.head.translation(headPosition))) {
-			this.player.drown(deltaTime);
-		}
-
-		// Out of health: blown up here, between physics steps (explode() can't run during one)
-		if (this.player.health <= 0) {
-			this.explode();
+		// Out of health: blown up here, between physics steps (explode() can't run during one). Restart in the menu
+		// gets him back, onExplode (if set) is told he's in pieces, the game itself keeps running
+		if (this.player.health <= 0 && !this.player.isExploded) {
+			this.player.explode();
+			this.onExplode?.();
 		}
 
 		// What the camera, pickups and sunlight centre on, once he's moved (or blown up)
@@ -285,7 +264,6 @@ export default class App extends SleekScene {
 
 		this.pickups.step(deltaTime, this.player, focus.x);
 		this.player.step(deltaTime);
-		this.debris.step(deltaTime);
 		this.blasts.step(deltaTime);
 		this.emitters.step(deltaTime);
 		// One shot per click (see the pointerdown listener)
@@ -297,6 +275,10 @@ export default class App extends SleekScene {
 		this.lasers.step(deltaTime);
 		this.drones.step(deltaTime, this.player, focus);
 		this.explosives.step(deltaTime);
+
+		// After everything that can blow up
+		this.debris.step(deltaTime);
+
 		this.stats?.update();
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
@@ -350,15 +332,14 @@ export default class App extends SleekScene {
 	// Follow the legs as drawn, not the raw physics body, or the camera and io8 judder against each other.
 	// Once he's blown up it watches his head fly for a moment, then backs away (see FollowCamera's retreat)
 	updateCamera (deltaTime, focus) {
-		if (this.player.isExploded) {
-			const head = this.player.headPiece;
-			// Its body is gone if it fell off the world (see Explosion.step()), the mesh still says where it was
-			const speed = this.explosion.pieces.includes(head) ? head.body.linvel().x : 0;
+		const speed = this.player.getFocusVelocity(focusVelocity).x;
 
-			this.follow.retreat(deltaTime, head?.object3d.getWorldPosition(target), speed);
+		if (this.player.isExploded) {
+			// The mesh still says where its head was if it's fallen off the world
+			this.follow.retreat(deltaTime, this.player.headPiece?.object3d.getWorldPosition(target), speed);
 		}
 		else {
-			this.follow.update(deltaTime, focus, this.player.legs.linvel(legsVelocity).x);
+			this.follow.update(deltaTime, focus, speed);
 		}
 
 		this.blasts.shake(this.camera);

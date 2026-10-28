@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
 import Explosion from './explosion.js';
-import Debris from './debris.js';
 
 const velocity = new THREE.Vector3();
 
@@ -20,11 +19,11 @@ export default class Explosives {
 	// Called with (point, blast config) whenever one goes off, so everything nearby can react (see App.blast())
 	onBlast = null;
 
-	constructor (scene, physics, impacts, blasts, conf = {}) {
+	constructor (scene, physics, blasts, debris, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
 		this.blasts = blasts;
-		this.debris = new Debris(impacts);
+		this.debris = debris;
 		this.config = Object.assign({
 			// Closest (m) anything has to get to count as touching (contacts are reported a little before things meet)
 			touch: 0.01,
@@ -61,8 +60,6 @@ export default class Explosives {
 	// Every frame, after the physics. Touching one does no damage itself, its blast does (see App.blast())
 	step (deltaTime) {
 		this.explosives.forEach(entity => this.toucher(entity) && this.explode(entity));
-
-		this.debris.step(deltaTime);
 	}
 
 	// Whatever's touching it (a collider), or null. Anything that can move counts, the ground it lies on doesn't

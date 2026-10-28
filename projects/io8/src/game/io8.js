@@ -120,7 +120,8 @@ export default class IO8 extends SleekEntity {
 
 	isExploded = false;
 
-	// His head's piece of debris ({object3d, body}) once he's blown up, the camera watches it for a moment
+	// What he blew up into, and his head's piece of it ({object3d, body}), the camera watches it for a moment
+	explosion = null;
 	headPiece = null;
 
 	fuel = 0;
@@ -130,6 +131,9 @@ export default class IO8 extends SleekEntity {
 	// Called with how much health a hit took (a crash or a laser blast, not drowning). Crashes call it from inside
 	// a physics step
 	onHit = null;
+
+	// Called with (point, blast config) when he blows up, so everything nearby can react (see App.blast())
+	onBlast = null;
 
 	// Seconds of game time (it stops while paused), for things that move by themselves
 	time = 0;
@@ -423,12 +427,34 @@ export default class IO8 extends SleekEntity {
 		return this.isExploded ? target.copy(this.wreck) : this.legsObject.getWorldPosition(target);
 	}
 
-	// Blow io8 apart: every mesh becomes a piece of debris keeping the speed its part had,
-	// then the real bodies, joints and controls go. Only call between frames, not during a physics step
-	explode (explosion) {
+	// How fast what the camera follows is going: his legs, or once he's blown up his head flying off (still once
+	// it's fallen off the world, see Debris.step())
+	getFocusVelocity (target) {
+		if (!this.isExploded) {
+			return this.legs.linvel(target);
+		}
+
+		return this.explosion.pieces.includes(this.headPiece) ? this.headPiece.body.linvel(target) : target.set(0, 0, 0);
+	}
+
+	// What blowing up and drowning need: the scene and Debris his pieces go to, Blasts for how it looks and
+	// sounds, and the water he shorts out in
+	setSurroundings ({scene, debris, blasts, water}) {
+		this.scene = scene;
+		this.debris = debris;
+		this.blasts = blasts;
+		this.water = water;
+	}
+
+	// Blow io8 apart: every mesh becomes a piece of debris keeping the speed its part had, then the real bodies,
+	// joints and controls go, and the blast goes out. Only call between frames, not during a physics step
+	explode () {
 		if (this.isExploded) {
 			return;
 		}
+
+		const {blast} = this.config;
+		const explosion = new Explosion(this.scene, this.physics, this.legs.translation(), blast);
 
 		// Which body each mesh was riding on, so its debris keeps that body's speed
 		const velocities = new Map(Object.entries(this.bodies).map(([name, body]) => [`${name}_RigidBody`, new THREE.Vector3().copy(body.linvel())]));
@@ -446,6 +472,7 @@ export default class IO8 extends SleekEntity {
 
 		// They need his bodies to run, and the meters would freeze where they were
 		this.effects.clear();
+		this.explosion = explosion;
 		this.headPiece = explosion.shatter(this.object3d, velocityOf).find(piece => piece.object3d.name === 'RobotHead_RigidBody') ?? null;
 		this.isExploded = true;
 		this.engineSound?.stop();
@@ -455,6 +482,11 @@ export default class IO8 extends SleekEntity {
 		this.destroy();
 		this.physics.world.removeRigidBody(this.gyro);
 		this.physics.world.removeRigidBody(this.planeAnchor);
+
+		explosion.shockwave();
+		this.debris.add(explosion);
+		this.blasts.spawn(explosion.center, blast.size);
+		this.onBlast?.(explosion.center, blast);
 	}
 
 	// Each read is a call into Rapier, so what the step needs is read once, before anything pushes on the
@@ -520,6 +552,10 @@ export default class IO8 extends SleekEntity {
 		this.updateFuel(timestep);
 		this.updateHealth(timestep);
 		this.updateEffects(timestep);
+
+		if (this.water?.isUnder(headPosition)) {
+			this.drown(timestep);
+		}
 	}
 
 	// Start a power-up (see EFFECTS). Getting the same one again while it's running adds its time instead of
@@ -711,11 +747,11 @@ export default class IO8 extends SleekEntity {
 		}
 	}
 
-	// Call every frame his head is under water (see Water), he shorts out within `drown` seconds
-	drown (deltaTime) {
+	// Every physics step his head is under water (see Water), he shorts out within `drown` seconds
+	drown (timestep) {
 		const {capacity, drown} = this.config.health;
 
-		this.health = Math.max(0, this.health - capacity / drown * deltaTime);
+		this.health = Math.max(0, this.health - capacity / drown * timestep);
 		this.sinceDamage = 0;
 	}
 

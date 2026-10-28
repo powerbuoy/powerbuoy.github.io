@@ -157,6 +157,11 @@ export default class SleekEntity {
 		return new RegExp(`_${part}[\\d_]*$`).test(obj.name);
 	}
 
+	// Whether obj is called `name`, copy endings and all
+	static isNamed (obj, name) {
+		return new RegExp(`^${name}[\\d_]*$`).test(obj.name);
+	}
+
 	// Thing, from Thing_RigidBody (or a copy of it)
 	static nameOf (obj) {
 		return obj.name.replace(/_RigidBody[\d_]*$/, '');

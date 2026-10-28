@@ -6,7 +6,6 @@ import {randomItem} from '../sleek/utils.js';
 
 import Explosion from './explosion.js';
 import Lasers from './lasers.js';
-import Debris from './debris.js';
 
 const MODEL = './assets/gltf/enemies/Drone/Drone.gltf';
 
@@ -266,10 +265,11 @@ export default class Drones {
 	// nearby can react (see App.blast())
 	onBlast = null;
 
-	constructor (scene, physics, audio, impacts, blasts, conf = {}) {
+	constructor (scene, physics, audio, impacts, blasts, debris, conf = {}) {
 		this.scene = scene;
 		this.physics = physics;
 		this.audio = audio;
+		this.impacts = impacts;
 		this.blasts = blasts;
 		this.config = Object.assign({
 			// The first one comes `delay` seconds in, each next one a random `interval` (s) after the last one's gone,
@@ -340,7 +340,7 @@ export default class Drones {
 
 		this.lasers.onBlast = (point, blast) => this.onBlast?.(point, blast);
 
-		this.debris = new Debris(impacts);
+		this.debris = debris;
 		this.untilNext = this.config.spawn.delay;
 	}
 
@@ -375,7 +375,7 @@ export default class Drones {
 	step (deltaTime, player, focus) {
 		const {spawn, hover} = this.config;
 		const canShoot = !player.isExploded;
-		const speed = canShoot ? player.legs.linvel(playerVelocity).x : 0;
+		const speed = canShoot ? player.getFocusVelocity(playerVelocity).x : 0;
 
 		if (canShoot && this.drones.size < spawn.max) {
 			this.untilNext -= deltaTime;
@@ -404,7 +404,6 @@ export default class Drones {
 		});
 
 		this.lasers.step(deltaTime);
-		this.debris.step(deltaTime);
 	}
 
 	spawn (focus, speed) {
@@ -420,6 +419,7 @@ export default class Drones {
 
 		this.scene.add(drone.object3d);
 		this.drones.add(drone);
+		this.impacts.add(drone);
 		this.emitters?.add(drone.object3d, drone);
 		drone.onHit = lost => this.emitters?.hit(drone.object3d, lost);
 	}
@@ -465,6 +465,7 @@ export default class Drones {
 		explosion.shatter(drone.object3d, () => velocity);
 		this.debris.add(explosion);
 
+		this.impacts.unregister(drone.colliders);
 		this.emitters?.remove(drone.object3d);
 		drone.destroy();
 		this.drones.delete(drone);
