@@ -403,7 +403,7 @@ export default class Drones {
 			drone.step(deltaTime, this.lasers, canShoot, this.warn);
 		});
 
-		this.lasers.step(deltaTime, player);
+		this.lasers.step(deltaTime);
 		this.debris.step(deltaTime, focus.x);
 	}
 

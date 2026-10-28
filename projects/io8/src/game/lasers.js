@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 
-import {randomItem, refill} from '../sleek/utils.js';
+import {randomItem} from '../sleek/utils.js';
 
 import Explosion from './explosion.js';
 import {ROBOT_GROUPS} from './io8.js';
@@ -10,8 +10,6 @@ import {ROBOT_GROUPS} from './io8.js';
 const SOUNDS = './assets/audio';
 
 const Y = new THREE.Vector3(0, 1, 0);
-const origin = new THREE.Vector3();
-const direction = new THREE.Vector3();
 const center = new THREE.Vector3();
 
 /*
@@ -19,12 +17,12 @@ const center = new THREE.Vector3();
 	through a box between two steps. So each frame the bolt's own shape (a capsule, so it can't slip through a
 	gap thinner than itself, like the seams between stacked boxes) is swept over the stretch it covers, and if
 	it hits something the bolt stops there and blows up (a small blast, and an Explosion's shockwave). They glow
-	from bloom, no real lights (changing the number of lights makes three.js recompile its shaders)
+	from bloom, no real lights (changing the number of lights makes three.js recompile its shaders). Whoever
+	fires them aims them and keeps track of their own ammo (see IO8.shoot())
 */
 export default class Lasers {
 	bolts = new Set();
 	sounds = {};
-	sinceFired = 0;
 
 	// Called with (point, blast config) whenever a bolt blows up, so everything nearby can react (see App.blast())
 	onBlast = null;
@@ -51,10 +49,6 @@ export default class Lasers {
 			// How far (m) they go before disappearing
 			range: 40,
 
-			// Shots in a full charge. Like the thruster fuel it starts refilling `refillDelay` seconds after the
-			// last shot, and takes `refillTime` seconds to go from empty to full
-			ammo: {capacity: 8, refillDelay: 2, refillTime: 2.5},
-
 			// The blast where it hits: things within `radius` (m) get up to `impulse` N·s per m² facing it (167 sends
 			// a cardboard box off at 15 m/s, see Explosion.shockwave()), and how big it looks and sounds (see Blasts,
 			// 1 = io8 blowing up). io8 loses up to `damage` health if he's within `reach` (m), see IO8.blast()
@@ -62,7 +56,7 @@ export default class Lasers {
 
 			// Sounds (5 variations of each, a random one plays): files in Kenney's sci-fi pack, or "pack/name" for
 			// another Kenney pack (e.g. "impact-sounds/impactGeneric_light"). And their volumes (0-1)
-			// (`empty` is the dry click when you fire with no charge left), and optionally their pitch (1 = as recorded)
+			// (`empty` is the dry click when whoever holds it fires with no charge left), and optionally their pitch (1 = as recorded)
 			sounds: {fire: 'laserRetro', empty: 'impact-sounds/impactGeneric_light'},
 			volume: {fire: 0.18, hit: 0.6, empty: 0.5},
 			pitch: {}
@@ -75,12 +69,6 @@ export default class Lasers {
 		this.material = new THREE.MeshBasicMaterial({color: new THREE.Color(color).multiplyScalar(brightness)});
 		// The same capsule for the physics, swept along each frame (along Y, centred on its position)
 		this.shape = new RAPIER.Capsule((length - radius * 2) / 2, radius);
-		this.ammo = this.config.ammo.capacity;
-	}
-
-	// 0-1, for the ammo meter
-	get ammoLevel () {
-		return this.ammo / this.config.ammo.capacity;
 	}
 
 	async init () {
@@ -95,26 +83,7 @@ export default class Lasers {
 		this.audio.playAt(randomItem(this.sounds[name]), position, {volume: this.config.volume[name], rate: this.config.pitch[name] ?? 1});
 	}
 
-	// `fire` is true on the frame the mouse was clicked (one shot per click)
-	step (deltaTime, player, fire) {
-		// Any charge at all fires (a shot with less than a whole one left just empties it), so the meter
-		// never shows ammo you can't use. Every shot restarts the refill delay, so it can't be spammed
-		if (fire && !player.isExploded && this.ammo > 0) {
-			player.muzzle(origin, direction);
-			this.fire(origin, direction);
-			this.ammo = Math.max(0, this.ammo - 1);
-			this.sinceFired = 0;
-		}
-		else {
-			if (fire && !player.isExploded) {
-				player.muzzle(origin, direction);
-				this.playSound('empty', origin);
-			}
-
-			this.sinceFired += deltaTime;
-			this.ammo = refill(this.ammo, this.sinceFired, this.config.ammo, deltaTime);
-		}
-
+	step (deltaTime) {
 		this.bolts.forEach(bolt => this.move(bolt, deltaTime));
 	}
 

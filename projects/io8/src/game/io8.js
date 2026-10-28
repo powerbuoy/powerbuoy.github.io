@@ -70,6 +70,8 @@ const AXLE_HOLD = 10000;
 const up = new THREE.Vector3();
 const velocity = new THREE.Vector3();
 const quat = new THREE.Quaternion();
+const muzzlePosition = new THREE.Vector3();
+const muzzleDirection = new THREE.Vector3();
 const legsUp = new THREE.Vector3();
 const anchor = new THREE.Vector3();
 const headOffset = new THREE.Vector3();
@@ -122,6 +124,8 @@ export default class IO8 extends SleekEntity {
 	headPiece = null;
 
 	fuel = 0;
+	ammo = 0;
+	sinceFired = 0;
 
 	// Called with how much health a hit took (a crash or a laser blast, not drowning). Crashes call it from inside
 	// a physics step
@@ -175,6 +179,10 @@ export default class IO8 extends SleekEntity {
 			// Below `low` (0-1) the flames sputter
 			fuel: {capacity: 1.2, refillDelay: 1, refillTime: 1.5, low: 0.25},
 
+			// Laser shots in a full charge. Like the fuel it starts refilling `refillDelay` seconds after the last
+			// shot, and takes `refillTime` seconds to go from empty to full
+			ammo: {capacity: 8, refillDelay: 2, refillTime: 2.5},
+
 			// Hold to charge, let go to jump: a tap jumps height[0] m, `charge` seconds or more height[1] m. Charging
 			// squashes the leg springs down to `squash` of their travel. Like thrust, the push is worked out from his
 			// normal weight, so the weight power-up keeps him (almost) on the ground
@@ -213,6 +221,7 @@ export default class IO8 extends SleekEntity {
 		this.handleInput();
 
 		this.fuel = this.config.fuel.capacity;
+		this.ammo = this.config.ammo.capacity;
 		this.health = this.config.health.capacity;
 
 		// Work out the debris shapes now, so exploding doesn't hitch
@@ -819,6 +828,31 @@ export default class IO8 extends SleekEntity {
 		this.engineSound.setVolume(this.engineGas * (volume.idle + (volume.top - volume.idle) * Math.min(1, this.engineRevs)));
 	}
 
+	// Fire a bolt from his muzzle, or a dry click with no charge left. Any charge at all fires (a shot with less
+	// than a whole one left just empties it), so the meter never shows ammo you can't use. Every shot restarts
+	// the refill delay, so it can't be spammed
+	shoot (lasers) {
+		if (this.isExploded) {
+			return;
+		}
+
+		this.muzzle(muzzlePosition, muzzleDirection);
+
+		if (this.ammo > 0) {
+			lasers.fire(muzzlePosition, muzzleDirection);
+			this.ammo = Math.max(0, this.ammo - 1);
+			this.sinceFired = 0;
+		}
+		else {
+			lasers.playSound('empty', muzzlePosition);
+		}
+	}
+
+	// 0-1, for the ammo meter
+	get ammoLevel () {
+		return this.ammo / this.config.ammo.capacity;
+	}
+
 	// Where laser bolts leave from and which way they go: the "Muzzle" empty on the head (its X axis is the barrel)
 	muzzle (position, direction) {
 		this.muzzleObject.getWorldPosition(position);
@@ -849,6 +883,8 @@ export default class IO8 extends SleekEntity {
 		}
 
 		this.time += deltaTime;
+		this.sinceFired += deltaTime;
+		this.ammo = refill(this.ammo, this.sinceFired, this.config.ammo, deltaTime);
 		this.updateEngineSound(deltaTime);
 
 		this.stretchParts.forEach(({obj, length}) => obj.scale.y = (length + this.springOffset) / length);

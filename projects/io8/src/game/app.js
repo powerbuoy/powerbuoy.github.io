@@ -290,8 +290,13 @@ export default class App extends SleekScene {
 		this.debris.step(deltaTime, focus.x);
 		this.blasts.step(deltaTime);
 		this.emitters.step(deltaTime);
-		this.lasers.step(deltaTime, this.player, this.fire && !this.controls.enabled);
+		// One shot per click (see the pointerdown listener)
+		if (this.fire && !this.controls.enabled) {
+			this.player.shoot(this.lasers);
+		}
+
 		this.fire = false;
+		this.lasers.step(deltaTime);
 		this.drones.step(deltaTime, this.player, focus);
 		this.explosives.step(deltaTime, focus.x);
 		// Keep stuff to crash into ahead of io8
@@ -300,7 +305,7 @@ export default class App extends SleekScene {
 		// Rounded up so he never shows 0% while he's still alive
 		this.hud.set('health', this.player.healthLevel, Math.ceil(this.player.healthLevel * 100));
 		this.hud.set('fuel', this.player.fuelLevel, Math.round(this.player.fuelLevel * 100));
-		this.hud.set('ammo', this.lasers.ammoLevel, Math.floor(this.lasers.ammoLevel * 100));
+		this.hud.set('ammo', this.player.ammoLevel, Math.floor(this.player.ammoLevel * 100));
 		this.hud.set('speed', this.player.effectLevel('speed'), Math.ceil(this.player.effectRemaining('speed')));
 		this.hud.set('weight', this.player.effectLevel('weight'), Math.ceil(this.player.effectRemaining('weight')));
 
