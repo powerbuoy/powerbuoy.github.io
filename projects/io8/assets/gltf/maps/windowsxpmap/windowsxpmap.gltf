@@ -195,14 +195,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				10,
@@ -249,14 +251,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				15,
@@ -303,14 +307,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				20,
@@ -357,14 +363,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				25,
@@ -411,14 +419,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				30,
@@ -465,14 +475,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				35,
@@ -519,14 +531,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				40,
@@ -573,14 +587,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				45,
@@ -627,14 +643,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				50,
@@ -681,14 +699,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				55,
@@ -735,14 +755,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				60,
@@ -789,14 +811,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				65,
@@ -843,14 +867,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				70,
@@ -897,14 +923,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				75,
@@ -951,14 +979,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				80,
@@ -1005,14 +1035,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				85,
@@ -1059,14 +1091,16 @@
 			"name":"Mine_RigidBody",
 			"extras":{
 				"mass":3,
-				"collider":"cuboid",
+				"collider":"sphere",
+				"angular_damping":1,
 				"explosive":1,
 				"impact":"metal",
 				"blast_radius":4,
 				"blast_impulse":250,
 				"blast_size":1,
 				"blast_damage":100,
-				"blast_reach":4.5
+				"blast_reach":4.5,
+				"wake_distance":50
 			},
 			"children":[
 				90,
@@ -1667,7 +1701,7 @@
 		{
 			"bufferView":24,
 			"componentType":5126,
-			"count":24,
+			"count":425,
 			"type":"VEC3",
 			"min":[
 				-0.175,
@@ -1683,13 +1717,13 @@
 		{
 			"bufferView":25,
 			"componentType":5126,
-			"count":24,
+			"count":425,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":26,
 			"componentType":5123,
-			"count":36,
+			"count":2160,
 			"type":"SCALAR"
 		},
 		{
@@ -1869,36 +1903,36 @@
 		{
 			"buffer":0,
 			"byteOffset":2572524,
-			"byteLength":288,
+			"byteLength":5100,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteOffset":2572812,
-			"byteLength":288,
+			"byteOffset":2577624,
+			"byteLength":5100,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteOffset":2573100,
-			"byteLength":72,
+			"byteOffset":2582724,
+			"byteLength":4320,
 			"target":34963
 		},
 		{
 			"buffer":0,
-			"byteOffset":2573172,
+			"byteOffset":2587044,
 			"byteLength":288,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteOffset":2573460,
+			"byteOffset":2587332,
 			"byteLength":288,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteOffset":2573748,
+			"byteOffset":2587620,
 			"byteLength":72,
 			"target":34963
 		}
@@ -1911,7 +1945,7 @@
 	],
 	"buffers":[
 		{
-			"byteLength":2573820,
+			"byteLength":2587692,
 			"uri":"windowsxpmap.bin"
 		}
 	]

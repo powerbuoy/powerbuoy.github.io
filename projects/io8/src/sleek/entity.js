@@ -8,7 +8,7 @@ const nearest = new THREE.Vector3();
 /*
 	Builds rigid bodies from a GLTF scene using the naming convention from Blender:
 
-	Thing_RigidBody      <- becomes a rigid body. Custom props: mass, kinematic, friction, restitution, collider
+	Thing_RigidBody      <- becomes a rigid body. Custom props: mass, kinematic, friction, restitution, collider, angular_damping
 		Thing_Mesh       <- what you see
 		Thing_Shape      <- hidden, every mesh inside becomes a collider on the same body
 
@@ -16,7 +16,8 @@ const nearest = new THREE.Vector3();
 	the collision should match what you see exactly). _Mesh is optional too, Thing_RigidBody can be the mesh
 	itself, then every mesh in it collides. mass 0 (or missing) means a fixed body, kinematic 1 one the code moves (it pushes
 	things out of its way, nothing pushes it). Colliders default to a convex hull for dynamic and kinematic bodies and a
-	triangle mesh for fixed ones; set "collider" to override.
+	triangle mesh for fixed ones; set "collider" to override. Rapier has no rolling resistance, so a ball rolls forever
+	(rocking in a dip, speeding up down a slope): angular_damping slows its spin a little every step instead.
 
 	A _RigidBody can be anywhere in the scene, just not inside another one (its parts are its own business), so
 	the copies a collection instance brings along work too. So do the endings copies get: Blender's ".001" (three
@@ -71,7 +72,8 @@ export default class SleekEntity {
 
 			const bodyDesc = (kinematic ? RAPIER.RigidBodyDesc.kinematicPositionBased() : mass > 0 ? RAPIER.RigidBodyDesc.dynamic() : RAPIER.RigidBodyDesc.fixed())
 				.setTranslation(worldPos.x, worldPos.y, worldPos.z)
-				.setRotation(worldQuat);
+				.setRotation(worldQuat)
+				.setAngularDamping(Number(obj.userData.angular_damping ?? 0));
 
 			const body = this.physics.world.createRigidBody(bodyDesc);
 			const meshes = [];

@@ -264,6 +264,7 @@ export default class App extends SleekScene {
 		// What the camera, pickups and sunlight centre on, once he's moved (or blown up)
 		this.player.getFocusPosition(focus);
 
+		this.props.step(focus);
 		this.pickups.step(deltaTime, this.player, focus.x);
 		this.player.step(deltaTime);
 		this.blasts.step(deltaTime);

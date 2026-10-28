@@ -22,6 +22,9 @@ function remember (link) {
 export default class SleekPhysics {
 	accumulator = 0;
 
+	// How many fixed steps the world has taken
+	steps = 0;
+
 	// By body, and Sets, so adding and removing (whole piles of props at once) is cheap
 	links = new Map();
 	listeners = new Set();
@@ -102,6 +105,7 @@ export default class SleekPhysics {
 
 			this.listeners.forEach(callback => callback(this.world.timestep));
 			this.world.step(this.events);
+			this.steps++;
 
 			this.events.drainContactForceEvents(event => {
 				const collider1 = this.world.getCollider(event.collider1());
