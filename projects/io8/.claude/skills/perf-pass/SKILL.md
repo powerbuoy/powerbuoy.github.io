@@ -1,6 +1,6 @@
 ---
 name: perf-pass
-description: Run a performance and cleanup pass on io8 - measure first, find what allocates, what costs GPU time and which shaders compile late, fix root causes, then prove the result against the previous build with deterministic old-vs-new benchmarks. Use when the user asks for a performance pass, a cleanup run, to check whether io8 got slower, or to measure a change's cost.
+description: Run a performance and cleanup pass on io8 - measure first, find what allocates, what costs GPU time and which shaders compile late, fix root causes, then prove the result against the previous build with deterministic old-vs-new benchmarks. Use when the user asks for a performance pass, to check whether io8 got slower, or to measure a change's cost. For hard-coded special cases and structural cleanup, use cleanup-pass instead.
 ---
 
 # io8 performance and cleanup pass
